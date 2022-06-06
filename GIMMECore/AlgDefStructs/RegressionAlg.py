@@ -212,7 +212,7 @@ class TabularAgentSynergies(RegressionAlg):
 		
 		self.synergyMatrix = synergyTable.to_numpy()
 		self.synergyMatrix[numpy.isnan(self.synergyMatrix)] = 0
-		self.symmetrize(self.synergyMatrix)
+		self.synergyMatrix = self.symmetrize(self.synergyMatrix)
 
 		# tempTable = pd.read_csv('taskTable.txt', sep=',', dtype={'task': object, 'agent': object})
 		# taskTable = tempTable.pivot_table(values='synergy', index='task', columns='agent')

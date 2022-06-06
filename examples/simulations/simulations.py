@@ -485,6 +485,8 @@ def executionPhase(numRuns, playerBridge, maxNumIterations, startingI, currRun, 
 		end = time.time()
 		deltaTime = (end - start)
 
+		print(adaptationTabularODPIP.configsGenAlg.getPlayerConstraints())
+
 
 		for x in range(numPlayers):
 			increases = simulateReaction(playerBridge, i, x)
@@ -614,6 +616,7 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 
 
 
+
 # ----------------------- [Simulation] --------------------------------
 if __name__ == '__main__':
 
@@ -732,11 +735,13 @@ if __name__ == '__main__':
 
 		
 	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
-	adaptationTabularODPIP.configsGenAlg.addRequiredJointCoalition([1,7])
+	# adaptationTabularODPIP.configsGenAlg.addJointPlayersConstraints([1,7])
+	# adaptationTabularODPIP.configsGenAlg.addSeparatedPlayersConstraints([1,2])
+
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
 		playerBridge, taskBridge, adaptationTabularODPIP, considerExtremePreferencesValues = True)
 
-	adaptationTabularODPIP.configsGenAlg.resetPlayersRestrictions()
+	adaptationTabularODPIP.configsGenAlg.resetPlayersConstraints()
 
 	# adaptationGA.name = "GIMME_GA_EP"
 	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 

@@ -987,9 +987,7 @@ class ODPIP(ConfigsGenAlg):
 		preferredNumberOfPlayersPerGroup = None, 
 		minNumberOfPlayersPerGroup = None, 
 		maxNumberOfPlayersPerGroup = None,
-		qualityWeights = None,
-		requiredJointPlayers = [],
-		restrictedPlayersToJoin = []):
+		qualityWeights = None):
 
 		super().__init__(playerModelBridge, 
 		interactionsProfileTemplate, 
@@ -1008,19 +1006,26 @@ class ODPIP(ConfigsGenAlg):
 		self.coalitionsValues = []
 
 		self.playerIds = []	
-		self.requiredJointPlayers = requiredJointPlayers
-		self.restrictedPlayersToJoin = restrictedPlayersToJoin
+		self.jointPlayersConstraints = []
+		self.separatedPlayersConstraints = []
+		self.allConstraints = []
 
-	def addRequiredJointCoalition(self, coalition):
-		self.requiredJointPlayers.append(coalition)
+	def addJointPlayersConstraints(self, players):
+		self.jointPlayersConstraints.append(players)
+		self.allConstraints.append({"players": players, "type": "JOIN"})
 
-	def addRestrictedPlayersCoalitions(self, coalition):
-		self.restrictedPlayersToJoin.append(coalition)
+	def addSeparatedPlayersConstraints(self, players):
+		self.separatedPlayersConstraints.append(players)
+		self.allConstraints.append({"players": players, "type": "SEPARATE"})
 
-	def resetPlayersRestrictions(self):
-		self.requiredJointPlayers = []
-		self.restrictedPlayersToJoin = []
 
+	def resetPlayersConstraints(self):
+		self.jointPlayersConstraints = []
+		self.separatedPlayersConstraints = []
+		self.allConstraints = []
+
+	def getPlayerConstraints(self):
+		return self.allConstraints
 
 	def calcQuality(self, state):
 		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
@@ -1144,18 +1149,18 @@ class ODPIP(ConfigsGenAlg):
 			self.coalitionsValues[coalition] = currQuality
 
 	def computeCoalitionsRestrictions(self):
-		requiredJointPlayersInBitFormat = self.requiredJointPlayers[:]
-		restrictedPlayersToJoinInBitFormat = self.restrictedPlayersToJoin[:]
+		jointPlayersConstraintInBitFormat = self.jointPlayersConstraints[:]
+		separatedPlayersConstraintInBitFormat = self.separatedPlayersConstraints[:]
 
-		for i in range(len(requiredJointPlayersInBitFormat)):
-			requiredJointPlayersInBitFormat[i] = self.convertFromIdsToBytes(requiredJointPlayersInBitFormat[i])
-			requiredJointPlayersInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(requiredJointPlayersInBitFormat[i], len(requiredJointPlayersInBitFormat[i]))
+		for i in range(len(jointPlayersConstraintInBitFormat)):
+			jointPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(jointPlayersConstraintInBitFormat[i])
+			jointPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(jointPlayersConstraintInBitFormat[i], len(jointPlayersConstraintInBitFormat[i]))
 
-		for i in range(len(restrictedPlayersToJoinInBitFormat)):
-			restrictedPlayersToJoinInBitFormat[i] = self.convertFromIdsToBytes(restrictedPlayersToJoinInBitFormat[i])
-			restrictedPlayersToJoinInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(restrictedPlayersToJoinInBitFormat[i], len(restrictedPlayersToJoinInBitFormat[i]))
+		for i in range(len(separatedPlayersConstraintInBitFormat)):
+			separatedPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(separatedPlayersConstraintInBitFormat[i])
+			separatedPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(separatedPlayersConstraintInBitFormat[i], len(separatedPlayersConstraintInBitFormat[i]))
 
-		return requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat
+		return jointPlayersConstraintInBitFormat, separatedPlayersConstraintInBitFormat
 
 
 	def results(self, cSInByteFormat):
@@ -1171,6 +1176,7 @@ class ODPIP(ConfigsGenAlg):
 			bestConfigProfiles.append(self.coalitionsProfiles[group])
 			avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
 
+		print(bestGroups)
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
 	# function to compute best profile for group according to each players preferences about the task
@@ -1222,7 +1228,7 @@ class ODPIP(ConfigsGenAlg):
 
 			print("}")
 
-		print(bestCSFound_byteFormat)
+		
 		
 		return self.results(bestCSFound_byteFormat)
 

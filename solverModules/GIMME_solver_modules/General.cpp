@@ -290,9 +290,13 @@ std::vector<bool> General::generateFeasibleCoalitionsInBitFormat(int numPlayers,
 	for (int curSize = minNumberOfPlayersPerGroup; curSize <= maxNumberOfPlayersPerGroup + 1; curSize++)
 	{
 		std::vector<int> combinationsOfCurSize = getCombinationOfGivenSizeInBitFormat(numPlayers, curSize);
-		for (int i = 0; i < combinationsOfCurSize.size(); i++) 
+		for (int i = 0; i < combinationsOfCurSize.size(); i++)
+		{
 			feasibleCoalitions[combinationsOfCurSize[i]] = true;
+			coalitionValues[combinationsOfCurSize[i]] += 2;
+		}
 	}
+
 
 	if (requiredJoinedPlayers.empty() && restrictedJointPlayers.empty())
 		return feasibleCoalitions;
@@ -307,7 +311,7 @@ std::vector<bool> General::generateFeasibleCoalitionsInBitFormat(int numPlayers,
 				if (isValidCoalition != 0 && isValidCoalition != *required)
 				{
 					feasibleCoalitions[i] = false;
-					coalitionValues[i] = -500;
+					coalitionValues[i] = 1;
 					break;
 				}
 
@@ -320,13 +324,14 @@ std::vector<bool> General::generateFeasibleCoalitionsInBitFormat(int numPlayers,
 				if (isValidCoalition == *restricted)
 				{
 					feasibleCoalitions[i] = false;
-					coalitionValues[i] = -500;
+					coalitionValues[i] = 1;
 					break;
 				}
 			}
 		}
 	}
 
+	
 	return feasibleCoalitions;
 }
 
