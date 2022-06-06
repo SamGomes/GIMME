@@ -2,14 +2,14 @@
 
 <img src="ReadmeImages/logo.png" width="300">
 
-![version](https://img.shields.io/badge/version-1.1.5-blue)
+![version](https://img.shields.io/badge/version-1.3.0-blue)
 ![version](https://img.shields.io/badge/python-v3.7-blue)
 
 GIMME (Group Interactions Management for Multiplayer sErious games) is a research tool which focuses on the management of 
 interactions in groups so that the collective ability improves. 
-More specifically, what sets the method appart is that the interactions between players are explicity considered when forming group configurations (also commonly named coalition structures).
+More specifically, what distinguishes the method is that the interactions between players are explicity considered when forming group configurations (also commonly named coalition structures).
 This repository contains the core of the application (written in Python), as well as some examples. 
-Over time, we aim to improve the core functionalities as well as provide more examples for GIMME.
+Over time, we aim to improve the core functionalities as well as to provide more examples for the GIMME API.
 
 
 Information about the API internals and examples can be observed in our [wiki](https://github.com/SamGomes/GIMME/wiki).
@@ -57,7 +57,7 @@ As of now, no unit tests are provided, due to development constraints. We believ
 
 
 ## Report on Latest Features
-We have been writing a report about our latest features, currently available [here](https://drive.google.com/file/d/1Qa5Mccx_P4rPGLnM6NnZ9IXBemLdd3Zp/view?usp=sharing) in pre-print format.
+We have been writing a report about our latest features, currently available [here](https://drive.google.com/file/d/10y9SROvK-20zBGLZggtJVasL5Uw27vWd/view) in pre-print format.
 
 ## Future Improvements
 As of the current version, there are still some unexplored open pathways. They include:

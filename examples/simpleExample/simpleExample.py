@@ -6,7 +6,7 @@ import textwrap
 
 from datetime import datetime, timedelta
 
-sys.path.insert(1,'/home/samgomes/Documents/doutoramento/reps/GIMME/GIMME')
+sys.path.insert(1,'/Users/pedro/Desktop/tese/GIMME/GIMMECore')
 sys.path.insert(1,'/GIMME')
 sys.path.insert(1,'../')
 from GIMMECore import *
@@ -28,6 +28,8 @@ tasks = [0 for x in range(numTasks)]
 
 
 preferredNumberOfPlayersPerGroup = 4#int(input("How many players per group would you prefer? "))
+minNumberPlayersPerGroup = 2
+maxNumberPlayersPerGroup = 5
 
 playerBridge = CustomPlayerModelBridge(players)
 taskBridge = CustomTaskModelBridge(tasks)
@@ -38,17 +40,14 @@ profileTemplate = InteractionsProfile({"Focus": 0, "Challenge": 0})
 print("Setting up the players...")
 
 for x in range(numPlayers):
+	gridTrimAlg = QualitySortPlayerDataTrimAlg(maxNumModelElements = 30, qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5))
 	playerBridge.registerNewPlayer(
 		playerId = int(x), 
 		name = "name", 
 		currState = PlayerState(profile = profileTemplate.generateCopy().reset()), 
-		pastModelIncreasesDataFrame = PlayerStatesDataFrame(
+		pastModelIncreasesGrid = PlayerStatesDataFrame(
 			interactionsProfileTemplate = profileTemplate.generateCopy().reset(), 
-			trimAlg = QualitySortPlayerDataTrimAlg(
-				maxNumModelElements = 30, 
-				qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
-				)
-			), 
+			trimAlg = gridTrimAlg), 
 		currModelIncreases = PlayerCharacteristics(), 
 		preferencesEst = profileTemplate.generateCopy().reset(), 
 		realPreferences = profileTemplate.generateCopy().reset())
@@ -103,7 +102,7 @@ def simulateReaction(isBootstrap, playerBridge, playerId):
 	increases = PlayerState(stateType = newState.stateType)
 	increases.profile = currState.profile
 	increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-	playerBridge.setAndSavePlayerStateToDataFrame(playerId, increases, newState)	
+	playerBridge.setAndSavePlayerStateToGrid(playerId, increases, newState)	
 	return increases
 
 def calcReaction(isBootstrap, playerBridge, state, playerId):
@@ -133,65 +132,69 @@ numberOfConfigChoices = 100
 numTestedPlayerProfilesInEst = 500
 regAlg = KNNRegression(playerBridge, 5)
 
+#GAConfigsAlg = EvolutionaryConfigsGenDEAP(
+#	playerModelBridge = playerBridge, 
+#	interactionsProfileTemplate = profileTemplate.generateCopy(), 
+#	regAlg = regAlg, 
+#	numberOfConfigChoices = numberOfConfigChoices, 
+#	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
+#	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+#)
 
-# ----------------------- [Init GA] --------------------------------
-initialPopulationSize = 100 
-numberOfEvolutionsPerIteration = 50
- 
-probOfCross = 0.65
-probOfMutation = 0.15
-# probReproduction = 1 - (probOfCross + probOfMutation) = 0.15
-
-probOfMutationConfig = 0.8
-probOfMutationGIPs = 0.4
-
-numSurvivors = 10
-numChildrenPerIteration = 100
-
-
-GAConfigsAlg = EvolutionaryConfigsGenDEAP(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = profileTemplate.generateCopy(), 
-	regAlg = regAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
-	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
-
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
-	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors,
-
-	cxOp = "order"
+GAConfigsAlg = ODPIP(
+	playerModelBridge = playerBridge,
+	interactionsProfileTemplate = profileTemplate.generateCopy(),
+	regAlg = regAlg,
+	persEstAlg = ExplorationPreferencesEstAlg(
+		playerModelBridge = playerBridge, 
+		interactionsProfileTemplate = profileTemplate.generateCopy(), 
+		regAlg = regAlg,
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
+		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	minNumberOfPlayersPerGroup = minNumberPlayersPerGroup,
+	maxNumberOfPlayersPerGroup = maxNumberPlayersPerGroup
 )
-
-# PRSConfigsAlg = PureRandomSearchConfigsGen(
-# 	playerModelBridge = playerBridge, 
-# 	interactionsProfileTemplate = profileTemplate.generateCopy(), 
-# 	regAlg = regAlg, 
-# 	persEstAlg = ExplorationPreferencesEstAlg(
-# 		playerModelBridge = playerBridge, 
-# 		interactionsProfileTemplate = profileTemplate.generateCopy(), 
-# 		regAlg = regAlg,
-# 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
-# 		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)), 
-# 	numberOfConfigChoices = numberOfConfigChoices, 
-# 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-# 	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
-# )
 adaptationGIMME.init(
 	playerModelBridge = playerBridge, 
 	taskModelBridge = taskBridge,
 	configsGenAlg = GAConfigsAlg, 
 	name="Test Adaptation"
 )
+#simpleConfigsAlg = StochasticHillclimberConfigsGen(
+#	playerModelBridge = playerBridge, 
+#	interactionsProfileTemplate = profileTemplate.generateCopy(), 
+#	regAlg = regAlg, 
+#	persEstAlg = ExplorationPreferencesEstAlg(
+#		playerModelBridge = playerBridge, 
+#		interactionsProfileTemplate = profileTemplate.generateCopy(), 
+#		regAlg = regAlg,
+#		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
+#		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)), 
+#	numberOfConfigChoices = numberOfConfigChoices, 
+#	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
+#	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+#)
+#adaptationGIMME.init(
+#	playerModelBridge = playerBridge, 
+#	taskModelBridge = taskBridge,
+#	configsGenAlg = GAConfigsAlg, 
+#	name="Test Adaptation"
+#)
 
 
+
+# randomConfigsAlg = RandomConfigsGen(
+# 	playerModelBridge = playerBridge, 
+# 	interactionsProfileTemplate = profileTemplate.generateCopy(), 
+# 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
+# )
+# adaptationGIMME.init(
+# 	playerModelBridge = playerBridge, 
+# 	taskModelBridge = taskBridge,
+# 	configsGenAlg = randomConfigsAlg, 
+# 	name="Test Adaptation"
+# )
 
 
 ready = True
@@ -209,7 +212,6 @@ while(True):
 	print("----------------------")
 	print("Iteration Summary:\n\n\n")
 	print(json.dumps(adaptationGIMME.iterate(), default=lambda o: o.__dict__, sort_keys=True))
-
 	print("----------------------\n\n\n")
 	print("Player States:\n\n\n")
 	for x in range(numPlayers):

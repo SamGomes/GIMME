@@ -21,7 +21,7 @@ from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 1
+numRuns = 10
 
 maxNumTrainingIterations = 20
 numRealIterations = 20
@@ -30,7 +30,7 @@ preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 23
+numPlayers = 20
 
 numTasks = 1
 
@@ -85,6 +85,10 @@ taskBridge = CustomTaskModelBridge(tasks)
 adaptationPRS = Adaptation()
 adaptationGA_scx = Adaptation()
 adaptationGA = Adaptation()
+adaptationODPIP = Adaptation()
+adaptationTabularODPIP = Adaptation()
+adaptationCLink = Adaptation()
+adaptationTabularCLink = Adaptation()
 
 adaptationEvl1D = Adaptation()
 adaptationEvl3D = Adaptation()
@@ -111,6 +115,7 @@ logManager = CSVLogManager(newpath, simsID)
 print("Initing algorithms...")
 
 regAlg = KNNRegression(playerModelBridge = playerBridge, numberOfNNs = 5)
+tabularRegAlg = TabularAgentSynergies(playerModelBridge= playerBridge, taskModelBridge=taskBridge)
 
 # - - - - - 
 intProfTemplate2D = InteractionsProfile({"dim_0": 0, "dim_1": 0})
@@ -169,6 +174,85 @@ adaptationGA.init(
 	name="GIMME_GA"
 )
 
+ODPIPconfigsAlg = ODPIP(
+	playerModelBridge = playerBridge,
+	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
+	regAlg = regAlg,
+	persEstAlg = ExplorationPreferencesEstAlg(
+		playerModelBridge = playerBridge, 
+		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
+		regAlg = regAlg,
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
+		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+)
+adaptationODPIP.init(
+	playerModelBridge = playerBridge, 
+	taskModelBridge = taskBridge,
+	configsGenAlg = ODPIPconfigsAlg, 
+	name="GIMME_ODPIP"
+)
+
+tabularODPIPconfigsAlg = ODPIP(
+	playerModelBridge = playerBridge,
+	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
+	regAlg = tabularRegAlg,
+	persEstAlg = ExplorationPreferencesEstAlg(
+		playerModelBridge = playerBridge, 
+		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
+		regAlg = regAlg,
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
+		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+)
+adaptationTabularODPIP.init(
+	playerModelBridge = playerBridge, 
+	taskModelBridge = taskBridge,
+	configsGenAlg = tabularODPIPconfigsAlg, 
+	name="GIMME_ODPIP"
+)
+
+CLinkconfigsAlg = CLink(
+	playerModelBridge = playerBridge,
+	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
+	regAlg = regAlg,
+	persEstAlg = ExplorationPreferencesEstAlg(
+		playerModelBridge = playerBridge, 
+		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
+		regAlg = regAlg,
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
+		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+)
+adaptationCLink.init(
+	playerModelBridge = playerBridge, 
+	taskModelBridge = taskBridge,
+	configsGenAlg = CLinkconfigsAlg, 
+	name="GIMME_CLink"
+)
+
+tabularCLinkconfigsAlg = CLink(
+	playerModelBridge = playerBridge,
+	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
+	regAlg = tabularRegAlg,
+	persEstAlg = ExplorationPreferencesEstAlg(
+		playerModelBridge = playerBridge, 
+		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
+		regAlg = regAlg,
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
+		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+)
+adaptationTabularCLink.init(
+	playerModelBridge = playerBridge, 
+	taskModelBridge = taskBridge,
+	configsGenAlg = tabularCLinkconfigsAlg, 
+	name="GIMME_CLink_Tabular"
+)
 
 
 prsConfigsAlg = PureRandomSearchConfigsGen(
@@ -363,7 +447,7 @@ def simulateReaction(playerBridge, currIteration, playerId):
 	increases = PlayerState(stateType = newState.stateType)
 	increases.profile = currState.profile
 	increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-	playerBridge.setAndSavePlayerStateToDataFrame(playerId, increases, newState)	
+	playerBridge.setAndSavePlayerStateToGrid(playerId, increases, newState)	
 	return increases
 
 def calcReaction(playerBridge, state, playerId, currIteration):
@@ -435,7 +519,7 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 			playerId = int(x), 
 			name = "name", 
 			currState = PlayerState(profile = profileTemplate.generateCopy().reset()), 
-			pastModelIncreasesDataFrame = PlayerStatesDataFrame(
+			pastModelIncreasesGrid = PlayerStatesDataFrame(
 				interactionsProfileTemplate = profileTemplate.generateCopy().reset(), 
 				trimAlg = ProximitySortPlayerDataTrimAlg(
 					maxNumModelElements = playerWindow, 
@@ -462,35 +546,24 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 		allRealPreferences = []
 		allQuestionnairePreferences = []
 
-		EPdimensions = [{"dim_0":1,"dim_1":0}, {"dim_0":0,"dim_1":1}, {"dim_0":0,"dim_1":0}, {"dim_0":1,"dim_1":1}]	
-		EPi = 0
-
-		EPAux = []
-		while ((numPlayers - len(EPAux)) / preferredNumberOfPlayersPerGroup) > 1.0:
-			elem = EPdimensions[EPi]
-			EPAux.extend([elem for _ in range(preferredNumberOfPlayersPerGroup)])
-			EPi = (EPi + 1) % 4
-
-		randElem = EPdimensions[random.randint(0, len(EPdimensions) - 1)]
-		EPAux.extend([randElem for _ in range(numPlayers - len(EPAux))])
-
-		# print(randElem)
-
-
-		EPi = 0
+		EPdimensions = [{"dim_0":0,"dim_1":0}, {"dim_0":1,"dim_1":0}, {"dim_0":0,"dim_1":1}, {"dim_0":1,"dim_1":1}, {"dim_0":1,"dim_1":1}]	
+		
 		playersDimsStr = "players: [\n"	
+
 
 		for x in range(numPlayers):
 			profile = profileTemplate.generateCopy().reset()
 			if(considerExtremePreferencesValues):
-				profile.dimensions = EPAux[EPi]
+				profile.dimensions = EPdimensions[x % len(EPdimensions)]
 				playersDimsStr += "{"+str(profile.dimensions)+"},\n"
-				EPi += 1
 			else:
 				for d in range(numInteractionDimensions):
 					profile.dimensions["dim_"+str(d)] = random.uniform(0, 1)
+
+
 			allRealPreferences.append(profile)
 			# allRealPreferences[x].normalize()
+
 
 
 			profile = profileTemplate.generateCopy().reset()
@@ -517,7 +590,6 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 		playersDimsStr += "],\n"
 
 		# print(playersDimsStr)
-		# exit()
 
 		if(maxNumTrainingIterations > 0):		
 			adaptation.bootstrap(maxNumTrainingIterations)
@@ -562,78 +634,124 @@ if __name__ == '__main__':
 
 	# ----------------------- [Execute Algorithms] ----------------------------
 
-	inputtedText = input("<<< All ready! Press Enter to start (Q, then Enter exits the application). >>>") 
-	if (inputtedText== "Q"):
-		exit()
+	# inputtedText = input("<<< All ready! Press Enter to start (Q, then Enter exits the application). >>>") 
+	# if (inputtedText== "Q"):
+	# 	exit()
+
+	# adaptationCLink.name = "GIMME_CLink"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	#    	playerBridge, taskBridge, adaptationCLink)
+
+	# adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationTabularODPIP)
+
+		
+	# adaptationODPIP.name = "GIMME_ODPIP"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationODPIP)
 
 
-	adaptationGA.name = "GIMME_GA"
+	# adaptationGA.name = "GIMME_GA"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationGA)
+
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	#  	playerBridge, taskBridge, adaptationPRS)
+
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	#  	playerBridge, taskBridge, adaptationRandom)
+
+
+	# adaptationODPIP.name = "GIMME_ODPIP_Bootstrap"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.1)
+
+	# adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_HighAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.05)
+
+	# adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_LowAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
+
+
+	# adaptationGA.name = "GIMME_GA_Bootstrap"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.1)
+
+	# adaptationGA.name = "GIMME_GA_Bootstrap_HighAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.05)
+
+	# adaptationGA.name = "GIMME_GA_Bootstrap_LowAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.2)
+
+
+	# adaptationPRS.name = "GIMME_PRS_Bootstrap"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy = 0.1)
+
+	# adaptationPRS.name = "GIMME_PRS_Bootstrap_HighAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy = 0.05)
+
+	# adaptationPRS.name = "GIMME_PRS_Bootstrap_LowAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+	# 				playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy = 0.2)
+
+
+
+	# executeSimulations(numRuns, intProfTemplate1D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationEvl1D)
+
+	# executeSimulations(numRuns, intProfTemplate3D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationEvl3D)
+
+	# executeSimulations(numRuns, intProfTemplate4D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationEvl4D)
+
+	# executeSimulations(numRuns, intProfTemplate5D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationEvl5D)
+
+	# executeSimulations(numRuns, intProfTemplate6D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationEvl6D)
+
+	# adaptationCLink.name = "GIMME_CLink_EP"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationCLink, considerExtremePreferencesValues = True)
+
+	# adaptationTabularCLink.name = "GIMME_CLink_Tabular"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationTabularCLink, considerExtremePreferencesValues = True)
+
+	# adaptationODPIP.name = "GIMME_CLink"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationODPIP, considerExtremePreferencesValues = True)
+
+		
+	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
+	adaptationTabularODPIP.configsGenAlg.addRequiredJointCoalition([1,7])
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationGA)
+		playerBridge, taskBridge, adaptationTabularODPIP, considerExtremePreferencesValues = True)
+
+	adaptationTabularODPIP.configsGenAlg.resetPlayersRestrictions()
+
+	# adaptationGA.name = "GIMME_GA_EP"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationGA, considerExtremePreferencesValues = True)
 
 
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationPRS)
+	# adaptationPRS.name = "GIMME_PRS_EP"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationPRS, considerExtremePreferencesValues = True)
 
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-		playerBridge, taskBridge, adaptationRandom)
-
-
-
-	adaptationGA.name = "GIMME_GA_Bootstrap"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
-					playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.1)
-
-	adaptationGA.name = "GIMME_GA_Bootstrap_HighAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
-					playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.05)
-
-	adaptationGA.name = "GIMME_GA_Bootstrap_LowAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
-					playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.2)
-
-
-	adaptationPRS.name = "GIMME_PRS_Bootstrap"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
-					playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy = 0.1)
-
-	adaptationPRS.name = "GIMME_PRS_Bootstrap_HighAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
-					playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy = 0.05)
-
-	adaptationPRS.name = "GIMME_PRS_Bootstrap_LowAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
-					playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy = 0.2)
-
-
-
-	executeSimulations(numRuns, intProfTemplate1D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationEvl1D)
-
-	executeSimulations(numRuns, intProfTemplate3D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationEvl3D)
-
-	executeSimulations(numRuns, intProfTemplate4D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationEvl4D)
-
-	executeSimulations(numRuns, intProfTemplate5D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationEvl5D)
-
-	executeSimulations(numRuns, intProfTemplate6D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationEvl6D)
-
-
-
-	adaptationGA.name = "GIMME_GA_EP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationGA, considerExtremePreferencesValues = True)
-
-
-	adaptationPRS.name = "GIMME_PRS_EP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationPRS, considerExtremePreferencesValues = True)
-
-
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	# 	playerBridge, taskBridge, adaptationRandom, considerExtremePreferencesValues = True)
 
 
 	print("Done!                        ")
+
+
+		

@@ -1,7 +1,11 @@
 import copy
 import json
+import numpy
+import pandas as pd
 
 from abc import ABC, abstractmethod
+
+from GIMMECore.ModelBridge.TaskModelBridge import TaskModelBridge
 from ..PlayerStructs import *
 
 from sklearn import linear_model, neighbors
@@ -17,6 +21,8 @@ class RegressionAlg(ABC):
 	def predict(self, profile, playerId):
 		pass
 
+	def isTabular(self):
+		return False
 
 	# instrumentation
 	def getCompPercentage(self):
@@ -193,3 +199,87 @@ class NeuralNetworkRegression(RegressionAlg):
 	def predict(self, profile, playerId):
 		pass
 
+
+# ---------------------- Tabular Agent Synergy Method -------------------------------------
+class TabularAgentSynergies(RegressionAlg):
+
+	def __init__(self, playerModelBridge, taskModelBridge):
+		super().__init__(playerModelBridge)
+		
+		self.taskModelBridge = taskModelBridge
+		tempTable = pd.read_csv('synergyTable.txt', sep=",", dtype={'agent_1': object, 'agent_2': object}) 
+		synergyTable = tempTable.pivot_table(values='synergy', index='agent_1', columns='agent_2') 
+		
+		self.synergyMatrix = synergyTable.to_numpy()
+		self.synergyMatrix[numpy.isnan(self.synergyMatrix)] = 0
+		self.symmetrize(self.synergyMatrix)
+
+		# tempTable = pd.read_csv('taskTable.txt', sep=',', dtype={'task': object, 'agent': object})
+		# taskTable = tempTable.pivot_table(values='synergy', index='task', columns='agent')
+
+		# self.taskMatrix = taskTable.to_numpy()
+		# self.taskMatrix[numpy.isnan(self.taskMatrix)] = 0
+
+	def symmetrize(self, table):
+		return table + table.T - numpy.diag(table.diagonal())
+
+
+	def isTabular(self):
+		return True
+
+	def predict(self, profile, playerId):
+		firstPlayerPreferencesInBinary = ''
+		for dim in profile.dimensions:
+			firstPlayerPreferencesInBinary += str(round(profile.dimensions[dim]))
+
+		secondPlayerPreferences = self.playerModelBridge.getPlayerPreferencesEst(playerId)
+		secondPlayerPreferenceInBinary = ''
+		for dim in secondPlayerPreferences.dimensions:
+			secondPlayerPreferenceInBinary += str(round(secondPlayerPreferences.dimensions[dim]))
+
+		firstPlayerPreferencesIndex = int(firstPlayerPreferencesInBinary, 2)
+		secondPlayerPreferencesIndex = int(secondPlayerPreferenceInBinary, 2)
+
+		return self.synergyMatrix[firstPlayerPreferencesIndex][secondPlayerPreferencesIndex]
+
+	# either this, or find here the best task
+	def predictTasks(self, taskId, playerId):
+		playerPreferences = self.playerModelBridge.getPlayerPreferencesEst(playerId)
+		playerPreferenceInBinary = ''
+		for dim in playerPreferences.dimensions:
+			playerPreferenceInBinary += str(round(playerPreferences.dimensions[dim]))
+
+		taskProfile = self.taskModelBridge.getTaskInteractionsProfile(taskId)
+		taskProfileInBinary = ''
+		for dim in taskProfile.dimensions:
+			taskProfileInBinary += str(round(taskProfile.dimensions[dim]))
+
+		playerPreferenceIndex = int(playerPreferenceInBinary, 2)
+		taskProfileIndex = int(taskProfileInBinary, 2)
+
+		return self.taskMatrix[playerPreferenceIndex][taskProfileIndex]
+
+
+
+# X = pd.read_csv('synergyTable.txt', sep=",") 
+# >>> X.pivot_table(values='synergy', index='agent1', columns='agent2')
+# agent2  (00)  (01)  (10)  (11)
+# agent1
+# (00)       1     0     0     0
+# (01)       0     1     0     0
+# (10)       0     0     1     0
+# (11)       0     0     0     1
+# >>> dX = X.pivot_table(values='synergy', index='agent1', columns='agent2')
+# >>> dX
+# agent2  (00)  (01)  (10)  (11)
+# agent1
+# (00)       0     0     0     0
+# (01)       0     0     0     0
+# (10)       0     0     0     0
+# (11)       0     0     0     0
+# >>> dX['(00)']
+# agent1
+# (00)    0
+# (01)    0
+# (10)    0
+# (11)    0

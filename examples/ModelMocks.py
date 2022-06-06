@@ -2,11 +2,11 @@ from GIMMECore import TaskModelBridge
 from GIMMECore import PlayerModelBridge
 
 class PlayerModelMock(object):
-	def __init__(self, id, name, currState, pastModelIncreasesDataFrame, currModelIncreases, preferencesEst, realPreferences):
+	def __init__(self, id, name, currState, pastModelIncreasesGrid, currModelIncreases, preferencesEst, realPreferences):
 		self.currState = currState
 		self.id = id
 		self.name = name
-		self.pastModelIncreasesDataFrame = pastModelIncreasesDataFrame
+		self.pastModelIncreasesGrid = pastModelIncreasesGrid
 
 		# self.preferencesEst = preferencesEst.normalized()
 		# self.realPreferences = realPreferences.normalized()
@@ -53,16 +53,16 @@ class CustomPlayerModelBridge(PlayerModelBridge):
 		self.numPlayers = len(players)
 
 
-	def registerNewPlayer(self, playerId, name, currState, pastModelIncreasesDataFrame, currModelIncreases, preferencesEst, realPreferences):
-		self.players[int(playerId)] = PlayerModelMock(playerId, name, currState, pastModelIncreasesDataFrame, currModelIncreases,  preferencesEst, realPreferences)	
+	def registerNewPlayer(self, playerId, name, currState, pastModelIncreasesGrid, currModelIncreases, preferencesEst, realPreferences):
+		self.players[int(playerId)] = PlayerModelMock(playerId, name, currState, pastModelIncreasesGrid, currModelIncreases,  preferencesEst, realPreferences)	
 	def resetPlayer(self, playerId):
 		self.players[int(playerId)].currState.reset()
-		self.players[int(playerId)].pastModelIncreasesDataFrame.reset()
+		self.players[int(playerId)].pastModelIncreasesGrid.reset()
 	def resetState(self, playerId):
 		self.players[int(playerId)].currState.reset()
-	def setAndSavePlayerStateToDataFrame(self, playerId, increases, newState):
+	def setAndSavePlayerStateToGrid(self, playerId, increases, newState):
 		self.players[int(playerId)].currState = newState
-		self.players[int(playerId)].pastModelIncreasesDataFrame.pushToDataFrame(increases)
+		self.players[int(playerId)].pastModelIncreasesGrid.pushToDataFrame(increases)
 
 	def setBaseLearningRate(self, playerId, blr):
 		self.players[int(playerId)].baseLearningRate = blr
@@ -79,7 +79,7 @@ class CustomPlayerModelBridge(PlayerModelBridge):
 	def getPlayerCurrProfile(self,  playerId):
 		return self.players[int(playerId)].currState.profile
 	def getPlayerStatesDataFrame(self, playerId):
-		return self.players[int(playerId)].pastModelIncreasesDataFrame
+		return self.players[int(playerId)].pastModelIncreasesGrid
 	def getPlayerCurrCharacteristics(self, playerId):
 		return self.players[int(playerId)].currState.characteristics
 	def getPlayerPreferencesEst(self, playerId):
