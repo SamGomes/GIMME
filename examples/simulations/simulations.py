@@ -447,7 +447,7 @@ def simulateReaction(playerBridge, currIteration, playerId):
 	increases = PlayerState(stateType = newState.stateType)
 	increases.profile = currState.profile
 	increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-	playerBridge.setAndSavePlayerStateToGrid(playerId, increases, newState)	
+	playerBridge.setAndSavePlayerStateToDataFrame(playerId, increases, newState)	
 	return increases
 
 def calcReaction(playerBridge, state, playerId, currIteration):
@@ -521,7 +521,7 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 			playerId = int(x), 
 			name = "name", 
 			currState = PlayerState(profile = profileTemplate.generateCopy().reset()), 
-			pastModelIncreasesGrid = PlayerStatesDataFrame(
+			pastModelIncreasesDataFrame = PlayerStatesDataFrame(
 				interactionsProfileTemplate = profileTemplate.generateCopy().reset(), 
 				trimAlg = ProximitySortPlayerDataTrimAlg(
 					maxNumModelElements = playerWindow, 

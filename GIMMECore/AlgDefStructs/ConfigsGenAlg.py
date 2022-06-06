@@ -541,7 +541,6 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 		playerModelBridge, 
 		interactionsProfileTemplate, 
 		regAlg = None, 
-		numberOfConfigChoices = 0,
 		preferredNumberOfPlayersPerGroup = None, 
 		minNumberOfPlayersPerGroup = None, 
 		maxNumberOfPlayersPerGroup = None, 
