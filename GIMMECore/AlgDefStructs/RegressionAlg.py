@@ -206,6 +206,8 @@ class TabularAgentSynergies(RegressionAlg):
 	def __init__(self, playerModelBridge, taskModelBridge):
 		super().__init__(playerModelBridge)
 		
+		self.playerPrefEstimates = {}
+
 		self.taskModelBridge = taskModelBridge
 		tempTable = pd.read_csv('synergyTable.txt', sep=",", dtype={'agent_1': object, 'agent_2': object}) 
 		synergyTable = tempTable.pivot_table(values='synergy', index='agent_1', columns='agent_2') 
@@ -232,7 +234,7 @@ class TabularAgentSynergies(RegressionAlg):
 		for dim in profile.dimensions:
 			firstPlayerPreferencesInBinary += str(round(profile.dimensions[dim]))
 
-		secondPlayerPreferences = self.playerModelBridge.getPlayerPreferencesEst(playerId)
+		secondPlayerPreferences = self.playerPrefEstimates[playerId]
 		secondPlayerPreferenceInBinary = ''
 		for dim in secondPlayerPreferences.dimensions:
 			secondPlayerPreferenceInBinary += str(round(secondPlayerPreferences.dimensions[dim]))
@@ -244,7 +246,7 @@ class TabularAgentSynergies(RegressionAlg):
 
 	# either this, or find here the best task
 	def predictTasks(self, taskId, playerId):
-		playerPreferences = self.playerModelBridge.getPlayerPreferencesEst(playerId)
+		playerPreferences = self.playerPrefEstimates[playerId]
 		playerPreferenceInBinary = ''
 		for dim in playerPreferences.dimensions:
 			playerPreferenceInBinary += str(round(playerPreferences.dimensions[dim]))

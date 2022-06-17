@@ -2,6 +2,7 @@ import random
 import math
 import copy
 import numpy
+import re
 from abc import ABC, abstractmethod
 
 import GIMMESolver as gs
@@ -230,6 +231,7 @@ class AnnealedPRSConfigsGen(ConfigsGenAlg):
 		self.temperature = 1.0
 		self.temperatureDecay = temperatureDecay
 
+
 	def init(self):
 		super().init()
 		self.temperature = 1.0
@@ -277,7 +279,7 @@ class AnnealedPRSConfigsGen(ConfigsGenAlg):
 
 				if(random.uniform(0.0, 1.0) > self.temperature):
 					for currPlayer in group:
-						preferences = self.playerModelBridge.getPlayerPreferencesEst(currPlayer)
+						preferences = self.playerModelBridge.getPlayerPrefEstimation(currPlayer)
 						for dim in profile.dimensions:
 							profile.dimensions[dim] += preferences.dimensions[dim] / groupSize
 					# profile.normalize()
@@ -363,7 +365,7 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 
 
 		# estimate preferences
-		self.persEstAlg.updateEstimates()
+		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
 
 		# generate several random groups, calculate their fitness and select the best one
 		for i in range(self.numberOfConfigChoices):
@@ -384,7 +386,7 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
 				for currPlayer in group:
-					preferences = self.playerModelBridge.getPlayerPreferencesEst(currPlayer)
+					preferences = self.playerPrefEstimates[currPlayer]
 					for dim in profile.dimensions:
 						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
 
@@ -986,7 +988,9 @@ class ODPIP(ConfigsGenAlg):
 		preferredNumberOfPlayersPerGroup = None, 
 		minNumberOfPlayersPerGroup = None, 
 		maxNumberOfPlayersPerGroup = None,
-		qualityWeights = None):
+		qualityWeights = None,
+		jointPlayerConstraints = "",
+		separatedPlayerConstraints = ""):
 
 		super().__init__(playerModelBridge, 
 		interactionsProfileTemplate, 
@@ -1008,6 +1012,28 @@ class ODPIP(ConfigsGenAlg):
 		self.jointPlayersConstraints = []
 		self.separatedPlayersConstraints = []
 		self.allConstraints = []
+
+		self.playerPrefEstimates = {}
+
+		jointPlayerConstraints = self.fromStringConstraintToList(jointPlayerConstraints)
+		separatedPlayerConstraints = self.fromStringConstraintToList(separatedPlayerConstraints)
+		for i in range(len(jointPlayerConstraints)):
+			if jointPlayerConstraints[i] == ['']:
+				continue
+			self.addJointPlayersConstraints(jointPlayerConstraints[i])
+			
+		for i in range(len(separatedPlayerConstraints)):
+			if separatedPlayerConstraints[i] == ['']:
+				continue
+			self.addSeparatedPlayersConstraints(separatedPlayerConstraints[i])
+
+	def fromStringConstraintToList(self, constraints):
+		constraints = constraints.split(';')
+
+		for i in range(len(constraints)):
+			constraints[i] = re.sub('[^A-Za-z0-9,]+', '', constraints[i]).split(',')
+		
+		return constraints
 
 	def addJointPlayersConstraints(self, players):
 		self.jointPlayersConstraints.append(players)
@@ -1099,7 +1125,7 @@ class ODPIP(ConfigsGenAlg):
 	def computeAllCoalitionsValues(self):
 		numOfAgents = len(self.playerIds)
 		numOfCoalitions = 1 << (numOfAgents)
-
+		count = 0
 		# initialize all coalitions
 		for coalition in range(numOfCoalitions-1, 0, -1):
 			group = self.getGroupFromBitFormat(coalition)
@@ -1110,6 +1136,8 @@ class ODPIP(ConfigsGenAlg):
 
 			# calculate the profile and characteristics only for groups in the range defined
 			if groupSize >= self.minNumberOfPlayersPerGroup and groupSize <= self.maxNumberOfPlayersPerGroup + 1:	
+				count += 1
+				print("Progress: " + str(count) + "/6188")
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
@@ -1118,7 +1146,7 @@ class ODPIP(ConfigsGenAlg):
 
 				# else:
 				for currPlayer in groupInIds:
-					preferences = self.playerModelBridge.getPlayerPreferencesEst(currPlayer)
+					preferences = self.playerPrefEstimates[currPlayer]
 					for dim in profile.dimensions:
 						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
 
@@ -1134,7 +1162,7 @@ class ODPIP(ConfigsGenAlg):
 					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 				
 					if (self.regAlg.isTabular()):
-						firstPlayerPreferences = self.playerModelBridge.getPlayerPreferencesEst(groupInIds[i])
+						firstPlayerPreferences = self.playerPrefEstimates[groupInIds[i]]
 						for j in range(i+1, groupSize):
 							currQuality += self.regAlg.predict(firstPlayerPreferences, groupInIds[j]) / math.comb(groupSize, 2)
 
@@ -1203,7 +1231,9 @@ class ODPIP(ConfigsGenAlg):
 		return bestProfile
 
 	def organize(self):
-		self.playerIds = sorted(self.playerModelBridge.getAllPlayerIds())
+		self.playerIds = self.playerModelBridge.getAllPlayerIds()
+		for i in range(len(self.playerIds)):
+			self.playerIds[i] = str(self.playerIds[i])
 		self.numPlayers = len(self.playerIds)
 
 		self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
@@ -1211,7 +1241,10 @@ class ODPIP(ConfigsGenAlg):
 		self.coalitionsValues = numpy.empty(1 << self.numPlayers)
 
 		# estimate preferences
-		self.persEstAlg.updateEstimates()
+		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
+
+		if (self.regAlg.isTabular()):
+			self.regAlg.playerPrefEstimates = self.playerPrefEstimates
 			
 		# initialization(compute the value for every coalition between min and max number of players)
 		self.computeAllCoalitionsValues()
@@ -1219,13 +1252,13 @@ class ODPIP(ConfigsGenAlg):
 
 		bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist(), requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
 		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
-		for coalition in bestCSFound_byteFormat:
-			print("{", end="")
-			for player in coalition:
-				preferences = self.playerModelBridge.getPlayerRealPreferences(player - 1)
-				print("{" + str(preferences.dimensions["dim_0"]) + ", " + str(preferences.dimensions["dim_1"]) + "},", end="")
+		# for coalition in bestCSFound_byteFormat:
+		# 	print("{", end="")
+		# 	for player in coalition:
+		# 		preferences = self.playerModelBridge.getPlayerRealPreferences(player - 1)
+		# 		print("{" + str(preferences.dimensions["dim_0"]) + ", " + str(preferences.dimensions["dim_1"]) + "},", end="")
 
-			print("}")
+		# 	print("}")
 
 		
 		
@@ -1261,6 +1294,9 @@ class CLink(ConfigsGenAlg):
 		self.coalitionsValues = []
 
 		self.playerIds = []	
+
+		self.playerPrefEstimates = {}
+
 
 	def calcQuality(self, state):
 		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
@@ -1343,7 +1379,7 @@ class CLink(ConfigsGenAlg):
 
 				# else:
 				for currPlayer in groupInIds:
-					preferences = self.playerModelBridge.getPlayerPreferencesEst(currPlayer)
+					preferences = self.playerPrefEstimates[currPlayer]
 					for dim in profile.dimensions:
 						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
 
@@ -1360,7 +1396,7 @@ class CLink(ConfigsGenAlg):
 					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 				
 					if (self.regAlg.isTabular()):
-						firstPlayerPreferences = self.playerModelBridge.getPlayerPreferencesEst(groupInIds[i])
+						firstPlayerPreferences = self.playerPrefEstimates[groupInIds[i]]
 						for j in range(i+1, groupSize):
 							currQuality += self.regAlg.predict(firstPlayerPreferences, groupInIds[j]) / math.comb(groupSize, 2)
 
@@ -1414,7 +1450,9 @@ class CLink(ConfigsGenAlg):
 		return bestProfile
 
 	def organize(self):
-		self.playerIds = sorted(self.playerModelBridge.getAllPlayerIds())
+		self.playerIds = self.playerModelBridge.getAllPlayerIds()
+		for i in range(len(self.playerIds)):
+			self.playerIds[i] = str(self.playerIds[i])
 		self.numPlayers = len(self.playerIds)
 
 		self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
@@ -1422,20 +1460,23 @@ class CLink(ConfigsGenAlg):
 		self.coalitionsValues = numpy.empty(1 << self.numPlayers)
 
 		# estimate preferences
-		self.persEstAlg.updateEstimates()
+		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
+
+		if (self.regAlg.isTabular()):
+			self.regAlg.playerPrefEstimates = self.playerPrefEstimates
 
 		# initialization(compute the value for every coalition between min and max number of players)
 		self.computeAllCoalitionsValues()
 
 		bestCSFound_bitFormat = (gs.clink(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist()))
 		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
-		for coalition in bestCSFound_byteFormat:
-			print("{", end="")
-			for player in coalition:
-				preferences = self.playerModelBridge.getPlayerRealPreferences(player - 1)
-				print("{" + str(preferences.dimensions["dim_0"]) + ", " + str(preferences.dimensions["dim_1"]) + "},", end="")
+		# for coalition in bestCSFound_byteFormat:
+		# 	print("{", end="")
+		# 	for player in coalition:
+		# 		preferences = self.playerModelBridge.getPlayerRealPreferences(player - 1)
+		# 		print("{" + str(preferences.dimensions["dim_0"]) + ", " + str(preferences.dimensions["dim_1"]) + "},", end="")
 
-			print("}")
+		# 	print("}")
 
 		print()
 

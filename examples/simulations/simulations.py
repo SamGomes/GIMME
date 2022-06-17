@@ -30,7 +30,7 @@ preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 20
+numPlayers = 16
 
 numTasks = 1
 
@@ -205,7 +205,8 @@ tabularODPIPconfigsAlg = ODPIP(
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
 		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
+	jointPlayerConstraints="[1,7]"
 )
 adaptationTabularODPIP.init(
 	playerModelBridge = playerBridge, 

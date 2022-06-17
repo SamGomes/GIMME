@@ -1,4 +1,5 @@
 import math
+from sre_parse import State
 import time
 import copy
 import json
@@ -80,6 +81,12 @@ class PlayerStatesDataFrame(object):
 		self.flatProfiles = []
 		self.flatAbilities = []
 		self.flatEngagements = []
+		if states != None:
+			for state in self.states:
+				self.flatProfiles.append(state.profile.flattened())
+				self.flatAbilities.append(state.characteristics.ability)
+				self.flatEngagements.append(state.characteristics.engagement)
+		
 
 	def reset(self):
 		self.states = []
@@ -114,6 +121,7 @@ class PlayerStatesDataFrame(object):
 
 		self.states = trimmedList
 
+		
 		#update tuple representation 
 		for i in remainderIndexes:
 			self.flatProfiles.pop(i)

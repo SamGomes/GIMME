@@ -1,6 +1,7 @@
 import math
 import copy
 import random
+import traceback
 
 class InteractionsProfile(object):
 
@@ -72,8 +73,10 @@ class InteractionsProfile(object):
 	def sqrDistanceBetween(self, profileToTest):
 		cost = self.generateCopy()
 		cost.reset()
-
 		if(len(cost.dimensions) != len(profileToTest.dimensions)):
+			traceback.print_stack()
+			print(cost.dimensions)
+			print(profileToTest.dimensions)
 			raise Exception("[ERROR] Could not compute distance between profiles in different sized spaces. Execution aborted.")
 
 		for key in cost.dimensions:

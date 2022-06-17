@@ -70,6 +70,7 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 	
 	def updateEstimates(self):
 		playerIds = self.playerModelBridge.getAllPlayerIds()
+		updatedEstimates = {}
 		for playerId in playerIds:
 			
 			currPreferencesEst = self.playerModelBridge.getPlayerPreferencesEst(playerId)
@@ -87,3 +88,6 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 					newPreferencesEst = profile
 
 			self.playerModelBridge.setPlayerPreferencesEst(playerId, newPreferencesEst)
+			updatedEstimates[playerId] = newPreferencesEst
+		
+		return updatedEstimates
