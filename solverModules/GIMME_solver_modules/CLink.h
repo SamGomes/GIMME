@@ -7,12 +7,12 @@
 class CLink
 {
 public:
-	int numPlayers;
+	unsigned int numPlayers;
 	double* coalitionValues;
-	int minNumberOfPlayersPerGroup;
-	int maxNumberOfPlayersPerGroup;
-	int minNumGroups;
-	int maxNumGroups;
+	unsigned int minNumberOfPlayersPerGroup;
+	unsigned int maxNumberOfPlayersPerGroup;
+	unsigned int minNumGroups;
+	unsigned int maxNumGroups;
 
 	std::vector<bool> feasibleCoalitions;
 
