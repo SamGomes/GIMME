@@ -1,4 +1,6 @@
 #pragma once
+#include <limits>
+#include <math.h>
 #include <vector>
 #include "General.h"
 

@@ -1,4 +1,3 @@
-#include <Windows.h>
 #include "ODPIP.h"
 
 ODPIP::ODPIP(int numPlayers, double* coalitionValues, int minNumberOfPlayersPerGroup, int maxNumberOfPlayersPerGroup, std::vector<int> requiredJoinedPlayers, std::vector<int> restrictedJointPlayers)
@@ -680,7 +679,7 @@ void ODPIP::putSubsetAtTheBeginning(Node* node, std::vector<ElementOfMultiset> s
 	int index2 = newIntegers.size() - counter;
 	for (int i = 0; i < node->subspace.integers.size(); i++)
 	{
-		boolean found = false;
+		bool found = false;
 		for (int j = 0; j < remainingIntegers_array.size(); j++) {
 			if (remainingIntegers_array[j] == node->subspace.integers[i])
 			{
