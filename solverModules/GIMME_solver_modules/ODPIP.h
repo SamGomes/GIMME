@@ -7,10 +7,10 @@
 class ODPIP
 {
 public:
-	int numPlayers;
+	unsigned int numPlayers;
 	double* coalitionValues;
-	int minNumberOfPlayersPerGroup;
-	int maxNumberOfPlayersPerGroup;
+	unsigned int minNumberOfPlayersPerGroup;
+	unsigned int maxNumberOfPlayersPerGroup;
 	std::vector<bool> feasibleCoalitions;
 
 
