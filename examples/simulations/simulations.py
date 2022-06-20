@@ -486,9 +486,6 @@ def executionPhase(numRuns, playerBridge, maxNumIterations, startingI, currRun, 
 		end = time.time()
 		deltaTime = (end - start)
 
-		print(adaptationTabularODPIP.configsGenAlg.getPlayerConstraints())
-
-
 		for x in range(numPlayers):
 			increases = simulateReaction(playerBridge, i, x)
 			logManager.writeToLog("GIMMESims", "resultsEvl", 
@@ -651,9 +648,9 @@ if __name__ == '__main__':
 	# 	playerBridge, taskBridge, adaptationTabularODPIP)
 
 		
-	# adaptationODPIP.name = "GIMME_ODPIP"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 	playerBridge, taskBridge, adaptationODPIP)
+	adaptationODPIP.name = "GIMME_ODPIP"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationODPIP)
 
 
 	# adaptationGA.name = "GIMME_GA"
@@ -739,10 +736,10 @@ if __name__ == '__main__':
 	# adaptationTabularODPIP.configsGenAlg.addJointPlayersConstraints([1,7])
 	# adaptationTabularODPIP.configsGenAlg.addSeparatedPlayersConstraints([1,2])
 
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationTabularODPIP, considerExtremePreferencesValues = True)
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationTabularODPIP, considerExtremePreferencesValues = True)
 
-	adaptationTabularODPIP.configsGenAlg.resetPlayersConstraints()
+	# adaptationTabularODPIP.configsGenAlg.resetPlayersConstraints()
 
 	# adaptationGA.name = "GIMME_GA_EP"
 	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 

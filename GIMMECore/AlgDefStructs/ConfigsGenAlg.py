@@ -1136,8 +1136,8 @@ class ODPIP(ConfigsGenAlg):
 
 			# calculate the profile and characteristics only for groups in the range defined
 			if groupSize >= self.minNumberOfPlayersPerGroup and groupSize <= self.maxNumberOfPlayersPerGroup + 1:	
-				count += 1
-				print("Progress: " + str(count) + "/6188")
+				# count += 1
+				# print("Progress: " + str(count) + "/6188")
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
@@ -1160,7 +1160,8 @@ class ODPIP(ConfigsGenAlg):
 
 					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
 					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
-				
+
+
 					if (self.regAlg.isTabular()):
 						firstPlayerPreferences = self.playerPrefEstimates[groupInIds[i]]
 						for j in range(i+1, groupSize):
@@ -1203,7 +1204,6 @@ class ODPIP(ConfigsGenAlg):
 			bestConfigProfiles.append(self.coalitionsProfiles[group])
 			avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
 
-		print(bestGroups)
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
 	# function to compute best profile for group according to each players preferences about the task

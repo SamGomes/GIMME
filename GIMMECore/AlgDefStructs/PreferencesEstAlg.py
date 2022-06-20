@@ -88,6 +88,8 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 					newPreferencesEst = profile
 
 			self.playerModelBridge.setPlayerPreferencesEst(playerId, newPreferencesEst)
-			updatedEstimates[playerId] = newPreferencesEst
+			updatedEstimates[str(playerId)] = newPreferencesEst
+
+
 		
 		return updatedEstimates
