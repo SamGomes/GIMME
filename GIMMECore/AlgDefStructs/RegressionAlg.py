@@ -21,21 +21,37 @@ class RegressionAlg(ABC):
 	def predict(self, profile, playerId):
 		pass
 
+	@abstractmethod
 	def isTabular(self):
-		return False
+		pass
 
 	# instrumentation
 	def getCompPercentage(self):
 		return self.completionPerc
 
 
-# ---------------------- KNNRegression ---------------------------
-class KNNRegression(RegressionAlg):
-
-	def __init__(self, playerModelBridge, numberOfNNs):
+# ---------------------- Regression Based Characteristic Functions ---------------------------
+class RegCoalitionValueAlg(RegressionAlg):
+	def __init__(self, playerModelBridge, qualityWeights):
 		super().__init__(playerModelBridge)
+		self.qualityWeights = PlayerCharacteristics(ability = 0.5, engagement = 0.5) if qualityWeights == None else qualityWeights 
+
+	def isTabular(self):
+		return False
+
+
+# ---------------------- KNNRegression ---------------------------
+class KNNRegression(RegCoalitionValueAlg):
+
+	def __init__(self, playerModelBridge, numberOfNNs, qualityWeights = None):
+		super().__init__(playerModelBridge, qualityWeights)
 		self.numberOfNNs = numberOfNNs
 
+
+
+	def calcQuality(self, state):
+		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
+	
 	def distSort(self, elem):
 		return elem.dist
 
@@ -73,17 +89,19 @@ class KNNRegression(RegressionAlg):
 
 		# executionTime = (time.time() - startTime)
 		# print('Execution time in seconds: ' + str(executionTime))
-		
-		return predictedState
+		self.state = predictedState
+		return self.calcQuality(predictedState)
 
 # ---------------------- KNNRegressionSKLearn ---------------------------
-class KNNRegressionSKLearn(RegressionAlg):
+class KNNRegressionSKLearn(RegCoalitionValueAlg):
 
-	def __init__(self, playerModelBridge, numberOfNNs):
-		super().__init__(playerModelBridge)
+	def __init__(self, playerModelBridge, numberOfNNs, qualityWeights = None):
+		super().__init__(playerModelBridge, qualityWeights)
 		self.numberOfNNs = numberOfNNs
 
-
+	def calcQuality(self, state):
+		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
+	
 	def predict(self, profile, playerId):
 		# import time
 		# startTime = time.time()
@@ -117,14 +135,19 @@ class KNNRegressionSKLearn(RegressionAlg):
 
 		# executionTime = (time.time() - startTime)
 		# print('Execution time in seconds: ' + str(executionTime))
-
-		return predState
+		self.state = predState
+		return self.calcQuality(predState)
 
 # ---------------------- LinearRegressionSKLearn ---------------------------
-class LinearRegressionSKLearn(RegressionAlg):
+class LinearRegressionSKLearn(RegCoalitionValueAlg):
 
-	def __init__(self, playerModelBridge):
-		super().__init__(playerModelBridge)
+	def __init__(self, playerModelBridge, qualityWeights = None):
+		super().__init__(playerModelBridge, qualityWeights)
+
+
+	def calcQuality(self, state):
+		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
+	
 
 	def predict(self, profile, playerId):
 		
@@ -147,14 +170,19 @@ class LinearRegressionSKLearn(RegressionAlg):
 		predState = PlayerState(profile = profile, characteristics = PlayerCharacteristics(ability = predAbilityInc, engagement = predEngagement))
 		
 		self.completionPerc = 1.0
-
-		return predState
+		self.state = predState
+		return self.calcQuality(predState)
 
 # ---------------------- SVMRegressionSKLearn ---------------------------
-class SVMRegressionSKLearn(RegressionAlg):
+class SVMRegressionSKLearn(RegCoalitionValueAlg):
 
-	def __init__(self, playerModelBridge):
-		super().__init__(playerModelBridge)
+	def __init__(self, playerModelBridge, qualityWeights = None):
+		super().__init__(playerModelBridge, qualityWeights)
+
+
+	def calcQuality(self, state):
+		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
+	
 
 	def predict(self, profile, playerId):
 		
@@ -177,36 +205,49 @@ class SVMRegressionSKLearn(RegressionAlg):
 		predState = PlayerState(profile = profile, characteristics = PlayerCharacteristics(ability = predAbility, engagement = predEngagement))
 		
 		self.completionPerc = 1.0
-
-		return predState
+		self.state = predState
+		return self.calcQuality(predState)
 
 # ---------------------- DecisionTreesRegression ---------------------------
-class DecisionTreesRegression(RegressionAlg):
+class DecisionTreesRegression(RegCoalitionValueAlg):
 
-	def __init__(self, playerModelBridge):
-		super().__init__(playerModelBridge)
+	def __init__(self, playerModelBridge, qualityWeights = None):
+		super().__init__(playerModelBridge, qualityWeights)
 
 	def predict(self, profile, playerId):
 		pass
 
 
 # ---------------------- NeuralNetworkRegression ---------------------------
-class NeuralNetworkRegression(RegressionAlg):
+class NeuralNetworkRegression(RegCoalitionValueAlg):
 
-	def __init__(self, playerModelBridge):
-		super().__init__(playerModelBridge)
+	def __init__(self, playerModelBridge, qualityWeights = None):
+		super().__init__(playerModelBridge, qualityWeights)
 
 	def predict(self, profile, playerId):
 		pass
 
 
+# ---------------------- Tabular Characteristic Functions -------------------------------------
+class TabularCoalitionValueAlg(RegressionAlg):
+	def __init__(self, playerModelBridge):
+		super().__init__(playerModelBridge)
+		self.playerPrefEstimates = {}
+
+
+	def isTabular(self):
+		return True
+
+	def getPlayerPreferencesEstimations(self):
+	 	for player in self.playerIds:
+	 		self.playerPrefEstimates[player] = self.playerModelBridge.getPlayerPreferencesEst(player)
+
 # ---------------------- Tabular Agent Synergy Method -------------------------------------
-class TabularAgentSynergies(RegressionAlg):
+class TabularAgentSynergies(TabularCoalitionValueAlg):
 
 	def __init__(self, playerModelBridge, taskModelBridge):
 		super().__init__(playerModelBridge)
 		
-		self.playerPrefEstimates = {}
 
 		self.taskModelBridge = taskModelBridge
 		tempTable = pd.read_csv('synergyTable.txt', sep=",", dtype={'agent_1': object, 'agent_2': object}) 
@@ -215,6 +256,8 @@ class TabularAgentSynergies(RegressionAlg):
 		self.synergyMatrix = synergyTable.to_numpy()
 		self.synergyMatrix[numpy.isnan(self.synergyMatrix)] = 0
 		self.synergyMatrix = self.symmetrize(self.synergyMatrix)
+
+		self.playerIds = self.playerModelBridge.getAllPlayerIds()
 
 		# tempTable = pd.read_csv('taskTable.txt', sep=',', dtype={'task': object, 'agent': object})
 		# taskTable = tempTable.pivot_table(values='synergy', index='task', columns='agent')
@@ -225,14 +268,13 @@ class TabularAgentSynergies(RegressionAlg):
 	def symmetrize(self, table):
 		return table + table.T - numpy.diag(table.diagonal())
 
-
-	def isTabular(self):
-		return True
-
 	def predict(self, profile, playerId):
 		firstPlayerPreferencesInBinary = ''
 		for dim in profile.dimensions:
 			firstPlayerPreferencesInBinary += str(round(profile.dimensions[dim]))
+
+		if (self.playerPrefEstimates == {}):
+			self.getPlayerPreferencesEstimations()
 
 		secondPlayerPreferences = self.playerPrefEstimates[playerId]
 		secondPlayerPreferenceInBinary = ''
@@ -243,6 +285,7 @@ class TabularAgentSynergies(RegressionAlg):
 		secondPlayerPreferencesIndex = int(secondPlayerPreferenceInBinary, 2)
 
 		return self.synergyMatrix[firstPlayerPreferencesIndex][secondPlayerPreferencesIndex]
+
 
 	# either this, or find here the best task
 	def predictTasks(self, taskId, playerId):
@@ -262,26 +305,3 @@ class TabularAgentSynergies(RegressionAlg):
 		return self.taskMatrix[playerPreferenceIndex][taskProfileIndex]
 
 
-
-# X = pd.read_csv('synergyTable.txt', sep=",") 
-# >>> X.pivot_table(values='synergy', index='agent1', columns='agent2')
-# agent2  (00)  (01)  (10)  (11)
-# agent1
-# (00)       1     0     0     0
-# (01)       0     1     0     0
-# (10)       0     0     1     0
-# (11)       0     0     0     1
-# >>> dX = X.pivot_table(values='synergy', index='agent1', columns='agent2')
-# >>> dX
-# agent2  (00)  (01)  (10)  (11)
-# agent1
-# (00)       0     0     0     0
-# (01)       0     0     0     0
-# (10)       0     0     0     0
-# (11)       0     0     0     0
-# >>> dX['(00)']
-# agent1
-# (00)    0
-# (01)    0
-# (10)    0
-# (11)    0
