@@ -1,4 +1,5 @@
 #include "ODPIP.h"
+#include <iostream>
 
 ODPIP::ODPIP(int numPlayers, double* coalitionValues, int minNumberOfPlayersPerGroup, int maxNumberOfPlayersPerGroup, std::vector<int> requiredJoinedPlayers, std::vector<int> restrictedJointPlayers)
 {
@@ -94,6 +95,15 @@ int* ODPIP::IP()
 
 		if (numOfRemainingSubspaces == 0) break;
 	}
+
+	/*for (int i = 0; i < ipBestCSFound.size(); i++)
+	{
+		printf("{%ld, %lf}, \n", General::convertCombinationFromByteToBitFormat(ipBestCSFound[i]), coalitionValues[General::convertCombinationFromByteToBitFormat(ipBestCSFound[i])]);
+	}
+
+	for (int i = 0; i < feasibleCoalitions.size(); i++)
+		if (feasibleCoalitions[i] && General::getSizeOfCombinationInBitFormat(i) == 5)
+			printf("%ld\n", i);*/
 
 	finalize();
 
@@ -942,8 +952,8 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 	{
 		int sizeOfSecondHalf = coalitionSize - sizeOfFirstHalf;
 
-		if ((sizeOfFirstHalf > maxNumberOfPlayersPerGroup || sizeOfFirstHalf < minNumberOfPlayersPerGroup)
-			&& (sizeOfSecondHalf > maxNumberOfPlayersPerGroup || sizeOfSecondHalf < minNumberOfPlayersPerGroup))
+		if ((sizeOfFirstHalf > maxNumberOfPlayersPerGroup + 1 || sizeOfFirstHalf < minNumberOfPlayersPerGroup)
+			&& (sizeOfSecondHalf > maxNumberOfPlayersPerGroup + 1 || sizeOfSecondHalf < minNumberOfPlayersPerGroup))
 			continue;
 
 
@@ -965,7 +975,7 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 		double curValue = getValueOfBestPartitionFound(firstHalfInBitFormat) + getValueOfBestPartitionFound(secondHalfInBitFormat);
 		if (curValue > valueOfBestSplit)
 		{
-			if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
+			if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup + 1 && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
 				best_firstHalfInBitFormat = firstHalfInBitFormat;
 
 			else
@@ -977,9 +987,9 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 		else if (abs(curValue - valueOfBestSplit) < 0.0000005)
 		{
 			int sizeOfBestFirstHalf = General::getSizeOfCombinationInBitFormat(best_firstHalfInBitFormat);
-			if (sizeOfBestFirstHalf > maxNumberOfPlayersPerGroup || sizeOfBestFirstHalf < minNumberOfPlayersPerGroup)
+			if (sizeOfBestFirstHalf > maxNumberOfPlayersPerGroup + 1 || sizeOfBestFirstHalf < minNumberOfPlayersPerGroup)
 			{
-				if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
+				if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup + 1 && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
 					best_firstHalfInBitFormat = firstHalfInBitFormat;
 				
 				else
@@ -1003,7 +1013,7 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 			double curValue = getValueOfBestPartitionFound(firstHalfInBitFormat) + getValueOfBestPartitionFound(secondHalfInBitFormat);
 			if (curValue > valueOfBestSplit)
 			{
-				if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
+				if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup + 1 && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
 					best_firstHalfInBitFormat = firstHalfInBitFormat;
 
 				else
@@ -1015,9 +1025,9 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 			else if (abs(curValue - valueOfBestSplit) < 0.0000005)
 			{
 				int sizeOfBestFirstHalf = General::getSizeOfCombinationInBitFormat(best_firstHalfInBitFormat);
-				if (sizeOfBestFirstHalf > maxNumberOfPlayersPerGroup || sizeOfBestFirstHalf < minNumberOfPlayersPerGroup)
+				if (sizeOfBestFirstHalf > maxNumberOfPlayersPerGroup + 1 || sizeOfBestFirstHalf < minNumberOfPlayersPerGroup)
 				{
-					if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
+					if (sizeOfFirstHalf <= maxNumberOfPlayersPerGroup + 1 && sizeOfFirstHalf >= minNumberOfPlayersPerGroup)
 						best_firstHalfInBitFormat = firstHalfInBitFormat;
 
 					else

@@ -303,18 +303,31 @@ std::vector<bool> General::generateFeasibleCoalitionsInBitFormat(int numPlayers,
 
 	for (int i = 0; i < feasibleCoalitions.size(); i++)
 	{
+		//if (i == 49538)
+		//	printf("1\n");
+
 		if (feasibleCoalitions[i]) 
 		{
 			for (std::vector<int>::iterator required = requiredJoinedPlayers.begin(); required != requiredJoinedPlayers.end(); ++required)
 			{
+				/*if (i == 49538)
+					printf("%ld\n", *required);*/
 				int isValidCoalition = i & *required;
 				if (isValidCoalition != 0 && isValidCoalition != *required)
 				{
+				/*	if (i == 49538)
+						printf("2\n");*/
+
 					feasibleCoalitions[i] = false;
-					coalitionValues[i] = 1;
-					break;
+					coalitionValues[i] = 0.1;
 				}
 
+				else if (feasibleCoalitions[i] && isValidCoalition) {
+					/*if (i == 49538)
+						printf("3\n");*/
+
+					coalitionValues[i] += 1;
+				}
 			}
 
 			
@@ -324,7 +337,7 @@ std::vector<bool> General::generateFeasibleCoalitionsInBitFormat(int numPlayers,
 				if (isValidCoalition == *restricted)
 				{
 					feasibleCoalitions[i] = false;
-					coalitionValues[i] = 1;
+					coalitionValues[i] = 0.1;
 					break;
 				}
 			}

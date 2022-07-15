@@ -1,6 +1,7 @@
 import random
 import math
 import copy
+from sys import breakpointhook
 import numpy
 import re
 from abc import ABC, abstractmethod
@@ -1039,6 +1040,7 @@ class ODPIP(ConfigsGenAlg):
 
 		jointPlayerConstraints = self.fromStringConstraintToList(jointPlayerConstraints)
 		separatedPlayerConstraints = self.fromStringConstraintToList(separatedPlayerConstraints)
+		print(jointPlayerConstraints)
 		for i in range(len(jointPlayerConstraints)):
 			if jointPlayerConstraints[i] == ['']:
 				continue
@@ -1049,11 +1051,13 @@ class ODPIP(ConfigsGenAlg):
 				continue
 			self.addSeparatedPlayersConstraints(separatedPlayerConstraints[i])
 
+		print(self.allConstraints)
+
 	def fromStringConstraintToList(self, constraints):
 		constraints = constraints.split(';')
 
 		for i in range(len(constraints)):
-			constraints[i] = re.sub('[^A-Za-z0-9,]+', '', constraints[i]).split(',')
+			constraints[i] = re.sub('[^A-Za-z0-9,_]+', '', constraints[i]).split(',')
 		
 		return constraints
 
@@ -1271,14 +1275,28 @@ class ODPIP(ConfigsGenAlg):
 		self.computeAllCoalitionsValues()
 		requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat = self.computeCoalitionsRestrictions()
 
+		if requiredJointPlayersInBitFormat != []:
+			i = 0
+			while 2**i < requiredJointPlayersInBitFormat[0]:
+				if 2**i & requiredJointPlayersInBitFormat[0]:
+					print(self.playerIds[i])
+
+				i += 1
+
+		print(self.numPlayers)
+		print(self.maxNumberOfPlayersPerGroup)
+		print(self.minNumberOfPlayersPerGroup)
+
 		bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist(), requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
 		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
+		# i = 0
 		# for coalition in bestCSFound_byteFormat:
 		# 	print("{", end="")
 		# 	for player in coalition:
 		# 		preferences = self.playerModelBridge.getPlayerRealPreferences(player - 1)
-		# 		print("{" + str(preferences.dimensions["dim_0"]) + ", " + str(preferences.dimensions["dim_1"]) + "},", end="")
+		# 		print(str(player) + ",", end="")
 
+		# 	print(self.coalitionsValues[bestCSFound_bitFormat[i]], end="")
 		# 	print("}")
 
 		

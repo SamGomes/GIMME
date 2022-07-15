@@ -30,7 +30,7 @@ preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 16
+numPlayers = 20
 
 numTasks = 1
 
@@ -147,32 +147,32 @@ intProfTemplate2D = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 # 	name="GIMME_GA"
 # )
 
-evolutionaryConfigsAlg = EvolutionaryConfigsGenDEAP(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-	regAlg = regAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
+# evolutionaryConfigsAlg = EvolutionaryConfigsGenDEAP(
+# 	playerModelBridge = playerBridge, 
+# 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
+# 	regAlg = regAlg, 
+# 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
+# 	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
+# 	initialPopulationSize = initialPopulationSize, 
+# 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
 	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
+# 	probOfCross = probOfCross, 
+# 	probOfMutation = probOfMutation,
 
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
+# 	probOfMutationConfig = probOfMutationConfig, 
+# 	probOfMutationGIPs = probOfMutationGIPs, 
 	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors,
+# 	numChildrenPerIteration = numChildrenPerIteration,
+# 	numSurvivors = numSurvivors,
 
-	cxOp = "order"
-)
-adaptationGA.init(
-	playerModelBridge = playerBridge, 
-	taskModelBridge = taskBridge,
-	configsGenAlg = evolutionaryConfigsAlg, 
-	name="GIMME_GA"
-)
+# 	cxOp = "order"
+# )
+# adaptationGA.init(
+# 	playerModelBridge = playerBridge, 
+# 	taskModelBridge = taskBridge,
+# 	configsGenAlg = evolutionaryConfigsAlg, 
+# 	name="GIMME_GA"
+# )
 
 ODPIPconfigsAlg = ODPIP(
 	playerModelBridge = playerBridge,
@@ -182,10 +182,8 @@ ODPIPconfigsAlg = ODPIP(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 		regAlg = regAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
-		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 )
 adaptationODPIP.init(
 	playerModelBridge = playerBridge, 
@@ -202,11 +200,10 @@ tabularODPIPconfigsAlg = ODPIP(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 		regAlg = regAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
-		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
-	jointPlayerConstraints="[1,7]"
+	jointPlayerConstraints="[15,1];[2,7];[3,4];[12,13];[14,15];[0,12];[9,15]",
+	separatedPlayerConstraints="[0,1]"
 )
 adaptationTabularODPIP.init(
 	playerModelBridge = playerBridge, 
@@ -223,10 +220,8 @@ CLinkconfigsAlg = CLink(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 		regAlg = regAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
-		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 )
 adaptationCLink.init(
 	playerModelBridge = playerBridge, 
@@ -243,10 +238,8 @@ tabularCLinkconfigsAlg = CLink(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 		regAlg = regAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
-		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 )
 adaptationTabularCLink.init(
 	playerModelBridge = playerBridge, 
@@ -264,11 +257,9 @@ prsConfigsAlg = PureRandomSearchConfigsGen(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 		regAlg = regAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst, 
-		qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)), 
+		numTestedPlayerProfiles = numTestedPlayerProfilesInEst), 
 	numberOfConfigChoices = numberOfConfigChoices, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5)
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 )
 adaptationPRS.init(
 	playerModelBridge = playerBridge, 
@@ -299,8 +290,7 @@ evolutionaryConfigsAlg1D = EvolutionaryConfigsGenDEAP(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate1D.generateCopy(), 
 	regAlg = regAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
+	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
 	
@@ -329,7 +319,6 @@ evolutionaryConfigsAlg3D = EvolutionaryConfigsGenDEAP(
 	interactionsProfileTemplate = intProfTemplate3D.generateCopy(), 
 	regAlg = regAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
 	
@@ -356,7 +345,6 @@ evolutionaryConfigsAlg4D = EvolutionaryConfigsGenDEAP(
 	interactionsProfileTemplate = intProfTemplate4D.generateCopy(), 
 	regAlg = regAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
 	
@@ -385,7 +373,6 @@ evolutionaryConfigsAlg5D = EvolutionaryConfigsGenDEAP(
 	interactionsProfileTemplate = intProfTemplate5D.generateCopy(), 
 	regAlg = regAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
 	
@@ -413,7 +400,6 @@ evolutionaryConfigsAlg6D = EvolutionaryConfigsGenDEAP(
 	interactionsProfileTemplate = intProfTemplate6D.generateCopy(), 
 	regAlg = regAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5),
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
 	
@@ -648,9 +634,9 @@ if __name__ == '__main__':
 	# 	playerBridge, taskBridge, adaptationTabularODPIP)
 
 		
-	adaptationODPIP.name = "GIMME_ODPIP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationODPIP)
+	# adaptationODPIP.name = "GIMME_ODPIP"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	# 	playerBridge, taskBridge, adaptationODPIP)
 
 
 	# adaptationGA.name = "GIMME_GA"
@@ -733,13 +719,11 @@ if __name__ == '__main__':
 
 		
 	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
-	# adaptationTabularODPIP.configsGenAlg.addJointPlayersConstraints([1,7])
-	# adaptationTabularODPIP.configsGenAlg.addSeparatedPlayersConstraints([1,2])
 
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 	playerBridge, taskBridge, adaptationTabularODPIP, considerExtremePreferencesValues = True)
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationTabularODPIP, considerExtremePreferencesValues = True)
 
-	# adaptationTabularODPIP.configsGenAlg.resetPlayersConstraints()
+	adaptationTabularODPIP.configsGenAlg.resetPlayersConstraints()
 
 	# adaptationGA.name = "GIMME_GA_EP"
 	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
