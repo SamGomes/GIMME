@@ -201,9 +201,11 @@ tabularODPIPconfigsAlg = ODPIP(
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 		regAlg = regAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	jointPlayerConstraints="[15,1];[2,7];[3,4];[12,13];[14,15];[0,12];[9,15]",
-	separatedPlayerConstraints="[0,1]"
+	minNumberOfPlayersPerGroup=3,
+	maxNumberOfPlayersPerGroup=4,
+	# preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	#jointPlayerConstraints="[15,1];[2,7];[3,4];[12,13];[14,15];[0,12];[9,15]",
+	# separatedPlayerConstraints="[0,1]"
 )
 adaptationTabularODPIP.init(
 	playerModelBridge = playerBridge, 

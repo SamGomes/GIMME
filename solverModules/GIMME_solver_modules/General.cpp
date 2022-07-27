@@ -287,7 +287,7 @@ std::vector<int> General::getCombinationOfGivenSizeInBitFormat(int numPlayers, i
 std::vector<bool> General::generateFeasibleCoalitionsInBitFormat(int numPlayers, int minNumberOfPlayersPerGroup, int maxNumberOfPlayersPerGroup, std::vector<int> requiredJoinedPlayers, std::vector<int> restrictedJointPlayers, double* coalitionValues)
 {
 	std::vector<bool> feasibleCoalitions(1 << numPlayers, false);
-	for (int curSize = minNumberOfPlayersPerGroup; curSize <= maxNumberOfPlayersPerGroup + 1; curSize++)
+	for (int curSize = minNumberOfPlayersPerGroup; curSize <= maxNumberOfPlayersPerGroup; curSize++)
 	{
 		std::vector<int> combinationsOfCurSize = getCombinationOfGivenSizeInBitFormat(numPlayers, curSize);
 		for (int i = 0; i < combinationsOfCurSize.size(); i++)

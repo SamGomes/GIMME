@@ -23,7 +23,9 @@ class ConfigsGenAlg(ABC):
 		taskModelBridge = None, 
 		preferredNumberOfPlayersPerGroup = None, 
 		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None):
+		maxNumberOfPlayersPerGroup = None,
+		jointPlayerConstraints = "",
+		separatedPlayerConstraints = ""):
 
 		self.groupSizeFreqs = {}
 		self.configSizeFreqs = {}
@@ -44,7 +46,19 @@ class ConfigsGenAlg(ABC):
 		self.playerModelBridge = playerModelBridge
 		self.taskModelBridge = taskModelBridge
 		self.interactionsProfileTemplate = interactionsProfileTemplate
-
+		
+		jointPlayerConstraints = self.fromStringConstraintToList(jointPlayerConstraints)
+		separatedPlayerConstraints = self.fromStringConstraintToList(separatedPlayerConstraints)
+		
+		for i in range(len(jointPlayerConstraints)):
+			if jointPlayerConstraints[i] == ['']:
+				continue
+			self.addJointPlayersConstraints(jointPlayerConstraints[i])
+			
+		for i in range(len(separatedPlayerConstraints)):
+			if separatedPlayerConstraints[i] == ['']:
+				continue
+			self.addSeparatedPlayersConstraints(separatedPlayerConstraints[i])
 
 		self.completionPerc = 0.0
 
@@ -120,7 +134,30 @@ class ConfigsGenAlg(ABC):
 
 		return returnedConfig
 
+	def fromStringConstraintToList(self, constraints):
+		constraints = constraints.split(';')
 
+		for i in range(len(constraints)):
+			constraints[i] = re.sub('[^A-Za-z0-9,_]+', '', constraints[i]).split(',')
+		
+		return constraints
+
+	def addJointPlayersConstraints(self, players):
+		self.jointPlayersConstraints.append(players)
+		self.allConstraints.append({"players": players, "type": "JOIN"})
+
+	def addSeparatedPlayersConstraints(self, players):
+		self.separatedPlayersConstraints.append(players)
+		self.allConstraints.append({"players": players, "type": "SEPARATE"})
+
+
+	def resetPlayersConstraints(self):
+		self.jointPlayersConstraints = []
+		self.separatedPlayersConstraints = []
+		self.allConstraints = []
+
+	def getPlayerConstraints(self):
+		return self.allConstraints
 
 	@abstractmethod
 	def organize(self):
@@ -153,13 +190,17 @@ class RandomConfigsGen(ConfigsGenAlg):
 		interactionsProfileTemplate, 
 		preferredNumberOfPlayersPerGroup = None, 
 		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None):
+		maxNumberOfPlayersPerGroup = None,
+		jointPlayerConstraints = "",
+		separatedPlayerConstraints = ""):
 		super().__init__(
 			playerModelBridge = playerModelBridge,
 			interactionsProfileTemplate = interactionsProfileTemplate, 
 			preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 			minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup, 
-			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup)
+			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup,
+			jointPlayerConstraints = jointPlayerConstraints,
+			separatedPlayerConstraints = separatedPlayerConstraints)
 
 	def organize(self):
 		playerIds = self.playerModelBridge.getAllPlayerIds() 
@@ -342,14 +383,18 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 		numberOfConfigChoices = None, 
 		preferredNumberOfPlayersPerGroup = None, 
 		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None):
+		maxNumberOfPlayersPerGroup = None,
+		jointPlayerConstraints = "",
+		separatedPlayerConstraints = ""):
 		
 		super().__init__(
 			playerModelBridge = playerModelBridge,
 			interactionsProfileTemplate = interactionsProfileTemplate, 
 			preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 			minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup, 
-			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup)
+			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup,
+			jointPlayerConstraints = jointPlayerConstraints,
+			separatedPlayerConstraints = separatedPlayerConstraints)
 
 		self.regAlg = regAlg
 		self.persEstAlg = persEstAlg
@@ -572,14 +617,19 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 		numChildrenPerIteration = None,
 		numSurvivors = None,
 
-		cxOp = None):
+		cxOp = None,
+		
+		jointPlayerConstraints = "",
+		separatedPlayerConstraints = ""):
 
 		super().__init__(
 			playerModelBridge = playerModelBridge,
 			interactionsProfileTemplate = interactionsProfileTemplate, 
 			preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 			minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup, 
-			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup)
+			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup,
+			jointPlayerConstraints = jointPlayerConstraints,
+			separatedPlayerConstraints = separatedPlayerConstraints)
 
 		self.regAlg = regAlg
 		self.persEstAlg = persEstAlg
@@ -1022,7 +1072,9 @@ class ODPIP(ConfigsGenAlg):
 		taskModelBridge,
 		preferredNumberOfPlayersPerGroup, 
 		minNumberOfPlayersPerGroup, 
-		maxNumberOfPlayersPerGroup)
+		maxNumberOfPlayersPerGroup,
+		jointPlayerConstraints = jointPlayerConstraints,
+		separatedPlayerConstraints = separatedPlayerConstraints)
 
 		self.regAlg = regAlg
 		self.persEstAlg = persEstAlg
@@ -1038,45 +1090,7 @@ class ODPIP(ConfigsGenAlg):
 
 		self.playerPrefEstimates = {}
 
-		jointPlayerConstraints = self.fromStringConstraintToList(jointPlayerConstraints)
-		separatedPlayerConstraints = self.fromStringConstraintToList(separatedPlayerConstraints)
-		print(jointPlayerConstraints)
-		for i in range(len(jointPlayerConstraints)):
-			if jointPlayerConstraints[i] == ['']:
-				continue
-			self.addJointPlayersConstraints(jointPlayerConstraints[i])
-			
-		for i in range(len(separatedPlayerConstraints)):
-			if separatedPlayerConstraints[i] == ['']:
-				continue
-			self.addSeparatedPlayersConstraints(separatedPlayerConstraints[i])
-
-		print(self.allConstraints)
-
-	def fromStringConstraintToList(self, constraints):
-		constraints = constraints.split(';')
-
-		for i in range(len(constraints)):
-			constraints[i] = re.sub('[^A-Za-z0-9,_]+', '', constraints[i]).split(',')
-		
-		return constraints
-
-	def addJointPlayersConstraints(self, players):
-		self.jointPlayersConstraints.append(players)
-		self.allConstraints.append({"players": players, "type": "JOIN"})
-
-	def addSeparatedPlayersConstraints(self, players):
-		self.separatedPlayersConstraints.append(players)
-		self.allConstraints.append({"players": players, "type": "SEPARATE"})
-
-
-	def resetPlayersConstraints(self):
-		self.jointPlayersConstraints = []
-		self.separatedPlayersConstraints = []
-		self.allConstraints = []
-
-	def getPlayerConstraints(self):
-		return self.allConstraints
+	
 
 	def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
 		coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat, len(coalitionInByteFormat))
@@ -1162,7 +1176,7 @@ class ODPIP(ConfigsGenAlg):
 			groupSize = len(group)
 
 			# calculate the profile and characteristics only for groups in the range defined
-			if groupSize >= self.minNumberOfPlayersPerGroup and groupSize <= self.maxNumberOfPlayersPerGroup + 1:	
+			if groupSize >= self.minNumberOfPlayersPerGroup and groupSize <= self.maxNumberOfPlayersPerGroup:	
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
@@ -1220,6 +1234,11 @@ class ODPIP(ConfigsGenAlg):
 		bestGroupsInBitFormat = []
 		bestConfigProfiles = []
 		avgCharacteristicsArray = []
+	
+		for coalition in cSInByteFormat:
+			if not (self.minNumberOfPlayersPerGroup <= len(coalition) <= self.maxNumberOfPlayersPerGroup):
+				return {"groups": [], "profiles": [], "avgCharacteristics": []}
+		
 		for coalition in cSInByteFormat:
 			bestGroups.append(self.convertFromByteToIds(coalition))
 			bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
@@ -1299,7 +1318,6 @@ class ODPIP(ConfigsGenAlg):
 		# 	print(self.coalitionsValues[bestCSFound_bitFormat[i]], end="")
 		# 	print("}")
 
-		
 		
 		return self.results(bestCSFound_byteFormat)
 
@@ -1407,7 +1425,7 @@ class CLink(ConfigsGenAlg):
 			groupSize = len(group)
 
 			# calculate the profile and characteristics only for groups in the range defined
-			if groupSize <= self.maxNumberOfPlayersPerGroup + 1:	
+			if groupSize <= self.maxNumberOfPlayersPerGroup:	
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
