@@ -29,6 +29,10 @@ class ConfigsGenAlg(ABC):
 
 		self.groupSizeFreqs = {}
 		self.configSizeFreqs = {}
+
+		self.jointPlayersConstraints = []
+		self.separatedPlayersConstraints = []
+		self.allConstraints = []
 		
 		minNumberOfPlayersPerGroup = 2 if minNumberOfPlayersPerGroup == None else minNumberOfPlayersPerGroup 
 		maxNumberOfPlayersPerGroup = 5 if maxNumberOfPlayersPerGroup == None else maxNumberOfPlayersPerGroup
@@ -74,6 +78,41 @@ class ConfigsGenAlg(ABC):
 	def randomConfigGenerator(self, playerIds, minNumGroups, maxNumGroups):
 		
 		returnedConfig = []
+		playerJointRequirements = {}
+		playerSeparatedRequirements = {}
+		#listOfPlayersWithJointRequirements = []
+		if self.jointPlayersConstraints != []:
+			for id in playerIds:
+				playerJointRequirements[str(id)] = []
+
+			for constraint in self.jointPlayersConstraints:
+				for i in range(len(constraint)):
+					
+					for j in range(len(constraint)):
+						if constraint[i] == constraint[j]:
+							continue
+
+						playerJointRequirements[constraint[i]].append(constraint[j])
+
+
+			for id in playerIds:
+				for restrictedId in playerJointRequirements[id]:
+					for restrictionOfRestrictedId in playerJointRequirements[restrictedId]:
+						if restrictionOfRestrictedId not in playerJointRequirements[id] and restrictionOfRestrictedId != restrictedId:
+							playerJointRequirements[id].append(restrictionOfRestrictedId)
+
+		if self.separatedPlayersConstraints != []:
+			for id in playerIds:
+				playerSeparatedRequirements[str(id)] = []
+
+			for constraint in self.separatedPlayersConstraints:
+				for i in range(len(constraint)):
+					
+					for j in range(len(constraint)):
+						if constraint[i] == constraint[j]:
+							continue
+
+						playerSeparatedRequirements[constraint[i]].append(constraint[j])
 
 		if(len(playerIds) < self.minNumberOfPlayersPerGroup):
 			print("number of players is lower than the minimum number of players per group!")
@@ -89,8 +128,14 @@ class ConfigsGenAlg(ABC):
 
 		# generate min num players for each group
 		playersWithoutGroupSize = len(playersWithoutGroup)
+		# if (listOfPlayersWithJointRequirements != []):
+		# 	playersWithoutGroup = listOfPlayersWithJointRequirements.copy()
+
+		# playersWithoutGroupWithoutRestrictions = list(set(playersWithoutGroup) - set(listOfPlayersWithJointRequirements))
+
 		for g in range(numGroups):
 			currGroup = []
+			currGroupSeparationRestrictions = []
 
 			if(playersWithoutGroupSize < 1):
 				break
@@ -98,10 +143,13 @@ class ConfigsGenAlg(ABC):
 			# add min number of players to the group
 			for p in range(self.minNumberOfPlayersPerGroup):
 				currPlayerIndex = random.randint(0, len(playersWithoutGroup) - 1)
+				
 				currPlayerID = playersWithoutGroup[currPlayerIndex]
 				currGroup.append(currPlayerID)
 				del playersWithoutGroup[currPlayerIndex]
-			
+
+			if ((playerSeparatedRequirements != {} or playerJointRequirements != {}) and len(playersWithoutGroup) > 0 ):
+				self.verifyCoalitionValidity(currGroup, playerJointRequirements, playerSeparatedRequirements, playersWithoutGroup)
 			returnedConfig.append(currGroup)
 		
 		# append the rest
@@ -133,6 +181,42 @@ class ConfigsGenAlg(ABC):
 			returnedConfig.append(playersWithoutGroup)
 
 		return returnedConfig
+
+	def verifyCoalitionValidity(self, config, playerJointRequirements, playerSeparatedRequirements, playersWithoutGroup):
+		for i in range(len(config)):
+			if playerJointRequirements[config[i]] != []:
+				playersNotInCoalition = []
+				for player in playerJointRequirements[config[i]]:
+					if player not in config:
+						playersNotInCoalition.append(player)
+				
+				if playersNotInCoalition != []:
+					
+					for j in range(len(config)):
+						if i != j and playersNotInCoalition[0] in playersWithoutGroup and config[j] not in playerJointRequirements[config[i]]:
+							playersWithoutGroup.append(config[j])
+							config[j] = playersNotInCoalition[0]
+							playersWithoutGroup.remove(playersNotInCoalition[0])
+							del playersNotInCoalition[0]
+
+							if len(playersNotInCoalition) == 0:
+								break
+			
+			if playerSeparatedRequirements[config[i]] != []:
+				for player in playerSeparatedRequirements[config[i]]:
+					if player in config:
+						currPlayerIndex = random.randint(0, len(playersWithoutGroup) - 1)
+						while playersWithoutGroup[currPlayerIndex] in playerSeparatedRequirements[config[i]]:
+							currPlayerIndex = random.randint(0, len(playersWithoutGroup) - 1)
+
+						config.remove(player)
+						config.append(playersWithoutGroup[currPlayerIndex])
+						del playersWithoutGroup[currPlayerIndex]
+
+						playersWithoutGroup.append(player)
+					
+		return config
+
 
 	def fromStringConstraintToList(self, constraints):
 		constraints = constraints.split(';')
@@ -209,7 +293,6 @@ class RandomConfigsGen(ConfigsGenAlg):
 		
 		newConfigProfiles = []
 		newAvgCharacteristics = []
-		
 		newGroups = self.randomConfigGenerator(playerIds, minNumGroups, maxNumGroups)
 		newConfigSize = len(newGroups)		
 		# generate profiles
@@ -239,6 +322,7 @@ class RandomConfigsGen(ConfigsGenAlg):
 			self.completionPerc = groupI/newConfigSize
 
 		self.updateMetrics(newGroups)
+		#print(newGroups)
 		return {"groups": newGroups, "profiles": newConfigProfiles, "avgCharacteristics": newAvgCharacteristics}
 
 
@@ -985,10 +1069,41 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 
 		lenConfig = len(config)
 
+		allConstrainsSatisfied = True
 		for groupI in range(lenConfig):
 			
 			group = config[groupI]
 			profile = profiles[groupI]
+
+
+			for constraint in self.jointPlayersConstraints:
+				hasToBeInGroup = False
+				isNotInGroup = False
+				for player in constraint:
+					if player in group and isNotInGroup == False:
+						hasToBeInGroup = True
+					
+					elif player not in group and hasToBeInGroup == False:
+						isNotInGroup = True
+
+					else:
+						allConstrainsSatisfied = False
+						break
+				
+				if allConstrainsSatisfied == False:
+					break
+
+			for constraint in self.separatedPlayersConstraints:
+				hasToNotBeInGroup = False
+				for player in constraint:
+					if player in group:
+						if hasToNotBeInGroup:
+							allConstrainsSatisfied = False
+							break
+						hasToNotBeInGroup = True
+				
+				if allConstrainsSatisfied == False:
+					break
 
 			# breakpoint()
 			for i in range(len(group)):
@@ -1001,6 +1116,8 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 					totalFitness += self.regAlg.predict(profile, group[i])
 		
 		totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
+		if allConstrainsSatisfied:
+			totalFitness += 1000
 		individual.fitness.values = totalFitness,
 
 		return totalFitness, #must return a tuple
@@ -1084,9 +1201,7 @@ class ODPIP(ConfigsGenAlg):
 		self.coalitionsValues = []
 
 		self.playerIds = []	
-		self.jointPlayersConstraints = []
-		self.separatedPlayersConstraints = []
-		self.allConstraints = []
+		
 
 		self.playerPrefEstimates = {}
 
