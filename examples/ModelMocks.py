@@ -70,7 +70,7 @@ class CustomPlayerModelBridge(PlayerModelBridge):
 		return self.players[int(playerId)].baseLearningRate
 
 	def getAllPlayerIds(self):
-		return [int(i) for i in range(self.numPlayers)]
+		return [str(i) for i in range(self.numPlayers)]
 
 	def getPlayerName(self, playerId):
 		return self.players[int(playerId)].name
