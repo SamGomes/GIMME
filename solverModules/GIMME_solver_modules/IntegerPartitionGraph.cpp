@@ -42,6 +42,16 @@ IntegerPartitionGraph::IntegerPartitionGraph(vector<vector<Subspace>> subspaces,
 
 }
 
+IntegerPartitionGraph::~IntegerPartitionGraph() 
+{
+	for (int i = 0; i < nodes.size(); i++) 
+		for (std::vector<Node*>::iterator it = nodes[i].begin(); it != nodes[i].end(); ++it) 
+			delete* it;
+		
+	
+}
+
+
 vector<Node*> IntegerPartitionGraph::getReachableNodes(Node* node)
 {
 	if (node->edgesFromThisNode.empty()) return vector<Node*>();

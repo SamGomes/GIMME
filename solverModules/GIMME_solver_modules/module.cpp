@@ -66,6 +66,8 @@ PyObject* odpip(PyObject* /*unused module reference*/, PyObject* args) {
 	for (int i = 0; i < bestCSFound.size(); i++)
 		PyList_SetItem(returnArray, i, PyLong_FromLong(bestCSFound[i]));
 
+	delete odpip;
+
 	return returnArray;
 }
 

@@ -1,3 +1,4 @@
+import gc
 import random
 import math
 import copy
@@ -1423,6 +1424,10 @@ class ODPIP(ConfigsGenAlg):
 
 		bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist(), requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
 		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
+
+		del bestCSFound_bitFormat
+
+		gc.collect()
 		# i = 0
 		# for coalition in bestCSFound_byteFormat:
 		# 	print("{", end="")
@@ -1649,6 +1654,9 @@ class CLink(ConfigsGenAlg):
 
 		print()
 
+		del bestCSFound_bitFormat
+		
+		gc.collect()
 
 
 		return self.results(bestCSFound_byteFormat)

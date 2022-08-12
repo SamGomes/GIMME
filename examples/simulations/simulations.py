@@ -635,14 +635,14 @@ if __name__ == '__main__':
 	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
 	#    	playerBridge, taskBridge, adaptationCLink)
 
-	# adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 	playerBridge, taskBridge, adaptationTabularODPIP)
+	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationTabularODPIP)
 
 		
-	# adaptationODPIP.name = "GIMME_ODPIP"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 	playerBridge, taskBridge, adaptationODPIP)
+	adaptationODPIP.name = "GIMME_ODPIP"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationODPIP)
 
 
 	adaptationGA.name = "GIMME_GA"

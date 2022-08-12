@@ -14,6 +14,7 @@ public:
 	int largestIntegerBeingSplitInThisGraph;
 
 	IntegerPartitionGraph() {}
+	~IntegerPartitionGraph();
 	IntegerPartitionGraph(vector<vector<Subspace>> subspace, int numPlayers, int largestIntegerBeingSplitInThisGraph);
 
 	vector<Node*> getReachableNodes(Node* node);
