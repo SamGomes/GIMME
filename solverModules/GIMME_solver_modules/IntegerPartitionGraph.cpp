@@ -1,4 +1,5 @@
 #include "IntegerPartitionGraph.h"
+#include <iostream>
 
 IntegerPartitionGraph::IntegerPartitionGraph(vector<vector<Subspace>> subspaces, int numPlayers, int largestIntegerBeingSplitInThisGraph) {
 	this->largestIntegerBeingSplitInThisGraph = largestIntegerBeingSplitInThisGraph;
@@ -44,11 +45,14 @@ IntegerPartitionGraph::IntegerPartitionGraph(vector<vector<Subspace>> subspaces,
 
 IntegerPartitionGraph::~IntegerPartitionGraph() 
 {
-	for (int i = 0; i < nodes.size(); i++) 
-		for (std::vector<Node*>::iterator it = nodes[i].begin(); it != nodes[i].end(); ++it) 
-			delete* it;
-		
-	
+	for (int i = 0; i < nodes.size(); i++) {
+		int nodeSize = nodes[i].size();
+		for (int j = 0; j < nodeSize; j++) {
+			if (i == 0 && j == 0)
+				continue;
+			delete nodes[i][j];
+		}
+	}
 }
 
 

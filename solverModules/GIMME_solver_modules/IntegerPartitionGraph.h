@@ -20,6 +20,7 @@ public:
 	vector<Node*> getReachableNodes(Node* node);
 	void updateEdges(int numPlayers, int largestIntegerBeingSplitInThisGraph);
 
+
 private:
 	vector<int> getIntegersThatResultedFromTheSplit(vector<IntegerPartition> listOfDirectlyConnectedIntegerPartitions, Node* nodeOnHighLevel);
 	void setIntegerRoots(Node* lowerNode, Node* upperNode, vector<int> twoPartsThatResultedFromTheSplit, int partThatWasSplit);

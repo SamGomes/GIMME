@@ -108,9 +108,11 @@ int* ODPIP::IP()
 
 	finalize();
 	//bestCSInBitFormat = getBestCSFoundInBitFormat();
+	
+	//int sortedNodesSize = sortedNodes.size();
+	//for (int i = 0; i < sortedNodesSize; i++)
+	//	delete[] sortedNodes[i];
 
-	for (std::vector<Node*>::iterator it = sortedNodes.begin(); it != sortedNodes.end(); ++it)
-		delete* it;
 
 	return NULL;
 }
@@ -441,7 +443,6 @@ std::vector<Node*> ODPIP::getListOfSortedNodes(std::vector<std::vector<Subspace>
 	for (int level = 0; level < nodes.size(); level++)
 		for (int i = 0; i < nodes[level].size(); i++)
 		{
-			sortedNodes[k] = new Node[nodes[level].size()];
 			sortedNodes[k] = nodes[level][i];
 			k++;
 		}
@@ -783,8 +784,6 @@ void ODPIP::ODP()
 	int grandCoalition = (1 << numPlayers) - 1;
 	int numOfCoalitions = 1 << numPlayers;
 	int bestHalfOfGrandCoalition = -1;
-
-	int maxSize = (int)(floor((2 * numPlayers) / (double)3)) < maxNumberOfPlayersPerGroup ? (int)(floor((2 * numPlayers) / (double)3)) : maxNumberOfPlayersPerGroup + 1;
 
 	for (int curSize = 2; curSize <= numPlayers; curSize++)
 	{

@@ -519,7 +519,7 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
-
+				
 				for currPlayer in group:
 					preferences = self.playerPrefEstimates[currPlayer]
 					for dim in profile.dimensions:
@@ -1410,18 +1410,6 @@ class ODPIP(ConfigsGenAlg):
 		self.computeAllCoalitionsValues()
 		requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat = self.computeCoalitionsRestrictions()
 
-		if requiredJointPlayersInBitFormat != []:
-			i = 0
-			while 2**i < requiredJointPlayersInBitFormat[0]:
-				if 2**i & requiredJointPlayersInBitFormat[0]:
-					print(self.playerIds[i])
-
-				i += 1
-
-		print(self.numPlayers)
-		print(self.maxNumberOfPlayersPerGroup)
-		print(self.minNumberOfPlayersPerGroup)
-
 		bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist(), requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
 		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
 
@@ -1654,9 +1642,9 @@ class CLink(ConfigsGenAlg):
 
 		print()
 
-		del bestCSFound_bitFormat
+		# del bestCSFound_bitFormat
 		
-		gc.collect()
+		# gc.collect()
 
 
 		return self.results(bestCSFound_byteFormat)
