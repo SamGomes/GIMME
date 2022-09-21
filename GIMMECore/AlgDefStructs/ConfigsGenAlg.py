@@ -451,7 +451,6 @@ class AnnealedPRSConfigsGen(ConfigsGenAlg):
 			self.temperature = 1.0
 
 		self.updateMetrics(bestGroups)
-		print(bestGroups)
 
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": bestAvgCharacteristics}
 
@@ -560,7 +559,6 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 			self.completionPerc = i/self.numberOfConfigChoices
 
 		self.updateMetrics(bestGroups)
-		print(bestGroups)
 
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": bestAvgCharacteristics}
 
@@ -672,7 +670,6 @@ class AccuratePRSConfigsGen(ConfigsGenAlg):
 
 
 		self.updateMetrics(bestGroups)
-		print(bestGroups)
 
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": bestAvgCharacteristics}
 
@@ -1167,7 +1164,6 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 				avgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 			avgCharacteristicsArray.append(avgCharacteristics)
 
-		print(bestGroups)
 
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
@@ -1363,7 +1359,6 @@ class ODPIP(ConfigsGenAlg):
 			bestConfigProfiles.append(self.coalitionsProfiles[group])
 			avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
 
-		print(bestGroups)
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
 	# function to compute best profile for group according to each players preferences about the task
@@ -1409,6 +1404,7 @@ class ODPIP(ConfigsGenAlg):
 		# initialization(compute the value for every coalition between min and max number of players)
 		self.computeAllCoalitionsValues()
 		requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat = self.computeCoalitionsRestrictions()
+
 
 		bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist(), requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
 		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
@@ -1632,19 +1628,10 @@ class CLink(ConfigsGenAlg):
 
 		bestCSFound_bitFormat = (gs.clink(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist()))
 		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
-		# for coalition in bestCSFound_byteFormat:
-		# 	print("{", end="")
-		# 	for player in coalition:
-		# 		preferences = self.playerModelBridge.getPlayerRealPreferences(player - 1)
-		# 		print("{" + str(preferences.dimensions["dim_0"]) + ", " + str(preferences.dimensions["dim_1"]) + "},", end="")
 
-		# 	print("}")
-
-		print()
-
-		# del bestCSFound_bitFormat
+		del bestCSFound_bitFormat
 		
-		# gc.collect()
+		gc.collect()
 
 
 		return self.results(bestCSFound_byteFormat)

@@ -120,7 +120,7 @@ class Adaptation(object):
 		increases = PlayerState(stateType = newState.stateType)
 		increases.profile = currState.profile
 		increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-		self.playerModelBridge.setAndSavePlayerStateToGrid(playerId, increases, newState)	
+		self.playerModelBridge.setAndSavePlayerStateToDataFrame(playerId, increases, newState)	
 		return increases
 
 	def calcReaction(self, state, playerId):
