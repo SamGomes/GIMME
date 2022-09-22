@@ -47,7 +47,6 @@ class Adaptation(object):
 
 		# print(json.dumps(self.playerModelBridge.getPlayerStatesDataFrame(0).states, default=lambda o: [o.__dict__["quality"],o.__dict__["stateType"],o.__dict__["creationTime"]], sort_keys=True))
 		# print("\n\n")
-
 		adaptedConfig = self.configsGenAlg.organize()
 
 		adaptedGroups = adaptedConfig["groups"]
