@@ -7,14 +7,14 @@ class General {
 public:
 	static std::vector<std::vector<long>> initPascalMatrix(int numOfLines, int numOfColumns);
 
-	static int getSizeOfCombinationInBitFormat(int combinationInBitFormat);
+	static unsigned int getSizeOfCombinationInBitFormat(int combinationInBitFormat);
 
 
 	static std::vector<int> sortArray(std::vector<int> array);
 
 	static std::vector<int> getUnderlyingSet(std::vector<int> array);
 
-	static int convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat, int combinationSize);
+	static int convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat, unsigned long long combinationSize);
 
 	static int convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat);
 

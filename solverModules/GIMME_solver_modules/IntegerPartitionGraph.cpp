@@ -26,7 +26,7 @@ IntegerPartitionGraph::IntegerPartitionGraph(vector<vector<Subspace>> subspaces,
 						vector<int> sortedParts1 = nodes[level][i]->integerPartition.partsSortedAscendingly;
 						vector<int> sortedParts2 = nodes[level+1][i]->integerPartition.partsSortedAscendingly;
 						int partThatWasSplit = -1;
-						for (int k = sortedParts1.size() - 1; k >= 0; k--)
+						for (unsigned long long k = sortedParts1.size() - 1; k >= 0; k--)
 							if (sortedParts1[k] != sortedParts2[k + 1]) {
 								partThatWasSplit = sortedParts1[k];
 								break;
@@ -46,7 +46,7 @@ IntegerPartitionGraph::IntegerPartitionGraph(vector<vector<Subspace>> subspaces,
 IntegerPartitionGraph::~IntegerPartitionGraph() 
 {
 	for (int i = 0; i < nodes.size(); i++) {
-		int nodeSize = nodes[i].size();
+		unsigned long long nodeSize = nodes[i].size();
 		for (int j = 0; j < nodeSize; j++) {
 			if (i == 0 && j == 0)
 				continue;
@@ -60,10 +60,10 @@ vector<Node*> IntegerPartitionGraph::getReachableNodes(Node* node)
 {
 	if (node->edgesFromThisNode.empty()) return vector<Node*>();
 
-	int numOfIntegersInNode = node->integerPartition.partsSortedAscendingly.size();
+	unsigned long long numOfIntegersInNode = node->integerPartition.partsSortedAscendingly.size();
 
 	node->tempIntegerRoots = vector<int>();
-	for (int level = numOfIntegersInNode; level < nodes.size(); level++)
+	for (unsigned long long level = numOfIntegersInNode; level < nodes.size(); level++)
 		for (int i = 0; i < nodes[level].size(); i++)
 		{
 			nodes[level][i]->tempFlag = false;
@@ -76,7 +76,7 @@ vector<Node*> IntegerPartitionGraph::getReachableNodes(Node* node)
 	}
 
 	int numOfReachableNodes = 0;
-	for (int level = numOfIntegersInNode; level < nodes.size() - 1; level++)
+	for (unsigned long long level = numOfIntegersInNode; level < nodes.size() - 1; level++)
 	{
 		for (int i = 0; i < nodes[level].size(); i++)
 		{
@@ -98,7 +98,7 @@ vector<Node*> IntegerPartitionGraph::getReachableNodes(Node* node)
 
 	int index = 0;
 	vector<Node*> listOfReachableNodes(numOfReachableNodes);
-	for (int level = numOfIntegersInNode; level < nodes.size() - 1; level++)
+	for (unsigned long long level = numOfIntegersInNode; level < nodes.size() - 1; level++)
 	{
 		for (int i = 0; i < nodes[level].size(); i++) 
 			if (nodes[level][i]->tempFlag)
@@ -128,7 +128,7 @@ void IntegerPartitionGraph::updateEdges(int numPlayers, int largestIntegerBeingS
 			if (!listOfDirectlyConnectedIntegerPartitions.empty())
 			{
 
-				int index;
+				unsigned long long index;
 				if (nodes[level][i]->edgesFromThisNode.empty())
 				{
 
@@ -155,7 +155,7 @@ void IntegerPartitionGraph::updateEdges(int numPlayers, int largestIntegerBeingS
 						std::vector<int> sortedParts1 = nodes[level][i]->integerPartition.partsSortedAscendingly;
 						std::vector<int> sortedParts2 = nodes[level+1][j]->integerPartition.partsSortedAscendingly;
 						int partThatWasSplit = -1;
-						for (int k = sortedParts1.size() - 1; k >= 0; k--)
+						for (unsigned long long k = sortedParts1.size() - 1; k >= 0; k--)
 						{
 							if (sortedParts1[k] != sortedParts2[k + 1])
 							{

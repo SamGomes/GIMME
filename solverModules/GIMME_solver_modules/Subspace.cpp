@@ -33,7 +33,7 @@ Subspace::Subspace(std::vector<int>integers, std::vector<double> avgValueForEach
 
 	else
 		if ((this->integers.size() == 1) || (this->integers.size() == numPlayers))
-			this->numOfSearchedCoalitionsInThisSubspace = this->integers.size();
+			this->numOfSearchedCoalitionsInThisSubspace = (long)this->integers.size();
 		else
 			this->numOfSearchedCoalitionsInThisSubspace = 0;
 
@@ -115,7 +115,7 @@ void Subspace::search_useBranchAndBound(ODPIP* odpip, double acceptableValue, st
 		return;
 	}
 
-	int numOfIntegers = integers.size();
+	int numOfIntegers = (int)integers.size();
 	long ipNumOfSearchedCoalitions_beforeSearchingThisSubspace = odpip->ipNumOfExpansions;
 	int numPlayers = odpip->numPlayers;
 	int numOfIntsToSplit = numOfIntegersToSplit;
@@ -142,7 +142,7 @@ void Subspace::search_useBranchAndBound(ODPIP* odpip, double acceptableValue, st
 	std::vector<int> sumOfAgents = init_sumOf_agents(numOfIntegers, CS);
 	std::vector<double> sumOfValues = init_sumOf_values(numOfIntegers, CS, odpip);
 
-	odpip->ipNumOfExpansions += integers.size() - 2;
+	odpip->ipNumOfExpansions += (int)integers.size() - 2;
 
 main_loop: while (true)
 {
@@ -373,7 +373,7 @@ std::vector<int> Subspace::init_length_of_A(int numPlayers, std::vector<int> int
 
 std::vector<int> Subspace::init_max_first_member_of_M(std::vector<int> integers, std::vector<int> lengthOfA) {
 	std::vector<int> maxFirstMemberOfM(integers.size());
-	int i = integers.size() - 1;
+	unsigned long long i = integers.size() - 1;
 
 	if ((!relevantNodes.empty()) && integers.size() > 2) {
 		maxFirstMemberOfM[i] = (int)(lengthOfA[i] - integers[i] + 1);
@@ -451,7 +451,7 @@ std::vector<std::vector<long>> Subspace::init_increment(std::vector<int> integer
 	increment[integers.size() - 1].resize(1);
 	increment[integers.size() - 1][0] = 1;
 
-	int s = integers.size() - 2;
+	unsigned long long s = integers.size() - 2;
 	while (s >= 0) {
 		if ((integers[s] != integers[s + 1]) || ((s == integers.size() - 2) && (integers.size() > 2))) {
 			increment[s].resize(1);
@@ -673,7 +673,7 @@ void Subspace::setTheLastTwoCoalitionsInCS(std::vector<int> &CS, std::vector<int
 	int result1 = 0;
 	int result2 = 0;
 	int m = integers[numOfIntegers - 2] - 1;
-	int a = A[numOfIntegers - 2].size() - 1;
+	unsigned long long a = A[numOfIntegers - 2].size() - 1;
 	do
 	{
 		if (a == M[m] - 1)
