@@ -445,11 +445,11 @@ std::vector<Node*> ODPIP::getListOfSortedNodes(std::vector<std::vector<Subspace>
 			k++;
 		}
 
-
-	for (unsigned long long i = sortedNodes.size() - 1; i >= 0; i--)
+	int sortedNodesSize = (int)sortedNodes.size();
+	for (int i = sortedNodesSize - 1; i >= 0; i--)
 	{
-		unsigned long long indexOfSmallestElement = i;
-		for (unsigned long long j = i; j >= 0; j--)
+		int indexOfSmallestElement = i;
+		for (int j = i; j >= 0; j--)
 		{
 			if ((sortedNodes[j]->subspace.priority < sortedNodes[indexOfSmallestElement]->subspace.priority)
 				|| ((sortedNodes[j]->subspace.priority == sortedNodes[indexOfSmallestElement]->subspace.priority)
@@ -599,7 +599,7 @@ long ODPIP::computeTotalNumOfExpansions()
 
 std::vector<ElementOfMultiset> ODPIP::getRelevantNodes(Node* node, int numOfIntegersToSplitAtTheEnd)
 {
-	unsigned long long numOfIntegersInNode = node->integerPartition.partsSortedAscendingly.size();
+	int numOfIntegersInNode = (int)node->integerPartition.partsSortedAscendingly.size();
 
 	std::vector<Node*> reachableNodes = ipIntegerPartitionGraph->getReachableNodes(node);
 	if (reachableNodes.empty())
@@ -696,7 +696,7 @@ void ODPIP::putSubsetAtTheBeginning(Node* node, std::vector<ElementOfMultiset> s
 	
 	std::vector<int> newIntegers(node->subspace.integers.size());
 	int index1 = 0;
-	unsigned long long index2 = newIntegers.size() - counter;
+	int index2 = (int)newIntegers.size() - counter;
 	for (int i = 0; i < node->subspace.integers.size(); i++)
 	{
 		bool found = false;
@@ -739,9 +739,9 @@ std::vector<double> ODPIP::computeSumOfMax_splitOneInteger(Node* node, std::vect
 	sumOfMax[integers.size() - 1] = sumOfMax[integers.size()] + maxValueForEachSize[integers[integers.size() - 2] - 1][0];
 	int k = 2;
 
-	unsigned long long x = integers.size() - k;
+	int x = (int)integers.size() - k;
 	int j = 0;
-	for (unsigned long long i = x; i > 0; i--)
+	for (int i = x; i > 0; i--)
 	{
 		if (integers[i - 1] == integers[i])
 			j++;
@@ -761,7 +761,8 @@ std::vector<double> ODPIP::computeSumOfMax_splitNoIntegers(std::vector<int> inte
 	sumOfMax[integers.size()] = maxValueForEachSize[integers[integers.size() - 1] - 1][0];
 
 	int j = 0;
-	for (unsigned long long i = integers.size() - 1; i > 0; i--)
+	int integersSize = (int)integers.size();
+	for (int i = integersSize - 1; i > 0; i--)
 	{
 		if (integers[i - 1] == integers[i])
 			j++;
@@ -921,14 +922,14 @@ std::vector<int> ODPIP::getOptimalSplit(int coalitionInBitFormat, int bestHalfOf
 std::vector<std::vector<int>> ODPIP::getOptimalSplit(std::vector<std::vector<int>> CS)
 {
 	std::vector<std::vector<int>> optimalSplit(CS.size());
-	unsigned long long numOfCoalitionsInFinalResult = 0;
+	int numOfCoalitionsInFinalResult = 0;
 
 	for (int i = 0; i < CS.size(); i++)
 	{
 		int coalitionInBitFormat = General::convertCombinationFromByteToBitFormat(CS[i]);
 		int bestHalfOfGrandCoalitionInBitFormat = getBestHalf(coalitionInBitFormat);
 		optimalSplit[i] = getOptimalSplit(coalitionInBitFormat, bestHalfOfGrandCoalitionInBitFormat);
-		numOfCoalitionsInFinalResult += optimalSplit[i].size();
+		numOfCoalitionsInFinalResult += (int)optimalSplit[i].size();
 	}
 
 	std::vector<std::vector<int>> finalResult(numOfCoalitionsInFinalResult);
@@ -957,10 +958,10 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 
 	std::vector<int> coalitionInByteFormat = General::convertCombinationFromBitToByteFormat(coalitionInBitFormat, numPlayers);
 
-	unsigned long long coalitionSize = coalitionInByteFormat.size();
+	int coalitionSize = (int)coalitionInByteFormat.size();
 	for (int sizeOfFirstHalf = (int)ceil(coalitionSize / (double)2); sizeOfFirstHalf < coalitionSize; sizeOfFirstHalf++)
 	{
-		unsigned long long sizeOfSecondHalf = coalitionSize - sizeOfFirstHalf;
+		int sizeOfSecondHalf = coalitionSize - sizeOfFirstHalf;
 
 		/*if ((sizeOfFirstHalf > maxNumberOfPlayersPerGroup || sizeOfFirstHalf < minNumberOfPlayersPerGroup)
 			&& (sizeOfSecondHalf > maxNumberOfPlayersPerGroup || sizeOfSecondHalf < minNumberOfPlayersPerGroup))
@@ -969,9 +970,9 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 
 		long numOfPossibleSplits;
 		if (((coalitionSize % 2) == 0) && (sizeOfFirstHalf == sizeOfSecondHalf))
-			numOfPossibleSplits = (int)(General::binomialCoefficient((int)coalitionSize, sizeOfFirstHalf) / 2);
+			numOfPossibleSplits = (int)(General::binomialCoefficient(coalitionSize, sizeOfFirstHalf) / 2);
 		else
-			numOfPossibleSplits = General::binomialCoefficient((int)coalitionSize, sizeOfFirstHalf);
+			numOfPossibleSplits = General::binomialCoefficient(coalitionSize, sizeOfFirstHalf);
 
 		std::vector<int> indicesOfMembersOfFirstHalf(sizeOfFirstHalf);
 		for (int i = 0; i < sizeOfFirstHalf; i++)
@@ -1012,7 +1013,7 @@ int ODPIP::getBestHalf(int coalitionInBitFormat)
 
 		for (int j = 1; j < numOfPossibleSplits; j++)
 		{
-			General::getPreviousCombination((int)coalitionSize, sizeOfFirstHalf, indicesOfMembersOfFirstHalf);
+			General::getPreviousCombination(coalitionSize, sizeOfFirstHalf, indicesOfMembersOfFirstHalf);
 
 			int firstHalfInBitFormat = 0;
 			for (int i = 0; i < sizeOfFirstHalf; i++)
@@ -1105,7 +1106,8 @@ void ODPIP::initValueOfBestPartition(std::vector<std::vector<double>> maxValueFo
 
 	init_max_f(maxValueForEachSize);
 
-	for (unsigned long long coalitionInBitFormat = valueOfBestPartitionFound.size() - 1; coalitionInBitFormat >= 1; coalitionInBitFormat--)
+	int valueOfBestPartitionFoundSize = (int)valueOfBestPartitionFound.size();
+	for (int coalitionInBitFormat = valueOfBestPartitionFoundSize - 1; coalitionInBitFormat >= 1; coalitionInBitFormat--)
 		valueOfBestPartitionFound[coalitionInBitFormat] = getCoalitionValue((int)coalitionInBitFormat);
 
 }

@@ -73,8 +73,8 @@ void CLink::CLinkAlgorithm()
 		}
 
 		PL.resize(optimalCSInBitFormat.size());
-		unsigned long long posOfNewCS = optimalCSInBitFormat.size() - 1;
-		for (unsigned long long i = 0; i < posOfNewCS; i++)
+		int posOfNewCS = (int)optimalCSInBitFormat.size() - 1;
+		for (int i = 0; i < posOfNewCS; i++)
 		{
 			if (bestIndexI > bestIndexJ)
 			{
@@ -92,16 +92,18 @@ void CLink::CLinkAlgorithm()
 		}
 
 		PL[posOfNewCS].resize(optimalCSInBitFormat.size());
-		for (unsigned int j = 0; j < posOfNewCS; j++)
+		for (int j = 0; j < posOfNewCS; j++)
 			PL[posOfNewCS][j] = lf(optimalCSInBitFormat[posOfNewCS], optimalCSInBitFormat[j]);
 
 		PL[posOfNewCS][posOfNewCS] = -std::numeric_limits<double>::infinity();
 
 		bestPairValue = -10;
 
+		int optimalCSInBitFormatSize = (int)optimalCSInBitFormat.size();
+
 		// Update best indexes and best value of linkage, according to group size limitations
-		for (unsigned int i = 0; i < optimalCSInBitFormat.size(); i++)
-			for (unsigned int j = 0; j < optimalCSInBitFormat.size(); j++)
+		for (int i = 0; i < optimalCSInBitFormatSize; i++)
+			for (int j = 0; j < optimalCSInBitFormatSize; j++)
 			{
 				if (i == j)
 					continue;

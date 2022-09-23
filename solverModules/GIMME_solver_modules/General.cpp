@@ -25,8 +25,8 @@ vector<vector<long>> General::initPascalMatrix(int numOfLines, int numOfColumns)
 		else
 		{
 			vector<vector<long>> prev_pascalMatrix = pascalMatrix;
-			long unsigned long prev_numLines = prev_pascalMatrix.size();
-			long unsigned long prev_numColumns = prev_pascalMatrix[0].size();
+			int prev_numLines = (int)prev_pascalMatrix.size();
+			int prev_numColumns = (int)prev_pascalMatrix[0].size();
 
 			pascalMatrix = vector<vector<long>>(numOfLines);
 			for (int i = 0; i < numOfLines; i++)
@@ -40,16 +40,16 @@ vector<vector<long>> General::initPascalMatrix(int numOfLines, int numOfColumns)
 				pascalMatrix[0][j] = j + 1;
 			}
 
-			for (long unsigned i = 1; i < prev_numLines; i++)
+			for (int i = 1; i < prev_numLines; i++)
 			{
-				for (long unsigned j = 1; j < prev_numColumns; j++)
+				for (int j = 1; j < prev_numColumns; j++)
 					pascalMatrix[i][j] = prev_pascalMatrix[i][j];
 
-				for (long long unsigned j = prev_numColumns; j < numOfColumns; j++)
+				for (int j = prev_numColumns; j < numOfColumns; j++)
 					pascalMatrix[i][j] = pascalMatrix[i - 1][j] + pascalMatrix[i][j - 1];
 			}
 
-			for (long long unsigned i = prev_numLines; i < numOfLines; i++)
+			for (int i = prev_numLines; i < numOfLines; i++)
 				for (int j = 1; j < numOfColumns; j++)
 					pascalMatrix[i][j] = pascalMatrix[i - 1][j] + pascalMatrix[i][j - 1];
 		}
@@ -59,15 +59,15 @@ vector<vector<long>> General::initPascalMatrix(int numOfLines, int numOfColumns)
 
 
 vector<int> General::sortArray(vector<int> array) {
-	long long unsigned arrayLength = array.size();
+	int arrayLength = (int)array.size();
 	vector<int> sortedArray(arrayLength);
 
-	for (unsigned long long i = 0; i < arrayLength; i++)
+	for (int i = 0; i < arrayLength; i++)
 		sortedArray[i] = array[i];
 
-	for (unsigned long long i = sortedArray.size() - 1; i >= 0; i--) {
-		unsigned long long highestIndex = i;
-		for (unsigned long long j = i; j >= 0; j--) {
+	for (int i = arrayLength - 1; i >= 0; i--) {
+		int highestIndex = i;
+		for (int j = i; j >= 0; j--) {
 			if (sortedArray[highestIndex] < sortedArray[j])
 				highestIndex = j;
 		}
@@ -81,11 +81,11 @@ vector<int> General::sortArray(vector<int> array) {
 }
 
 vector<int> General::getUnderlyingSet(vector<int> array) {
-	unsigned long long arrayLength = array.size();
+	int arrayLength = (int)array.size();
 	int numOfUniqueElements = 0;
 	vector<int> uniqueElements(arrayLength, 0);
 
-	for (unsigned long long i = 0; i < arrayLength; i++) {
+	for (int i = 0; i < arrayLength; i++) {
 		bool weHaveSeenThisElementBefore = false;
 		for (int j = 0; j < numOfUniqueElements; j++) {
 			if (uniqueElements[j] == array[i]) {
@@ -108,16 +108,16 @@ vector<int> General::getUnderlyingSet(vector<int> array) {
 	return underlyingSet;
 }
 
-int General::convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat, unsigned long long combinationSize) {
+int General::convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat, int combinationSize) {
 	int combinationInBitFormat = 0;
-	for (unsigned long long i = 0; i < combinationSize; i++)
+	for (int i = 0; i < combinationSize; i++)
 		combinationInBitFormat += 1 << (combinationInByteFormat[i] - 1);
 
 	return combinationInBitFormat;
 }
 
 int General::convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat) {
-	return convertCombinationFromByteToBitFormat(combinationInByteFormat, combinationInByteFormat.size());
+	return convertCombinationFromByteToBitFormat(combinationInByteFormat, (int)combinationInByteFormat.size());
 }
 
 
@@ -155,7 +155,7 @@ std::vector<std::vector<int>> General::convertSetOfCombinationsFromBitToByteForm
 std::vector<std::vector<int>> General::convertSetOfCombinationsFromBitToByteFormat(std::vector<int> setOfCombinationsInBitFormat, int numPlayers)
 {
 	std::vector<int> sizeOfEachCombination(setOfCombinationsInBitFormat.size());
-	for (unsigned long long i = setOfCombinationsInBitFormat.size() - 1; i >= 0; i--)
+	for (int i = (int)setOfCombinationsInBitFormat.size() - 1; i >= 0; i--)
 		sizeOfEachCombination[i] = (int)(getSizeOfCombinationInBitFormat(setOfCombinationsInBitFormat[i]));
 
 	return convertSetOfCombinationsFromBitToByteFormat(setOfCombinationsInBitFormat, numPlayers, sizeOfEachCombination);
@@ -246,7 +246,7 @@ std::vector<int> General::getCombinationOfGivenSizeInBitFormat(int numPlayers, i
 
 	std::vector<int> list(binomialCoefficient(numPlayers, size));
 
-	unsigned long long index = list.size() - 1;
+	int index = (int)list.size() - 1;
 
 	list[index] = 0;
 	for (int i = 1; i <= size; i++)

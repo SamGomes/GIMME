@@ -373,7 +373,7 @@ std::vector<int> Subspace::init_length_of_A(int numPlayers, std::vector<int> int
 
 std::vector<int> Subspace::init_max_first_member_of_M(std::vector<int> integers, std::vector<int> lengthOfA) {
 	std::vector<int> maxFirstMemberOfM(integers.size());
-	unsigned long long i = integers.size() - 1;
+	int i = (int)integers.size() - 1;
 
 	if ((!relevantNodes.empty()) && integers.size() > 2) {
 		maxFirstMemberOfM[i] = (int)(lengthOfA[i] - integers[i] + 1);
@@ -451,7 +451,7 @@ std::vector<std::vector<long>> Subspace::init_increment(std::vector<int> integer
 	increment[integers.size() - 1].resize(1);
 	increment[integers.size() - 1][0] = 1;
 
-	unsigned long long s = integers.size() - 2;
+	int s = (int)integers.size() - 2;
 	while (s >= 0) {
 		if ((integers[s] != integers[s + 1]) || ((s == integers.size() - 2) && (integers.size() > 2))) {
 			increment[s].resize(1);
@@ -673,7 +673,7 @@ void Subspace::setTheLastTwoCoalitionsInCS(std::vector<int> &CS, std::vector<int
 	int result1 = 0;
 	int result2 = 0;
 	int m = integers[numOfIntegers - 2] - 1;
-	unsigned long long a = A[numOfIntegers - 2].size() - 1;
+	int a = (int)A[numOfIntegers - 2].size() - 1;
 	do
 	{
 		if (a == M[m] - 1)

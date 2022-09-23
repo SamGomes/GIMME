@@ -14,7 +14,7 @@ public:
 
 	static std::vector<int> getUnderlyingSet(std::vector<int> array);
 
-	static int convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat, unsigned long long combinationSize);
+	static int convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat, int combinationSize);
 
 	static int convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat);
 
