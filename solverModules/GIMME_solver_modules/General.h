@@ -7,7 +7,7 @@ class General {
 public:
 	static std::vector<std::vector<long>> initPascalMatrix(int numOfLines, int numOfColumns);
 
-	static int getSizeOfCombinationInBitFormat(int combinationInBitFormat);
+	static unsigned int getSizeOfCombinationInBitFormat(int combinationInBitFormat);
 
 
 	static std::vector<int> sortArray(std::vector<int> array);

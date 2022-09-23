@@ -25,8 +25,8 @@ vector<vector<long>> General::initPascalMatrix(int numOfLines, int numOfColumns)
 		else
 		{
 			vector<vector<long>> prev_pascalMatrix = pascalMatrix;
-			int prev_numLines = prev_pascalMatrix.size();
-			int prev_numColumns = prev_pascalMatrix[0].size();
+			int prev_numLines = (int)prev_pascalMatrix.size();
+			int prev_numColumns = (int)prev_pascalMatrix[0].size();
 
 			pascalMatrix = vector<vector<long>>(numOfLines);
 			for (int i = 0; i < numOfLines; i++)
@@ -59,13 +59,13 @@ vector<vector<long>> General::initPascalMatrix(int numOfLines, int numOfColumns)
 
 
 vector<int> General::sortArray(vector<int> array) {
-	int arrayLength = array.size();
+	int arrayLength = (int)array.size();
 	vector<int> sortedArray(arrayLength);
 
 	for (int i = 0; i < arrayLength; i++)
 		sortedArray[i] = array[i];
 
-	for (int i = sortedArray.size() - 1; i >= 0; i--) {
+	for (int i = arrayLength - 1; i >= 0; i--) {
 		int highestIndex = i;
 		for (int j = i; j >= 0; j--) {
 			if (sortedArray[highestIndex] < sortedArray[j])
@@ -81,7 +81,7 @@ vector<int> General::sortArray(vector<int> array) {
 }
 
 vector<int> General::getUnderlyingSet(vector<int> array) {
-	int arrayLength = array.size();
+	int arrayLength = (int)array.size();
 	int numOfUniqueElements = 0;
 	vector<int> uniqueElements(arrayLength, 0);
 
@@ -117,7 +117,7 @@ int General::convertCombinationFromByteToBitFormat(std::vector<int> combinationI
 }
 
 int General::convertCombinationFromByteToBitFormat(std::vector<int> combinationInByteFormat) {
-	return convertCombinationFromByteToBitFormat(combinationInByteFormat, combinationInByteFormat.size());
+	return convertCombinationFromByteToBitFormat(combinationInByteFormat, (int)combinationInByteFormat.size());
 }
 
 
@@ -155,7 +155,7 @@ std::vector<std::vector<int>> General::convertSetOfCombinationsFromBitToByteForm
 std::vector<std::vector<int>> General::convertSetOfCombinationsFromBitToByteFormat(std::vector<int> setOfCombinationsInBitFormat, int numPlayers)
 {
 	std::vector<int> sizeOfEachCombination(setOfCombinationsInBitFormat.size());
-	for (int i = setOfCombinationsInBitFormat.size() - 1; i >= 0; i--)
+	for (int i = (int)setOfCombinationsInBitFormat.size() - 1; i >= 0; i--)
 		sizeOfEachCombination[i] = (int)(getSizeOfCombinationInBitFormat(setOfCombinationsInBitFormat[i]));
 
 	return convertSetOfCombinationsFromBitToByteFormat(setOfCombinationsInBitFormat, numPlayers, sizeOfEachCombination);
@@ -228,7 +228,7 @@ long General::binomialCoefficient(int x, int y) {
 	return pascalMatrix[x - y - 1][y];
 }
 
-int General::getSizeOfCombinationInBitFormat(int combinationInBitFormat) {
+unsigned int General::getSizeOfCombinationInBitFormat(int combinationInBitFormat) {
 	int count = 0;
 	while (combinationInBitFormat) {
 		count += combinationInBitFormat & 1;
@@ -246,7 +246,7 @@ std::vector<int> General::getCombinationOfGivenSizeInBitFormat(int numPlayers, i
 
 	std::vector<int> list(binomialCoefficient(numPlayers, size));
 
-	int index = list.size() - 1;
+	int index = (int)list.size() - 1;
 
 	list[index] = 0;
 	for (int i = 1; i <= size; i++)
@@ -286,7 +286,7 @@ std::vector<int> General::getCombinationOfGivenSizeInBitFormat(int numPlayers, i
 
 std::vector<bool> General::generateFeasibleCoalitionsInBitFormat(int numPlayers, int minNumberOfPlayersPerGroup, int maxNumberOfPlayersPerGroup, std::vector<int> requiredJoinedPlayers, std::vector<int> restrictedJointPlayers, double* coalitionValues)
 {
-	std::vector<bool> feasibleCoalitions(1 << numPlayers, false);
+	std::vector<bool> feasibleCoalitions(1i64 << numPlayers, false);
 	for (int curSize = minNumberOfPlayersPerGroup; curSize <= maxNumberOfPlayersPerGroup; curSize++)
 	{
 		std::vector<int> combinationsOfCurSize = getCombinationOfGivenSizeInBitFormat(numPlayers, curSize);

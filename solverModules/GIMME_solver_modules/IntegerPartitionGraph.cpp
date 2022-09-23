@@ -26,7 +26,7 @@ IntegerPartitionGraph::IntegerPartitionGraph(vector<vector<Subspace>> subspaces,
 						vector<int> sortedParts1 = nodes[level][i]->integerPartition.partsSortedAscendingly;
 						vector<int> sortedParts2 = nodes[level+1][i]->integerPartition.partsSortedAscendingly;
 						int partThatWasSplit = -1;
-						for (int k = sortedParts1.size() - 1; k >= 0; k--)
+						for (int k = (int)sortedParts1.size() - 1; k >= 0; k--)
 							if (sortedParts1[k] != sortedParts2[k + 1]) {
 								partThatWasSplit = sortedParts1[k];
 								break;
@@ -46,7 +46,7 @@ IntegerPartitionGraph::IntegerPartitionGraph(vector<vector<Subspace>> subspaces,
 IntegerPartitionGraph::~IntegerPartitionGraph() 
 {
 	for (int i = 0; i < nodes.size(); i++) {
-		int nodeSize = nodes[i].size();
+		int nodeSize = (int)nodes[i].size();
 		for (int j = 0; j < nodeSize; j++) {
 			if (i == 0 && j == 0)
 				continue;
@@ -60,7 +60,7 @@ vector<Node*> IntegerPartitionGraph::getReachableNodes(Node* node)
 {
 	if (node->edgesFromThisNode.empty()) return vector<Node*>();
 
-	int numOfIntegersInNode = node->integerPartition.partsSortedAscendingly.size();
+	int numOfIntegersInNode = (int)node->integerPartition.partsSortedAscendingly.size();
 
 	node->tempIntegerRoots = vector<int>();
 	for (int level = numOfIntegersInNode; level < nodes.size(); level++)
@@ -138,7 +138,7 @@ void IntegerPartitionGraph::updateEdges(int numPlayers, int largestIntegerBeingS
 				else
 				{
 
-					index = nodes[level][i]->edgesFromThisNode.size();
+					index = (int)nodes[level][i]->edgesFromThisNode.size();
 					std::vector<Edge> tempListOfEdges(nodes[level][i]->edgesFromThisNode.size() + listOfDirectlyConnectedIntegerPartitions.size());
 					for (int j = 0; j < nodes[level][i]->edgesFromThisNode.size(); j++)
 						tempListOfEdges[j] = nodes[level][i]->edgesFromThisNode[j];
@@ -155,7 +155,7 @@ void IntegerPartitionGraph::updateEdges(int numPlayers, int largestIntegerBeingS
 						std::vector<int> sortedParts1 = nodes[level][i]->integerPartition.partsSortedAscendingly;
 						std::vector<int> sortedParts2 = nodes[level+1][j]->integerPartition.partsSortedAscendingly;
 						int partThatWasSplit = -1;
-						for (int k = sortedParts1.size() - 1; k >= 0; k--)
+						for (int k = (int)sortedParts1.size() - 1; k >= 0; k--)
 						{
 							if (sortedParts1[k] != sortedParts2[k + 1])
 							{

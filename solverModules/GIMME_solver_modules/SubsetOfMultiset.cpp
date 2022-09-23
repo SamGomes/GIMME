@@ -35,7 +35,7 @@ std::vector<ElementOfMultiset> SubsetOfMultiset::getNextSubset()
 	else
 	{
 		int totalNumberOfElementsSeenSoFar = 0;
-		int indexInLastSubset = lastSubset.size() - 1;
+		int indexInLastSubset = (int)lastSubset.size() - 1;
 		for (int indexInCurrentSubset = numOfUniqueElementsInCurrentSubset - 1; indexInCurrentSubset >= 0; indexInCurrentSubset++)
 		{
 			if (currentSubset[indexInCurrentSubset].element != lastSubset[indexInLastSubset].element)
@@ -170,8 +170,8 @@ void SubsetOfMultiset::setLastSubset()
 	std::vector<ElementOfMultiset> temp(multisetWithIncrementalElements.size(), ElementOfMultiset(0, 0));
 
 	int totalNumOfAgentsToBeAdded = sizeOfSubsets;
-	int i = temp.size() - 1;
-	for (int j = multisetWithIncrementalElements.size() - 1; j >= 0; j--)
+	int i = (int)temp.size() - 1;
+	for (int j = (int)multisetWithIncrementalElements.size() - 1; j >= 0; j--)
 	{
 		if (totalNumOfAgentsToBeAdded <= multisetWithIncrementalElements[j].repetition)
 		{
@@ -187,7 +187,7 @@ void SubsetOfMultiset::setLastSubset()
 	}
 
 	lastSubset = std::vector<ElementOfMultiset>(multisetWithIncrementalElements.size() - i);
-	for (int j = lastSubset.size() - 1; j >= 0; j--) {
+	for (int j = (int)lastSubset.size() - 1; j >= 0; j--) {
 		lastSubset[j] = temp[temp.size() - lastSubset.size() + j];
 	}
 }

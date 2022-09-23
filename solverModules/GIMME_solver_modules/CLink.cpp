@@ -8,7 +8,7 @@ CLink::CLink(int numPlayers, double* coalitionValues, int minNumberOfPlayersPerG
 	this->maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup;
 
 	this->minNumGroups = numPlayers / maxNumberOfPlayersPerGroup;
-	this->maxNumGroups = floor(numPlayers / minNumberOfPlayersPerGroup);
+	this->maxNumGroups = (unsigned int)(floor(numPlayers / minNumberOfPlayersPerGroup));
 
 	this->PL.resize(numPlayers);
 	for (int i = 0; i < numPlayers; i++)
@@ -26,8 +26,8 @@ void CLink::CLinkAlgorithm()
 	int bestIndexI = 0; int bestIndexJ = 0;
 	double bestPairValue = -10;
 
-	for (int i = 0; i < numPlayers; i++) {
-		for (int j = 0; j < numPlayers; j++)
+	for (unsigned int i = 0; i < numPlayers; i++) {
+		for (unsigned int j = 0; j < numPlayers; j++)
 		{
 			if (PL[i][j] > bestPairValue)
 			{
@@ -73,7 +73,7 @@ void CLink::CLinkAlgorithm()
 		}
 
 		PL.resize(optimalCSInBitFormat.size());
-		int posOfNewCS = optimalCSInBitFormat.size() - 1;
+		int posOfNewCS = (int)optimalCSInBitFormat.size() - 1;
 		for (int i = 0; i < posOfNewCS; i++)
 		{
 			if (bestIndexI > bestIndexJ)
@@ -99,14 +99,16 @@ void CLink::CLinkAlgorithm()
 
 		bestPairValue = -10;
 
+		int optimalCSInBitFormatSize = (int)optimalCSInBitFormat.size();
+
 		// Update best indexes and best value of linkage, according to group size limitations
-		for (int i = 0; i < optimalCSInBitFormat.size(); i++)
-			for (int j = 0; j < optimalCSInBitFormat.size(); j++)
+		for (int i = 0; i < optimalCSInBitFormatSize; i++)
+			for (int j = 0; j < optimalCSInBitFormatSize; j++)
 			{
 				if (i == j)
 					continue;
 
-				int newPossibleCSSize = General::getSizeOfCombinationInBitFormat(optimalCSInBitFormat[i] ^ optimalCSInBitFormat[j]);
+				unsigned int newPossibleCSSize = General::getSizeOfCombinationInBitFormat(optimalCSInBitFormat[i] ^ optimalCSInBitFormat[j]);
 				if (newPossibleCSSize > maxNumberOfPlayersPerGroup)
 					continue;
 
@@ -131,8 +133,8 @@ void CLink::CLinkAlgorithm()
 
 void CLink::initializePL()
 {
-	for (int i = 0; i < numPlayers; i++)
-		for (int j = 0; j < numPlayers; j++)
+	for (unsigned int i = 0; i < numPlayers; i++)
+		for (unsigned int j = 0; j < numPlayers; j++)
 		{
 			if (j == i)
 				PL[i][j] = -std::numeric_limits<double>::infinity();
@@ -152,8 +154,6 @@ double CLink::lf(int coalition1, int coalition2)
 // Redistribute remaining coalitions in case not all coalitions respect players per group limitations
 void CLink::finalize()
 {
-	int maxNumGroups = floor(numPlayers / (double)minNumberOfPlayersPerGroup);
-
 	long smallCoalition = -1;
 	bool smallCoalitionFound = false;
 	do
