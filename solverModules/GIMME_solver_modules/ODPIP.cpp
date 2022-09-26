@@ -12,7 +12,7 @@ ODPIP::ODPIP(int numPlayers, double* coalitionValues, int minNumberOfPlayersPerG
 	this->ipValueOfBestCSFound = -1;
 	this->ipBestCSFound = std::vector<std::vector<int>>();
 	this->totalNumOfExpansions = 0;
-	this->valueOfBestPartitionFound = std::vector<double>(1i64 << numPlayers);
+	this->valueOfBestPartitionFound = std::vector<double>((unsigned int)pow(2, numPlayers));
 
 	this->max_f = new double[numPlayers];
 
