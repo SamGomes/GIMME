@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <cmath>
 #include "IntegerPartitionGraph.h"
 #include "General.h"
 #include "SubsetOfMultiset.h"
