@@ -1,4 +1,14 @@
-from setuptools import setup
+from setuptools import setup, Extension
+import glob
+#import pybind11
+
+sfc_module = Extension(
+  'GIMMESolver', 
+  sources = glob.glob('solverModules/GIMME_solver_modules/*.cpp'),
+  #include_dirs=[pybind11.get_include()],
+  language='c++',
+  )
+print(sfc_module)
 
 setup(
     name="GIMMECore",
@@ -24,4 +34,10 @@ setup(
     ]
 
 )
+
+setup(
+    name='GIMMESolver',
+    version='1.0',
+    ext_modules=[sfc_module]
+   )
 

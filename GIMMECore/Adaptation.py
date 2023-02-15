@@ -47,7 +47,6 @@ class Adaptation(object):
 
 		# print(json.dumps(self.playerModelBridge.getPlayerStatesDataFrame(0).states, default=lambda o: [o.__dict__["quality"],o.__dict__["stateType"],o.__dict__["creationTime"]], sort_keys=True))
 		# print("\n\n")
-
 		adaptedConfig = self.configsGenAlg.organize()
 
 		adaptedGroups = adaptedConfig["groups"]
@@ -121,7 +120,7 @@ class Adaptation(object):
 		increases = PlayerState(stateType = newState.stateType)
 		increases.profile = currState.profile
 		increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-		self.playerModelBridge.setAndSavePlayerStateToGrid(playerId, increases, newState)	
+		self.playerModelBridge.setAndSavePlayerStateToDataFrame(playerId, increases, newState)	
 		return increases
 
 	def calcReaction(self, state, playerId):

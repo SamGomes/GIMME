@@ -111,6 +111,10 @@ print((m_prs/m_rand - 1)*100)
 # ----------------------------------------------------------------------------------
 # cmp average ability increase 
 currAvg = 	avg[
+				avg$algorithm=="GIMME_CLink" |
+				avg$algorithm=="GIMME_ODPIP" |
+				avg$algorithm=="GIMME_Tabular_ODPIP" |
+				avg$algorithm=="GIMME_CLink_Tabular" |
 				avg$algorithm=="GIMME_PRS" | 
 				avg$algorithm=="GIMME_GA" |
 				avg$algorithm=="GIMME_GA_Bootstrap" |
@@ -118,6 +122,10 @@ currAvg = 	avg[
 				,]
 
 currSdev = sdev[
+				sdev$algorithm=="GIMME_CLink" |
+				sdev$algorithm=="GIMME_ODPIP" |
+				sdev$algorithm=="GIMME_Tabular_ODPIP" |
+				sdev$algorithm=="GIMME_CLink_Tabular" |
 				sdev$algorithm=="GIMME_PRS" | 
 				sdev$algorithm=="GIMME_GA" |
 				sdev$algorithm=="GIMME_GA_Bootstrap" |
@@ -125,6 +133,10 @@ currSdev = sdev[
 				,]
 
 
+currAvg$algorithm[currAvg$algorithm == "GIMME_CLink"] <- "GIMME-CLink" 
+currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP"] <- "GIMME-ODPIP" 
+currAvg$algorithm[currAvg$algorithm == "GIMME_Tabular_ODPIP"] <- "GIMME_Tabular_ODPIP" 
+currAvg$algorithm[currAvg$algorithm == "GIMME_CLink_Tabular"] <- "GIMME_Tabular_CLink" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_PRS"] <- "GIMME-PRS" 
 # currAvg$algorithm[currAvg$algorithm == "GIMME_GA_scx"] <- "GIMME GA (Simpler CX)" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_GA"] <- "GIMME-GA" 
@@ -134,7 +146,7 @@ currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap"] <- "GIMME-GA-Bootst
 currAvg$linetype <- "solid" 
 # currAvg$linetype[currAvg$algorithm == "Perf. Info."] <- "dashed" 
 
-buildAbIncPlots(currAvg, currSdev, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c"))
+buildAbIncPlots(currAvg, currSdev, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
 suppressMessages(ggsave(sprintf("plots/%s.png", "simulationsResultsAbilityInc"), height=7, width=15, units="in", dpi=500))
 
 
