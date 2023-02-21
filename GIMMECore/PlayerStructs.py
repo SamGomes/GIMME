@@ -1,5 +1,6 @@
 import math
 from sre_parse import State
+from abc import ABC, abstractmethod
 import time
 import copy
 import json
@@ -11,6 +12,7 @@ class PlayerCharacteristics(object):
 	def __init__(self, ability = None, engagement = None):
 		self.ability  = 0 if ability==None else ability
 		self.engagement = 0 if engagement==None else engagement
+
 
 		# self._ability  = 0 if ability==None else min(ability, 20.0)
 		# self._engagement = 0 if engagement==None else min(engagement, 1.0)
@@ -35,7 +37,7 @@ class PlayerCharacteristics(object):
 	# 	self._ability = min(newValue, 20.0)
 	# 	# self._ability = newValue
 	# 	return self._ability
-	
+
 	# @engagement.setter
 	# def engagement(self, newValue):
 	# 	self._engagement = min(newValue, 1.0)
@@ -46,7 +48,7 @@ class PlayerCharacteristics(object):
 class PlayerState(object):
 	def __init__(self, stateType = None, profile = None, characteristics = None, dist = None, quality = None, group = None, tasks = None):
 		self.creationTime = time.time()
-		
+
 		self.stateType = 1 if stateType == None else stateType
 		self.profile = InteractionsProfile() if profile == None else profile
 		self.characteristics = PlayerCharacteristics() if characteristics == None else characteristics
@@ -64,10 +66,50 @@ class PlayerState(object):
 		self.stateType = 1
 		self.quality = -1
 		self.dist = -1
-		
+
 		self.group = []
 		self.tasks = []
 		return self
+
+
+class PlayerPersonality(object):
+	def __init__(self):
+		self.maxDifferenceValue = 1
+
+	@abstractmethod
+	def getPersonalityDifference(self, other: PlayerPersonality):
+		pass
+
+
+class PersonalityMBTI(PlayerPersonality):
+	def __init__(self, letter1, letter2, letter3, letter4):
+		self.letter1 = letter1
+		self.letter2 = letter2
+		self.letter3 = letter3
+		self.letter4 = letter4
+
+
+	def getLettersList(self):
+		return [self.letter1, self.letter2, self.letter3, self.letter4]
+
+
+	def getPersonalityDifference(self, other: PlayerPersonality):
+		# Personality difference is a value between 0 and 1
+		
+		if not isinstance(other, PersonalityMBTI):
+			raise Exception("Comparison between different personality models not allowed.")
+
+		difference = 0
+		otherLetters = other.getLettersList()
+		selfLetters = self.getLettersList()
+
+		for i in range(0, len(selfLetters)):
+			difference += 0 if selfLetters[i] == otherLetters[i] else self.maxDifferenceValue / 4
+
+		return difference
+
+
+
 
 
 class PlayerStatesDataFrame(object):
@@ -86,11 +128,11 @@ class PlayerStatesDataFrame(object):
 				self.flatProfiles.append(state.profile.flattened())
 				self.flatAbilities.append(state.characteristics.ability)
 				self.flatEngagements.append(state.characteristics.engagement)
-		
+
 
 	def reset(self):
 		self.states = []
-		
+
 		#auxiliary stuff
 		self.flatProfiles = []
 		self.flatAbilities = []
@@ -101,7 +143,7 @@ class PlayerStatesDataFrame(object):
 	def pushToDataFrame(self, playerState):
 		self.states.append(playerState)
 
-		#update tuple representation		
+		#update tuple representation
 		self.flatProfiles.append(playerState.profile.flattened())
 		self.flatAbilities.append(playerState.characteristics.ability)
 		self.flatEngagements.append(playerState.characteristics.engagement)
@@ -117,12 +159,12 @@ class PlayerStatesDataFrame(object):
 		remainderIndexes = trimmedListAndRemainder[1]
 
 		# print(remainderIndexes)
-		
+
 
 		self.states = trimmedList
 
-		
-		#update tuple representation 
+
+		#update tuple representation
 		for i in remainderIndexes:
 			self.flatProfiles.pop(i)
 			self.flatAbilities.pop(i)
