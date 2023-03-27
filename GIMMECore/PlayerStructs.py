@@ -1,52 +1,52 @@
 import math
 from sre_parse import State
-from abc import ABC, abstractmethod
 import time
 import copy
 import json
 from .InteractionsProfile import InteractionsProfile
 
+from abc import ABC, abstractmethod
 
 
 class PlayerCharacteristics(object):
-	def __init__(self, ability = None, engagement = None):
-		self.ability  = 0 if ability==None else ability
-		self.engagement = 0 if engagement==None else engagement
+	def __init__(self, ability=None, engagement=None):
+		self.ability = 0 if ability == None else ability
+		self.engagement = 0 if engagement == None else engagement
 
-
-		# self._ability  = 0 if ability==None else min(ability, 20.0)
-		# self._engagement = 0 if engagement==None else min(engagement, 1.0)
+	# self._ability  = 0 if ability==None else min(ability, 20.0)
+	# self._engagement = 0 if engagement==None else min(engagement, 1.0)
 
 	def reset(self):
 		self.ability = 0
 		self.engagement = 0
 		return self
 
-	# #constraints enforced via properties
-	# @property
-	# def ability(self):
-	# 	return self._ability
+# #constraints enforced via properties
+# @property
+# def ability(self):
+# 	return self._ability
 
-	# @property
-	# def engagement(self):
-	# 	return self._engagement
+# @property
+# def engagement(self):
+# 	return self._engagement
 
-	# @ability.setter
-	# def ability(self, newValue):
-	# 	# print(newValue)
-	# 	self._ability = min(newValue, 20.0)
-	# 	# self._ability = newValue
-	# 	return self._ability
+# @ability.setter
+# def ability(self, newValue):
+# 	# print(newValue)
+# 	self._ability = min(newValue, 20.0)
+# 	# self._ability = newValue
+# 	return self._ability
 
-	# @engagement.setter
-	# def engagement(self, newValue):
-	# 	self._engagement = min(newValue, 1.0)
-	# 	# self._engagement = newValue
-	# 	return self._engagement
+# @engagement.setter
+# def engagement(self, newValue):
+# 	self._engagement = min(newValue, 1.0)
+# 	# self._engagement = newValue
+# 	return self._engagement
 
 
 class PlayerState(object):
-	def __init__(self, stateType = None, profile = None, characteristics = None, dist = None, quality = None, group = None, tasks = None):
+	def __init__(self, stateType=None, profile=None, characteristics=None, dist=None, quality=None, group=None,
+				 tasks=None):
 		self.creationTime = time.time()
 
 		self.stateType = 1 if stateType == None else stateType
@@ -57,7 +57,6 @@ class PlayerState(object):
 
 		self.group = [] if group == None else group
 		self.tasks = [] if tasks == None else tasks
-
 
 	def reset(self):
 		self.characteristics.reset()
@@ -72,32 +71,34 @@ class PlayerState(object):
 		return self
 
 
-class PlayerPersonality(object):
+class PlayerPersonality(ABC):
 	def __init__(self):
 		self.maxDifferenceValue = 1
 
 	@abstractmethod
-	def getPersonalityDifference(self, other: PlayerPersonality):
+	def getPairPersonalityDifference(self, other):
+		pass
+
+	@abstractmethod
+	def getTeamPersonalityDifference(players):
 		pass
 
 
 class PersonalityMBTI(PlayerPersonality):
 	def __init__(self, letter1, letter2, letter3, letter4):
+		super()
 		self.letter1 = letter1
 		self.letter2 = letter2
 		self.letter3 = letter3
 		self.letter4 = letter4
 
-
 	def getLettersList(self):
 		return [self.letter1, self.letter2, self.letter3, self.letter4]
 
-
-	def getPersonalityDifference(self, other: PlayerPersonality):
-		# Personality difference is a value between 0 and 1
-		
+	# Determine the difference between 2 personalities. The value ranges from 0 (no difference) to 1 (max difference). 
+	def getPersonalityDifference(self, other):
 		if not isinstance(other, PersonalityMBTI):
-			raise Exception("Comparison between different personality models not allowed.")
+			raise Exception("[ERROR] Comparison between different personality models not allowed.")
 
 		difference = 0
 		otherLetters = other.getLettersList()
@@ -108,18 +109,62 @@ class PersonalityMBTI(PlayerPersonality):
 
 		return difference
 
+	# Determine the group personality difference. Using a formula proposed by Pieterse, Kourie and Sonnekus.
+	# players is a list of PlayerPersonalties
+	def getTeamPersonalityDifference(players):
+		# Difference is 0 if there's only one player
+		if players.len() == 1
+			return 0
 
+		letters1 = []
+		letters2 = []
+		letters3 = []
+		letters4 = []
 
+		letters_list = [letters1, letters2, letters3, letters4]
+
+		# Populate letters_list with all the players' letters
+		for player in players:
+			for letters, letter in zip(letters_list, player.getLettersList()):
+				letters.append(letter)
+
+			
+		difference = 0
+
+		for letters in letters_list:
+			letters.sort()
+			length = letters.len()
+			difference_counter = 0.0
+
+			# The first/last two letters are different -> means all but one letters are the same (difference = 1)
+			if (letters[0] == letters[1]) or (letters[length-1] == letters[length]):
+				difference += 1.0
+				continue
+			else:
+				# The first two letters are the same and len = 2, means all the letters are the same (difference = 0)
+				if length == 2:
+					continue
+
+			for letter in letters:
+				# If not all the letters are the same, then difference = 2
+				if letter != first_letter
+					difference += 2.0
+					break
+
+			# Otherwise, all the letters are the same (difference = 0)
+
+		# Max value for difference is 8. Divide by 8 in order to normalize it.
+		return differnce / 8.0  	
 
 
 class PlayerStatesDataFrame(object):
-	def __init__(self, interactionsProfileTemplate, trimAlg, states = None):
+	def __init__(self, interactionsProfileTemplate, trimAlg, states=None):
 		self.interactionsProfileTemplate = interactionsProfileTemplate
 		self.trimAlg = trimAlg
 
 		self.states = [] if states == None else states
 
-		#auxiliary stuff
+		# auxiliary stuff
 		self.flatProfiles = []
 		self.flatAbilities = []
 		self.flatEngagements = []
@@ -129,11 +174,10 @@ class PlayerStatesDataFrame(object):
 				self.flatAbilities.append(state.characteristics.ability)
 				self.flatEngagements.append(state.characteristics.engagement)
 
-
 	def reset(self):
 		self.states = []
 
-		#auxiliary stuff
+		# auxiliary stuff
 		self.flatProfiles = []
 		self.flatAbilities = []
 		self.flatEngagements = []
@@ -143,7 +187,7 @@ class PlayerStatesDataFrame(object):
 	def pushToDataFrame(self, playerState):
 		self.states.append(playerState)
 
-		#update tuple representation
+		# update tuple representation
 		self.flatProfiles.append(playerState.profile.flattened())
 		self.flatAbilities.append(playerState.characteristics.ability)
 		self.flatEngagements.append(playerState.characteristics.engagement)
@@ -160,20 +204,16 @@ class PlayerStatesDataFrame(object):
 
 		# print(remainderIndexes)
 
-
 		self.states = trimmedList
 
-
-		#update tuple representation
+		# update tuple representation
 		for i in remainderIndexes:
 			self.flatProfiles.pop(i)
 			self.flatAbilities.pop(i)
 			self.flatEngagements.pop(i)
 
-
 	def getAllStates(self):
 		return self.states
-
 
 	def getAllStatesFlatten(self):
 		return {'profiles': self.flatProfiles, 'abilities': self.flatAbilities, 'engagements': self.flatEngagements}
