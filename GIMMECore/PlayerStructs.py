@@ -76,11 +76,11 @@ class PlayerPersonality(ABC):
 		self.maxDifferenceValue = 1
 
 	@abstractmethod
-	def getPairPersonalityDifference(self, other):
+	def getPairPersonalityDiveristy(self, other):
 		pass
 
 	@abstractmethod
-	def getTeamPersonalityDifference(players):
+	def getTeamPersonalityDiveristy(players):
 		pass
 
 
@@ -96,7 +96,7 @@ class PersonalityMBTI(PlayerPersonality):
 		return [self.letter1, self.letter2, self.letter3, self.letter4]
 
 	# Determine the difference between 2 personalities. The value ranges from 0 (no difference) to 1 (max difference). 
-	def getPersonalityDifference(self, other):
+	def getPersonalityDiveristy(self, other):
 		if not isinstance(other, PersonalityMBTI):
 			raise Exception("[ERROR] Comparison between different personality models not allowed.")
 
@@ -111,9 +111,9 @@ class PersonalityMBTI(PlayerPersonality):
 
 	# Determine the group personality difference. Using a formula proposed by Pieterse, Kourie and Sonnekus.
 	# players is a list of PlayerPersonalties
-	def getTeamPersonalityDifference(players):
+	def getTeamPersonalityDiveristy(players):
 		# Difference is 0 if there's only one player
-		if players.len() == 1
+		if players.len() == 1:
 			return 0
 
 		letters1 = []
@@ -147,14 +147,14 @@ class PersonalityMBTI(PlayerPersonality):
 
 			for letter in letters:
 				# If not all the letters are the same, then difference = 2
-				if letter != first_letter
+				if letter != letters[1]:
 					difference += 2.0
 					break
 
 			# Otherwise, all the letters are the same (difference = 0)
 
 		# Max value for difference is 8. Divide by 8 in order to normalize it.
-		return differnce / 8.0  	
+		return difference / 8.0
 
 
 class PlayerStatesDataFrame(object):
