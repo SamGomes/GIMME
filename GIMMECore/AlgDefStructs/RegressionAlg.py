@@ -25,16 +25,50 @@ class RegressionAlg(ABC):
 	def isTabular(self):
 		pass
 
+	# If returns true, must implement a groupPredict() method
+	def isGroupPredict(self):  
+		return False
+	
+	def groupPredict(self, groupIds):
+		pass
+	
 	# instrumentation
 	def getCompPercentage(self):
 		return self.completionPerc
 
 # Inherit from RegressionAlg, distance to centroid, logarithmic instead of linear, define a predict. Diversity metric should be a group attribute
 class DiversityValueAlg(RegressionAlg):
-	def __init__(self, playerModelBridge):
+	def __init__(self, playerModelBridge, diversityWeight):
 		super().__init__(playerModelBridge)
+		self.diversityWeight = diversityWeight
 
-	def predict(self, profile, playerId)
+	def predict(self, profile, playerId):
+		return 0
+	
+	def isTabular(self):
+		return False
+	
+	def isGroupPredict(self):
+		return True
+
+	def groupPredict(self, groupIds):
+		personalities = []  # list of strings that describe the personality
+
+		for playerId in groupIds:
+			personalities.append(self.playerModelBridge.getPlayerPersonality(playerId))
+
+
+		diversity = PlayerPersonality.getTeamPersonalityDiveristy(personalities)
+
+		# inverse of distance squared, maybe try other approaches too
+		distance = abs(diversity - self.diversityWeight)
+
+		if distance == 0:
+			return 1.0
+		
+		return 1.0 / (distance * distance)
+
+		
 
 
 # class DiversityLogarithmicCentroidDistance(RegressionAlg):
