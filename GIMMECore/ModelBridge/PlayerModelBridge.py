@@ -26,7 +26,7 @@ class PlayerModelBridge(ABC):
 	@abstractmethod
 	def getPlayerCurrCharacteristics(self, playerId):
 		pass
-		
+
 
 	@abstractmethod
 	def getPlayerStatesDataFrame(self, playerId):

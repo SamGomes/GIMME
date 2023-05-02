@@ -3,6 +3,7 @@ import copy
 import random
 import traceback
 
+
 class InteractionsProfile(object):
 
 	def __init__(self, dimensions = None):

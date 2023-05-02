@@ -69,34 +69,47 @@ class PlayerState(object):
 		self.group = []
 		self.tasks = []
 		return self
-
+	
 
 class PlayerPersonality(ABC):
 	def __init__(self):
 		self.maxDifferenceValue = 1
 
 	@abstractmethod
-	def getPairPersonalityDiveristy(self, other):
+	def getPersonalityString(self):
 		pass
 
 	@abstractmethod
-	def getTeamPersonalityDiveristy(players):
+	def getPairPersonalityDiversity(self, other):
+		pass
+
+	@abstractmethod
+	def getTeamPersonalityDiversity(players):
 		pass
 
 
 class PersonalityMBTI(PlayerPersonality):
+	def __init__(self):
+		super()
+			
 	def __init__(self, letter1, letter2, letter3, letter4):
 		super()
-		self.letter1 = letter1
-		self.letter2 = letter2
-		self.letter3 = letter3
-		self.letter4 = letter4
+		self.setLetters(letter1, letter2, letter3, letter4)
+
+	def setLetters(self, letter1, letter2, letter3, letter4):
+		self.letter1 = letter1.upper()
+		self.letter2 = letter2.upper()
+		self.letter3 = letter3.upper()
+		self.letter4 = letter4.upper()
+
+	def getPersonalityString(self):
+		return self.letter1 + self.letter2 + self.letter3 + self.letter4
 
 	def getLettersList(self):
 		return [self.letter1, self.letter2, self.letter3, self.letter4]
 
 	# Determine the difference between 2 personalities. The value ranges from 0 (no difference) to 1 (max difference). 
-	def getPersonalityDiveristy(self, other):
+	def getPairPersonalityDiversity(self, other):
 		if not isinstance(other, PersonalityMBTI):
 			raise Exception("[ERROR] Comparison between different personality models not allowed.")
 
@@ -111,33 +124,27 @@ class PersonalityMBTI(PlayerPersonality):
 
 	# Determine the group personality difference. Using a formula proposed by Pieterse, Kourie and Sonnekus.
 	# players is a list of PlayerPersonalties
-	def getTeamPersonalityDiveristy(players):
+	def getTeamPersonalityDiversity(players):
 		# Difference is 0 if there's only one player
-		if players.len() == 1:
+		if len(players) == 1:
 			return 0
 
-		letters1 = []
-		letters2 = []
-		letters3 = []
-		letters4 = []
-
-		letters_list = [letters1, letters2, letters3, letters4]
+		letters_list = [[], [], [], []]
 
 		# Populate letters_list with all the players' letters
 		for player in players:
 			for letters, letter in zip(letters_list, player.getLettersList()):
 				letters.append(letter)
-
 			
-		difference = 0
+		difference = 0.0
 
 		for letters in letters_list:
 			letters.sort()
-			length = letters.len()
-			difference_counter = 0.0
+			length = len(letters)
+
 
 			# The first/last two letters are different -> means all but one letters are the same (difference = 1)
-			if (letters[0] == letters[1]) or (letters[length-1] == letters[length]):
+			if (letters[0] == letters[1]) or (letters[length-2] == letters[length-1]):
 				difference += 1.0
 				continue
 			else:

@@ -431,8 +431,11 @@ class AnnealedPRSConfigsGen(ConfigsGenAlg):
 						for j in range(i+1, groupSize):
 							currQuality += self.regAlg.predict(firstPlayerPreferences, group[j]) / math.comb(groupSize, 2)
 
-					else:
+					elif (not self.regAlg.isGroupPredict()):
 						currQuality += self.regAlg.predict(profile, group[i])
+
+				if (self.regAlg.isGroupPredict()):
+					currQuality += self.regAlg.groupPredict(group)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -544,8 +547,11 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 						for j in range(i+1, groupSize):
 							currQuality += self.regAlg.predict(firstPlayerPreferences, group[j]) / math.comb(groupSize, 2)
 
-					else:
+					elif (not self.regAlg.isGroupPredict()):
 						currQuality += self.regAlg.predict(profile, group[i])
+
+				if (self.regAlg.isGroupPredict()):
+					currQuality += self.regAlg.groupPredict(group)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -1110,8 +1116,11 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 						for j in range(i+1, len(group)):
 							totalFitness += self.regAlg.predict(firstPlayerPreferences, group[j]) / math.comb(len(group), 2)
 
-				else:
+				elif (not self.regAlg.isGroupPredict()):
 					totalFitness += self.regAlg.predict(profile, group[i])
+
+			if (self.regAlg.isGroupPredict()):
+				totalFitness += self.regAlg.groupPredict(group)
 		
 		totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
 		if allConstrainsSatisfied:
@@ -1318,8 +1327,11 @@ class ODPIP(ConfigsGenAlg):
 						for j in range(i+1, groupSize):
 							currQuality += self.regAlg.predict(firstPlayerPreferences, groupInIds[j]) / math.comb(groupSize, 2)
 
-					else:
+					elif (not self.regAlg.isGroupPredict()):
 						currQuality += self.regAlg.predict(profile, groupInIds[i])
+
+				if (self.regAlg.isGroupPredict()):
+					currQuality += self.regAlg.groupPredict(group)
 
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
@@ -1559,8 +1571,11 @@ class CLink(ConfigsGenAlg):
 						for j in range(i+1, groupSize):
 							currQuality += self.regAlg.predict(firstPlayerPreferences, groupInIds[j]) / math.comb(groupSize, 2)
 
-					else:
+					elif (not self.regAlg.isGroupPredict()):
 						currQuality += self.regAlg.predict(profile, groupInIds[i])
+
+				if (self.regAlg.isGroupPredict()):
+					currQuality += self.regAlg.groupPredict(group)
 						
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile

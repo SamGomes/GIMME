@@ -36,8 +36,11 @@ class RegressionAlg(ABC):
 	def getCompPercentage(self):
 		return self.completionPerc
 
-# Inherit from RegressionAlg, distance to centroid, logarithmic instead of linear, define a predict. Diversity metric should be a group attribute
+
+# ---------------------- Personality Diversity ---------------------------
 class DiversityValueAlg(RegressionAlg):
+	#  Consider the task preferences of students in addition to team diversity. People with the same personality can still have different preferences
+	#  Diversity weight is the value determined by the teacher (0 = aligned, 1 = diverse)
 	def __init__(self, playerModelBridge, diversityWeight):
 		super().__init__(playerModelBridge)
 		self.diversityWeight = diversityWeight
@@ -52,23 +55,23 @@ class DiversityValueAlg(RegressionAlg):
 		return True
 
 	def groupPredict(self, groupIds):
-		personalities = []  # list of strings that describe the personality
+		personalities = []  # list of PlayerPersonality objects
+		diversity = 0.0
 
 		for playerId in groupIds:
 			personalities.append(self.playerModelBridge.getPlayerPersonality(playerId))
 
-
-		diversity = PlayerPersonality.getTeamPersonalityDiveristy(personalities)
+		if isinstance(personalities[0], PersonalityMBTI):
+			diversity = PersonalityMBTI.getTeamPersonalityDiversity(personalities)
 
 		# inverse of distance squared, maybe try other approaches too
+		# lower distance = higher quality
 		distance = abs(diversity - self.diversityWeight)
 
 		if distance == 0:
 			return 1.0
 		
 		return 1.0 / (distance * distance)
-
-		
 
 
 # class DiversityLogarithmicCentroidDistance(RegressionAlg):
