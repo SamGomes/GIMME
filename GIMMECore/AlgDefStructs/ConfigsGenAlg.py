@@ -1331,7 +1331,7 @@ class ODPIP(ConfigsGenAlg):
 						currQuality += self.regAlg.predict(profile, groupInIds[i])
 
 				if (self.regAlg.isGroupPredict()):
-					currQuality += self.regAlg.groupPredict(group)
+					currQuality += self.regAlg.groupPredict(groupInIds)
 
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
@@ -1575,7 +1575,7 @@ class CLink(ConfigsGenAlg):
 						currQuality += self.regAlg.predict(profile, groupInIds[i])
 
 				if (self.regAlg.isGroupPredict()):
-					currQuality += self.regAlg.groupPredict(group)
+					currQuality += self.regAlg.groupPredict(groupInIds)
 						
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
@@ -1623,6 +1623,7 @@ class CLink(ConfigsGenAlg):
 		return bestProfile
 
 	def organize(self):
+		print(4)
 		self.playerIds = self.playerModelBridge.getAllPlayerIds()
 		for i in range(len(self.playerIds)):
 			self.playerIds[i] = str(self.playerIds[i])
