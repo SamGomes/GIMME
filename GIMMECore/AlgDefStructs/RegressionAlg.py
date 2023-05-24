@@ -53,22 +53,33 @@ class DiversityValueAlg(RegressionAlg):
 	
 	def isGroupPredict(self):
 		return True
-
-	def groupPredict(self, groupIds):
+	
+	def getPersonalitiesListFromPlayerIds(self, groupIds):
 		personalities = []  # list of PlayerPersonality objects
-		diversity = 0.0
 
 		for playerId in groupIds:
-			personalities.append(self.playerModelBridge.getPlayerPersonality(playerId))
+				personalities.append(self.playerModelBridge.getPlayerPersonality(playerId))
+
+		return personalities
+	
+	def getTeamPersonalityDiveristy(self, personalities):
+		diversity = 0.0
 
 		if isinstance(personalities[0], PersonalityMBTI):
 			diversity = PersonalityMBTI.getTeamPersonalityDiversity(personalities)
 
+		return diversity
+
+
+	def groupPredict(self, groupIds):
+		personalities = self.getPersonalitiesListFromPlayerIds(groupIds)  # list of PlayerPersonality objects
+		diversity = self.getTeamPersonalityDiveristy(personalities)
+
 		# inverse of distance squared, maybe try other approaches too
 		# lower distance = higher quality
 		distance = abs(diversity - self.diversityWeight)
-
-		if distance == 0:
+		
+		if distance == 0.0:
 			return 1.0
 		
 		return 1.0 / (distance * distance)
@@ -137,6 +148,7 @@ class KNNRegression(RegCoalitionValueAlg):
 		# executionTime = (time.time() - startTime)
 		# print('Execution time in seconds: ' + str(executionTime))
 		self.state = predictedState
+
 		return self.calcQuality(predictedState)
 
 # ---------------------- KNNRegressionSKLearn ---------------------------

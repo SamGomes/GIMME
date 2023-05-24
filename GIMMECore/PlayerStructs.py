@@ -9,9 +9,10 @@ from abc import ABC, abstractmethod
 
 
 class PlayerCharacteristics(object):
-	def __init__(self, ability=None, engagement=None):
+	def __init__(self, ability=None, engagement=None, group_diversity=None):
 		self.ability = 0 if ability == None else ability
 		self.engagement = 0 if engagement == None else engagement
+		self.group_diversity = 0 if group_diversity == None else group_diversity
 
 	# self._ability  = 0 if ability==None else min(ability, 20.0)
 	# self._engagement = 0 if engagement==None else min(engagement, 1.0)
@@ -149,7 +150,7 @@ class PersonalityMBTI(PlayerPersonality):
 				continue
 			else:
 				# The first two letters are the same and len = 2, means all the letters are the same (difference = 0)
-				if length == 2:
+				if length <= 3:
 					continue
 
 			for letter in letters:
@@ -161,6 +162,8 @@ class PersonalityMBTI(PlayerPersonality):
 			# Otherwise, all the letters are the same (difference = 0)
 
 		# Max value for difference is 8. Divide by 8 in order to normalize it.
+		print(letters_list)
+		print(difference / 8.0)
 		return difference / 8.0
 
 
