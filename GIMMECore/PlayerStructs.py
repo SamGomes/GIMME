@@ -144,14 +144,13 @@ class PersonalityMBTI(PlayerPersonality):
 			length = len(letters)
 
 
-			# The first/last two letters are different -> means all but one letters are the same (difference = 1)
-			if (letters[0] == letters[1]) or (letters[length-2] == letters[length-1]):
+			if (letters[0] != letters[1]) or (letters[length-2] != letters[length-1]):
+				# The first/last two letters are different -> means all but one letters are the same (difference = 1)
 				difference += 1.0
 				continue
-			else:
-				# The first two letters are the same and len = 2, means all the letters are the same (difference = 0)
-				if length <= 3:
-					continue
+			elif length <= 3:
+				# The first/last two letters are the same and len =< 3, means all the letters are the same (difference = 0)
+				continue
 
 			for letter in letters:
 				# If not all the letters are the same, then difference = 2
@@ -162,8 +161,6 @@ class PersonalityMBTI(PlayerPersonality):
 			# Otherwise, all the letters are the same (difference = 0)
 
 		# Max value for difference is 8. Divide by 8 in order to normalize it.
-		print(letters_list)
-		print(difference / 8.0)
 		return difference / 8.0
 
 

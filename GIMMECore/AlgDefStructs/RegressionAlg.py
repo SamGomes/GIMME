@@ -75,7 +75,7 @@ class DiversityValueAlg(RegressionAlg):
 		personalities = self.getPersonalitiesListFromPlayerIds(groupIds)  # list of PlayerPersonality objects
 		diversity = self.getTeamPersonalityDiveristy(personalities)
 
-		# inverse of distance squared, maybe try other approaches too
+		# inverse of distance squared
 		# lower distance = higher quality
 		distance = abs(diversity - self.diversityWeight)
 		
