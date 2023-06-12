@@ -28,6 +28,10 @@ class TaskModelBridge(ABC):
 		pass
 
 	@abstractmethod
+	def getTaskDiversityWeight(self, taskId):
+		pass
+
+	@abstractmethod
 	def getTaskInitDate(self, taskId):
 		pass
 
