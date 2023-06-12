@@ -22,7 +22,7 @@ resultsLog <- resultsLog[resultsLog$iteration > 19,]
 resultsLog <- resultsLog[complete.cases(resultsLog),]
 
 print(sprintf("nRuns: %f", (nrow(unique(resultsLog[c("simsID", "run", "algorithm")])) / nrow(unique(resultsLog[c("algorithm")]))) ))
-# print(resultsLog)
+
 
 # plot strategies
 avg <- aggregate(abilityInc ~ iteration*algorithm, resultsLog, mean)
@@ -138,10 +138,9 @@ currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP"] <- "GIMME-ODPIP"
 currAvg$algorithm[currAvg$algorithm == "GIMME_Tabular_ODPIP"] <- "GIMME_Tabular_ODPIP" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_CLink_Tabular"] <- "GIMME_Tabular_CLink" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_PRS"] <- "GIMME-PRS" 
-# currAvg$algorithm[currAvg$algorithm == "GIMME_GA_scx"] <- "GIMME GA (Simpler CX)" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_GA"] <- "GIMME-GA" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap"] <- "GIMME-GA-Bootstrap" 
-# currAvg$algorithm[currAvg$algorithm == "Random"] <- "Random" 
+currAvg$algorithm[currAvg$algorithm == "Random"] <- "Random" 
 
 currAvg$linetype <- "solid" 
 # currAvg$linetype[currAvg$algorithm == "Perf. Info."] <- "dashed" 
@@ -149,7 +148,7 @@ currAvg$linetype <- "solid"
 buildAbIncPlots(currAvg, currSdev, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
 suppressMessages(ggsave(sprintf("plots/%s.png", "simulationsResultsAbilityInc"), height=7, width=15, units="in", dpi=500))
 
-
+q()
 
 # ----------------------------------------------------------------------------------
 # cmp average ability increase of GIMME with different accuracy est

@@ -20,10 +20,10 @@ from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 1
+numRuns = 5
 
-maxNumTrainingIterations = 5
-numRealIterations = 5
+maxNumTrainingIterations = 20
+numRealIterations = 20
 
 preferredNumberOfPlayersPerGroup = 4
 
@@ -680,7 +680,7 @@ def executionPhase(numRuns, playerBridge, maxNumIterations, startingI, currRun, 
 
 		for x in range(numPlayersToTest):
 			increases = simulateReaction(playerBridge, i, x)
-			logManager.writeToLog("GIMMESims", "resultsEvl", 
+			logManager.writeToLog("GIMMESims", "results", 
 				{
 					"simsID": str(simsID),
 					"algorithm": adaptation.name,
@@ -878,9 +878,9 @@ if __name__ == '__main__':
 	# 				playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
 
 
-	# adaptationGA.name = "GIMME_GA_Bootstrap"
-	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
-	# 				playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.1)
+	adaptationGA.name = "GIMME_GA_Bootstrap"
+	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 
+					playerBridge, taskBridge, adaptationGA, estimatorsAccuracy = 0.1)
 
 	# adaptationGA.name = "GIMME_GA_Bootstrap_HighAcc"
 	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations, 

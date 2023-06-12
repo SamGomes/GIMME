@@ -33,6 +33,5 @@ setup(
       'pymongo'
     ],
     ext_modules=[sfc_module]
-
 )
 
