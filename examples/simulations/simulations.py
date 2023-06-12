@@ -13,15 +13,14 @@ import matplotlib.pyplot as plt
 from numpy import array
 import matplotlib.collections as collections
 
-sys.path.insert(1,'/home/samgomes/Documents/doutoramento/reps/GIMME/GIMME')
-sys.path.insert(1,'/GIMME')
+
 sys.path.insert(1,'../')
 from GIMMECore import *
 from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 20
+numRuns = 1
 
 maxNumTrainingIterations = 20
 numRealIterations = 20
@@ -830,70 +829,40 @@ if __name__ == '__main__':
 
 	# ----------------------- [Execute Algorithms] ----------------------------
 
-	# inputtedText = input("<<< All ready! Press Enter to start (Q, then Enter exits the application). >>>") 
-	# if (inputtedText== "Q"):
-	# 	exit()
+	inputtedText = input("<<< All ready! Press Enter to start (Q, then Enter exits the application). >>>") 
+	if (inputtedText== "Q"):
+		exit()
 
 	
+
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	 	playerBridge, taskBridge, adaptationRandom)
 	
-	# for i in range(len(listAdaptationRandom)):
-	# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 		listPlayerBridge[i], taskBridge, listAdaptationRandom[i])
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	 	#playerBridge, taskBridge, adaptationPRS)
 
-	# for i in range(len(listAdaptationPRS)):
-	# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 		listPlayerBridge[i], taskBridge, listAdaptationPRS[i])
-
-	# for i in range(len(listAdaptationGA)):
-	# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 		listPlayerBridge[i+1], taskBridge, listAdaptationGA[i])
-
-	# for i in range(len(listAdaptationODPIP)):
-	# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 		listPlayerBridge[i], taskBridge, listAdaptationODPIP[i])
-
-	# for i in range(len(listAdaptationTabularODPIP)):
-	# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 		listPlayerBridge[i], taskBridge, listAdaptationTabularODPIP[i])
-
-	# for i in range(len(listAdaptationCLink)):
-	# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 		listPlayerBridge[i], taskBridge, listAdaptationCLink[i])
-
-	# for i in range(len(listAdaptationTabularCLink)):
-	# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 		listPlayerBridge[i], taskBridge, listAdaptationTabularCLink[i])
-
-	
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	#  	playerBridge, taskBridge, adaptationPRS)
-
-
-	# adaptationGA.name = "GIMME_GA"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 	playerBridge, taskBridge, adaptationGA)
-
+	adaptationGA.name = "GIMME_GA"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationGA)
 
 		
-	# adaptationODPIP.name = "GIMME_ODPIP"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	# 	playerBridge, taskBridge, adaptationODPIP)
+	#adaptationODPIP.name = "GIMME_ODPIP"
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		#playerBridge, taskBridge, adaptationODPIP)
 
-	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationTabularODPIP)
+	#adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		#playerBridge, taskBridge, adaptationTabularODPIP)
 
-	adaptationCLink.name = "GIMME_CLink"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	   	playerBridge, taskBridge, adaptationCLink)
+	#adaptationCLink.name = "GIMME_CLink"
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	   	#playerBridge, taskBridge, adaptationCLink)
 
-	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationTabularCLink)
+	#adaptationTabularCLink.name = "GIMME_CLink_Tabular"
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		#playerBridge, taskBridge, adaptationTabularCLink)
 
 
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	#  	playerBridge, taskBridge, adaptationRandom)
 
 
 	# adaptationODPIP.name = "GIMME_ODPIP_Bootstrap"

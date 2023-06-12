@@ -13,7 +13,6 @@ from ctypes import *
 from ..InteractionsProfile import InteractionsProfile 
 from ..PlayerStructs import *
 from ..AlgDefStructs.RegressionAlg import *
-import matplotlib.pyplot as plt
 
 
 class ConfigsGenAlg(ABC):
@@ -1078,7 +1077,7 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 				totalFitness += profile.sqrDistanceBetween(InteractionsProfile(dimensions = {'dim_0': 0.98, 'dim_1': 0.005}))
 				totalFitness += abs(config[groupI][playerI] - targetConfig[groupI][playerI])
 		
-		print(totalFitness)
+		#print(totalFitness)
 		totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
 		individual.fitness.values = totalFitness,
 		return totalFitness, #must return a tuple
@@ -1202,7 +1201,7 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
-# new algorithms
+# deterministic algorithms
 class ODPIP(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
@@ -1660,7 +1659,6 @@ class CLink(ConfigsGenAlg):
 		return bestProfile
 
 	def organize(self):
-		print(4)
 		self.playerIds = self.playerModelBridge.getAllPlayerIds()
 		for i in range(len(self.playerIds)):
 			self.playerIds[i] = str(self.playerIds[i])

@@ -1,22 +1,20 @@
-from setuptools import setup, Extension
+from setuptools import dist, setup, Extension
 import glob
-#import pybind11
 
 sfc_module = Extension(
-  'GIMMESolver', 
+  'GIMMECore.GIMMESolver', 
   sources = glob.glob('solverModules/GIMME_solver_modules/*.cpp'),
   #include_dirs=[pybind11.get_include()],
   language='c++',
   )
-print(sfc_module)
 
 setup(
     name="GIMMECore",
-    version="1.3.0",
+    version="1.4.0",
     license = "CC BY 4.0",
     author="Samuel Gomes",
     author_email = "samuel.gomes@tecnico.ulisboa.pt",
-    packages=['GIMMECore', 'GIMMECore.ModelBridge', 'GIMMECore.AlgDefStructs'],
+    packages=['GIMMECore', 'GIMMECore.ModelBridge', 'GIMMECore.AlgDefStructs','GIMMECore.GIMMESolver'],
     classifiers = [
     'Development Status :: Development',
     'Intended Audience :: Science/Research',
@@ -27,17 +25,12 @@ setup(
     'Topic :: Scientific/Engineering :: Adaptation'
     ],
     install_requires=[
-      'numpy',
-      'scikit-learn',
-      'deap', 
-      'pymongo'
-    ]
+      'python-decouple',
+      'deap',
+      'pandas',
+      'scikit-learn'
+    ],
+    ext_modules=[sfc_module]
 
 )
-
-setup(
-    name='GIMMESolver',
-    version='1.0',
-    ext_modules=[sfc_module]
-   )
 
