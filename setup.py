@@ -2,7 +2,7 @@ from setuptools import dist, setup, Extension
 import glob
 
 sfc_module = Extension(
-  'GIMMECore.GIMMESolver', 
+  'GIMMESolver', 
   sources = glob.glob('solverModules/GIMME_solver_modules/*.cpp'),
   #include_dirs=[pybind11.get_include()],
   language='c++',
@@ -14,7 +14,7 @@ setup(
     license = "CC BY 4.0",
     author="Samuel Gomes",
     author_email = "samuel.gomes@tecnico.ulisboa.pt",
-    packages=['GIMMECore', 'GIMMECore.ModelBridge', 'GIMMECore.AlgDefStructs','GIMMECore.GIMMESolver'],
+    packages=['GIMMECore', 'GIMMECore.ModelBridge', 'GIMMECore.AlgDefStructs'],
     classifiers = [
     'Development Status :: Development',
     'Intended Audience :: Science/Research',
@@ -28,7 +28,9 @@ setup(
       'python-decouple',
       'deap',
       'pandas',
-      'scikit-learn'
+      'scikit-learn',
+      'matplotlib',
+      'pymongo'
     ],
     ext_modules=[sfc_module]
 

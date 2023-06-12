@@ -45,6 +45,9 @@ class CustomTaskModelBridge(TaskModelBridge):
 		return self.tasks[taskId].initDate
 	def getTaskFinalDate(self, taskId):
 		return self.tasks[taskId].finalDate
+		
+	def getTaskDiversityWeight(self, taskId):
+		return 0.5
 
 
 class CustomPlayerModelBridge(PlayerModelBridge):
@@ -84,6 +87,9 @@ class CustomPlayerModelBridge(PlayerModelBridge):
 		return self.players[int(playerId)].currState.characteristics
 	def getPlayerPreferencesEst(self, playerId):
 		return self.players[int(playerId)].preferencesEst
+		
+	def getPlayerPersonality(self, playerId):
+		return "<MOCKED PERSONALITY>"
 
 	def setPlayerPreferencesEst(self, playerId, preferencesEst):
 		self.players[int(playerId)].preferencesEst = preferencesEst

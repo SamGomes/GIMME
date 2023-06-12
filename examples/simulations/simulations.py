@@ -22,8 +22,8 @@ from LogManager import *
 
 numRuns = 1
 
-maxNumTrainingIterations = 20
-numRealIterations = 20
+maxNumTrainingIterations = 5
+numRealIterations = 5
 
 preferredNumberOfPlayersPerGroup = 4
 
@@ -838,29 +838,29 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 	 	playerBridge, taskBridge, adaptationRandom)
 	
-	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	 	#playerBridge, taskBridge, adaptationPRS)
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	 	playerBridge, taskBridge, adaptationPRS)
 
 	adaptationGA.name = "GIMME_GA"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
 		playerBridge, taskBridge, adaptationGA)
 
 		
-	#adaptationODPIP.name = "GIMME_ODPIP"
-	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		#playerBridge, taskBridge, adaptationODPIP)
+	adaptationODPIP.name = "GIMME_ODPIP"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationODPIP)
 
-	#adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
-	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		#playerBridge, taskBridge, adaptationTabularODPIP)
+	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationTabularODPIP)
 
-	#adaptationCLink.name = "GIMME_CLink"
-	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	   	#playerBridge, taskBridge, adaptationCLink)
+	adaptationCLink.name = "GIMME_CLink"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	   	playerBridge, taskBridge, adaptationCLink)
 
-	#adaptationTabularCLink.name = "GIMME_CLink_Tabular"
-	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		#playerBridge, taskBridge, adaptationTabularCLink)
+	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		playerBridge, taskBridge, adaptationTabularCLink)
 
 
 
