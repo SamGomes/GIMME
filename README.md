@@ -22,10 +22,10 @@ GIMME was tested on Windows and Linux. May also work in MacOS, but remains untes
 
 ## Setup
 
-GIMME setup is straightforward. You just got to install the python package:
+GIMME setup is straightforward. You just got to install the python package via the repository:
 
 ```python 
-sudo python3 setup.py install
+pip install GIMMECore
 ```
 
 *Note: If some errors about libraries are prompted (for ex. numpy or matplotlib package not found), please install those packages as well, we are currently reimplementing some code parts, by which we do not ensure the requirements are updated to the last code version...*
@@ -41,29 +41,26 @@ Besides importing the core, the user has to also implement the functionalities t
 
 ## Execute an example
 
-Some simulations are provided as example use cases of our system. To execute the provided simulations, you just have to enter the folder examples and call python as usual:
+Some examples are provided as use cases of our package. To execute the provided examples, you just have to call python as usual, for instance:
 
 ```python 
-cd examples
-python simulations.py
+python examples/simpleExample/simpleExample.py
+python examples/simulations/simulations.py
 ```
 
-*Note: For just testing the code, it is advised to change the numRuns variable to a low value, higher than 1, such as 10. For tendencies to be clearly observed when executing them, it is adviseable to set numRuns to 200.*
+*Note: For just testing the code, it is advised to change the numRuns variable of simulations.py to a low value, such as 10. For tendencies to be clearly observed when executing them, it is adviseable to set numRuns to 200.*
 
 This will output the data to a csv file ```examples/simulationResults/latestResults/GIMMESims/results.csv```, summing the results of applying our simulations. Several plots summarizing the results can be built using the r code provided in ```examples/simulationResults/latestResults/plotGenerator.r```.
-
-## Unit Tests
-As of now, no unit tests are provided, due to development constraints. We believe unit tests will be provided in near updates, as they are needed to ensure consistency in future releases.
 
 
 ## Report on Latest Features
 We have been writing a report about our latest features, currently available [here](https://drive.google.com/file/d/10y9SROvK-20zBGLZggtJVasL5Uw27vWd/view) in pre-print format.
 
 ## Future Improvements
-As of the current version, there are still some unexplored open pathways. They include:
+As of the current version, there are still some on-going exploration pathways. They include:
 - The integration of more refined coalition structure generators (ConfigGenAlg);
-- The integration of the tool in a multiplayer serious game (example/ use case);
-- The integration of automatic task selection (not covered by simulations).
+- The integration of the tool in a multiplayer serious scenario (example/ use case);
+- The improvement of task selection.
 
 *Any help to improve this idea is welcome.*
 

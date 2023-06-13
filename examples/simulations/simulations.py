@@ -14,7 +14,9 @@ from numpy import array
 import matplotlib.collections as collections
 
 
-sys.path.insert(1,'../')
+#hack for fetching the ModelMocks package on the previous directory
+sys.path.insert(1,sys.path[0].rsplit('/',1)[0])
+
 from GIMMECore import *
 from ModelMocks import *
 from LogManager import *
@@ -59,7 +61,7 @@ numChildrenPerIteration = 100
 simsID = str(os.getpid())
 
 startTime = str(datetime.datetime.now())
-newpath = "./simulationResults/latestResults/"
+newpath = sys.path[0]+"/simulationResults/latestResults/"
 if not os.path.exists(newpath):
     os.makedirs(newpath)
 
@@ -850,17 +852,17 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
 		playerBridge, taskBridge, adaptationODPIP)
 
-	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationTabularODPIP)
+	#adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		#playerBridge, taskBridge, adaptationTabularODPIP)
 
 	adaptationCLink.name = "GIMME_CLink"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
 	   	playerBridge, taskBridge, adaptationCLink)
 
-	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		playerBridge, taskBridge, adaptationTabularCLink)
+	#adaptationTabularCLink.name = "GIMME_CLink_Tabular"
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+		#playerBridge, taskBridge, adaptationTabularCLink)
 
 
 
