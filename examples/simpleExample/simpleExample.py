@@ -6,9 +6,14 @@ import textwrap
 
 from datetime import datetime, timedelta
 
-#sys.path.insert(1,'/Users/pedro/Desktop/tese/GIMME/GIMMECore')
-#sys.path.insert(1,'/GIMME')
-sys.path.insert(1,'../')
+import itertools
+import threading
+import time
+import sys
+
+#hack for fetching the ModelMocks package on the previous directory
+sys.path.insert(1,sys.path[0].rsplit('/',1)[0])
+
 from GIMMECore import *
 from ModelMocks import *
 
@@ -157,6 +162,22 @@ adaptationGIMME.init(
 
 
 ready = True
+thinking = False
+
+#here is a loading animation 
+#(source: https://stackoverflow.com/questions/22029562/python-how-to-make-simple-animated-loading-while-process-is-running)
+def animate():
+    for c in itertools.cycle(['|', '/', '-', '\\']):
+        if thinking:
+            break
+        sys.stdout.write('\rcomputing new iteration...' + c)
+        sys.stdout.flush()
+        time.sleep(0.1)
+
+t = threading.Thread(target=animate)
+t.start()
+
+
 while(True):
 	readyText = ""
 	readyText = str(input("Ready to compute iteration (y/n)? "))
@@ -167,10 +188,11 @@ while(True):
 		print("~~~~~~(The End)~~~~~~")
 		break
 
+	thinking = True
 
 	print("----------------------")
-	print("Iteration Summary:\n\n\n")
-	print(json.dumps(adaptationGIMME.iterate(), default=lambda o: o.__dict__, sort_keys=True))
+	print("Iteration Summary:\n\n\n"+json.dumps(adaptationGIMME.iterate(), default=lambda o: o.__dict__, sort_keys=True))
+	thinking = False
 	print("----------------------\n\n\n")
 	print("Player States:\n\n\n")
 	for x in range(numPlayers):

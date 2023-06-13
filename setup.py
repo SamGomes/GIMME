@@ -3,6 +3,7 @@ import glob
 
 sfc_module = Extension(
   'GIMMESolver', 
+  include_dirs = glob.glob('solverModules/GIMME_solver_modules/'),
   sources = glob.glob('solverModules/GIMME_solver_modules/*.cpp'),
   #include_dirs=[pybind11.get_include()],
   language='c++',
