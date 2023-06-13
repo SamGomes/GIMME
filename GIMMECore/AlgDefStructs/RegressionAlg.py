@@ -25,16 +25,75 @@ class RegressionAlg(ABC):
 	def isTabular(self):
 		pass
 
+	# If returns true, must implement a groupPredict() method
+	def isGroupPredict(self):  
+		return False
+	
+	def groupPredict(self, groupIds):
+		pass
+	
 	# instrumentation
 	def getCompPercentage(self):
 		return self.completionPerc
 
 
+# ---------------------- Personality Diversity ---------------------------
+class DiversityValueAlg(RegressionAlg):
+	#  Consider the task preferences of students in addition to team diversity. People with the same personality can still have different preferences
+	#  Diversity weight is the value determined by the teacher (0 = aligned, 1 = diverse)
+	def __init__(self, playerModelBridge, diversityWeight):
+		super().__init__(playerModelBridge)
+		self.diversityWeight = diversityWeight
+
+	def predict(self, profile, playerId):
+		return 0
+	
+	def isTabular(self):
+		return False
+	
+	def isGroupPredict(self):
+		return True
+	
+	def getPersonalitiesListFromPlayerIds(self, groupIds):
+		personalities = []  # list of PlayerPersonality objects
+
+		for playerId in groupIds:
+				personalities.append(self.playerModelBridge.getPlayerPersonality(playerId))
+
+		return personalities
+	
+	def getTeamPersonalityDiveristy(self, personalities):
+		diversity = 0.0
+
+		if isinstance(personalities[0], PersonalityMBTI):
+			diversity = PersonalityMBTI.getTeamPersonalityDiversity(personalities)
+
+		return diversity
+
+
+	def groupPredict(self, groupIds):
+		personalities = self.getPersonalitiesListFromPlayerIds(groupIds)  # list of PlayerPersonality objects
+		diversity = self.getTeamPersonalityDiveristy(personalities)
+
+		# inverse of distance squared
+		# lower distance = higher quality
+		distance = abs(diversity - self.diversityWeight)
+		
+		if distance == 0.0:
+			return 1.0
+		
+		return 1.0 / (distance * distance)
+
+
+# class DiversityLogarithmicCentroidDistance(RegressionAlg):
+# 	def __init__(self, playerModelBridge):
+# 		super().__init__(playerModelBridge)
+
 # ---------------------- Regression Based Characteristic Functions ---------------------------
 class RegCoalitionValueAlg(RegressionAlg):
 	def __init__(self, playerModelBridge, qualityWeights):
 		super().__init__(playerModelBridge)
-		self.qualityWeights = PlayerCharacteristics(ability = 0.5, engagement = 0.5) if qualityWeights == None else qualityWeights 
+		self.qualityWeights = PlayerCharacteristics(ability = 0.5, engagement = 0.5) if qualityWeights == None else qualityWeights
 
 	def isTabular(self):
 		return False
@@ -48,10 +107,9 @@ class KNNRegression(RegCoalitionValueAlg):
 		self.numberOfNNs = numberOfNNs
 
 
-
 	def calcQuality(self, state):
 		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
-	
+
 	def distSort(self, elem):
 		return elem.dist
 
@@ -66,7 +124,7 @@ class KNNRegression(RegCoalitionValueAlg):
 		pastModelIncsSize = len(pastModelIncs)
 
 		predictedState = PlayerState(profile = profile, characteristics = PlayerCharacteristics())
-	
+
 		for modelInc in pastModelIncs:
 			modelInc.dist = profile.sqrDistanceBetween(modelInc.profile)
 
@@ -90,6 +148,7 @@ class KNNRegression(RegCoalitionValueAlg):
 		# executionTime = (time.time() - startTime)
 		# print('Execution time in seconds: ' + str(executionTime))
 		self.state = predictedState
+
 		return self.calcQuality(predictedState)
 
 # ---------------------- KNNRegressionSKLearn ---------------------------
@@ -101,7 +160,7 @@ class KNNRegressionSKLearn(RegCoalitionValueAlg):
 
 	def calcQuality(self, state):
 		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
-	
+
 	def predict(self, profile, playerId):
 		# import time
 		# startTime = time.time()
@@ -109,7 +168,7 @@ class KNNRegressionSKLearn(RegCoalitionValueAlg):
 		pastModelIncs = self.playerModelBridge.getPlayerStatesDataFrame(playerId).getAllStatesFlatten()
 
 		lenPMI = len(pastModelIncs['profiles'])
-		
+
 		numberOfNNs = self.numberOfNNs
 		if(lenPMI < self.numberOfNNs):
 			if(lenPMI==0):
@@ -118,7 +177,7 @@ class KNNRegressionSKLearn(RegCoalitionValueAlg):
 
 		profData = profile.flattened()
 		prevProfs = pastModelIncs['profiles']
-		
+
 
 		self.regrAb = neighbors.KNeighborsRegressor(numberOfNNs, weights="distance")
 		self.regrAb.fit(prevProfs, pastModelIncs['abilities'])
@@ -129,7 +188,7 @@ class KNNRegressionSKLearn(RegCoalitionValueAlg):
 		predEngagement = self.regrEng.predict([profData])[0]
 
 		predState = PlayerState(profile = profile, characteristics = PlayerCharacteristics(ability = predAbilityInc, engagement = predEngagement))
-		
+
 
 		self.completionPerc = 1.0
 
@@ -147,10 +206,10 @@ class LinearRegressionSKLearn(RegCoalitionValueAlg):
 
 	def calcQuality(self, state):
 		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
-	
+
 
 	def predict(self, profile, playerId):
-		
+
 		pastModelIncs = self.playerModelBridge.getPlayerStatesDataFrame(playerId).getAllStatesFlatten()
 
 		if(len(pastModelIncs['profiles'])==0):
@@ -160,7 +219,7 @@ class LinearRegressionSKLearn(RegCoalitionValueAlg):
 
 		prevProfs = pastModelIncs['profiles']
 
-		regr = linear_model.LinearRegression() 
+		regr = linear_model.LinearRegression()
 		regr.fit(prevProfs, pastModelIncs['abilities'])
 		predAbilityInc = regr.predict([profData])[0]
 
@@ -168,7 +227,7 @@ class LinearRegressionSKLearn(RegCoalitionValueAlg):
 		predEngagement = regr.predict([profData])[0]
 
 		predState = PlayerState(profile = profile, characteristics = PlayerCharacteristics(ability = predAbilityInc, engagement = predEngagement))
-		
+
 		self.completionPerc = 1.0
 		self.state = predState
 		return self.calcQuality(predState)
@@ -182,10 +241,10 @@ class SVMRegressionSKLearn(RegCoalitionValueAlg):
 
 	def calcQuality(self, state):
 		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
-	
+
 
 	def predict(self, profile, playerId):
-		
+
 		pastModelIncs = self.playerModelBridge.getPlayerStatesDataFrame(playerId).getAllStatesFlatten()
 
 		if(len(pastModelIncs['profiles'])==0):
@@ -203,7 +262,7 @@ class SVMRegressionSKLearn(RegCoalitionValueAlg):
 		predEngagement = regr.predict([profData])[0]
 
 		predState = PlayerState(profile = profile, characteristics = PlayerCharacteristics(ability = predAbility, engagement = predEngagement))
-		
+
 		self.completionPerc = 1.0
 		self.state = predState
 		return self.calcQuality(predState)
@@ -245,14 +304,14 @@ class TabularCoalitionValueAlg(RegressionAlg):
 # ---------------------- Tabular Agent Synergy Method -------------------------------------
 class TabularAgentSynergies(TabularCoalitionValueAlg):
 
-	def __init__(self, playerModelBridge, taskModelBridge):
+	def __init__(self, playerModelBridge, taskModelBridge, syntergyTablePath):
 		super().__init__(playerModelBridge)
-		
+
 
 		self.taskModelBridge = taskModelBridge
-		tempTable = pd.read_csv('synergyTable.txt', sep=",", dtype={'agent_1': object, 'agent_2': object}) 
-		synergyTable = tempTable.pivot_table(values='synergy', index='agent_1', columns='agent_2') 
-		
+		tempTable = pd.read_csv(syntergyTablePath, sep=",", dtype={'agent_1': object, 'agent_2': object})
+		synergyTable = tempTable.pivot_table(values='synergy', index='agent_1', columns='agent_2')
+
 		self.synergyMatrix = synergyTable.to_numpy()
 		self.synergyMatrix[numpy.isnan(self.synergyMatrix)] = 0
 		self.synergyMatrix = self.symmetrize(self.synergyMatrix)
