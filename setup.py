@@ -13,8 +13,9 @@ with open('README.md', 'r') as file:
 
 setup(
     name="GIMMECore",
-    version="1.5.0",
+    version="1.6.0",
     license = "CC BY 4.0",
+    python_requires='>=3.7',
     author="Samuel Gomes",
     author_email = "samuel.gomes@tecnico.ulisboa.pt",
     description="GIMME (Group Interactions Management for Multiplayer sErious games) is a research tool which focuses on the management of interactions in groups so that the collective ability improves.",
@@ -30,12 +31,12 @@ setup(
     'Topic :: Scientific/Engineering :: Artificial Intelligence'
     ],
     install_requires=[
-      'python-decouple',
-      'deap',
-      'pandas',
-      'scikit-learn',
-      'matplotlib',
-      'pymongo'
+      'python-decouple>=3.0',
+      'deap>=1.3.3',
+      'pandas>=1.3.5',
+      'scikit-learn>=1.0.2',
+      'matplotlib>=3.5.3',
+      'pymongo>=4.3.3'
     ],
     ext_modules=[sfc_module]
 )

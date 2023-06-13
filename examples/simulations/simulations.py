@@ -61,7 +61,7 @@ numChildrenPerIteration = 100
 simsID = str(os.getpid())
 
 startTime = str(datetime.datetime.now())
-newpath = sys.path[0]+"/simulationResults/latestResults/"
+newpath = sys.path[0]+"/analyzer/results/"
 if not os.path.exists(newpath):
     os.makedirs(newpath)
 
@@ -74,22 +74,13 @@ for numPlayersToTest in range(4, 25, 4):
 	listPlayers.append([0 for x in range(numPlayersToTest)])
 
 players = [0 for x in range(numPlayers)]
-playersGrid = [0 for x in range(numPlayers)]
 tasks = [0 for x in range(numTasks)]
 
 
 # ----------------------- [Init Model Bridges] --------------------------------
 print("Initing model bridges...")
 
-playerBridgeGrid = CustomPlayerModelBridge(playersGrid)
-listPlayerBridge = []
 playerBridge = CustomPlayerModelBridge(players)
-
-for i in range(len(listPlayers)):
-	listPlayerBridge.append(CustomPlayerModelBridge(listPlayers[i]))
-
-#print(playerBridge.getAllPlayerIds())
-
 taskBridge = CustomTaskModelBridge(tasks)
 
 
@@ -133,78 +124,16 @@ logManager = CSVLogManager(newpath, simsID)
 # ----------------------- [Init Algorithms] --------------------------------
 print("Initing algorithms...")
 
-listRegAlg = []
-for i in range(len(listPlayerBridge)):
-	listRegAlg.append(KNNRegression(playerModelBridge= listPlayerBridge[i], numberOfNNs= 5))
-regAlg = KNNRegression(playerModelBridge = playerBridge, numberOfNNs = 5)
+syntergyTablePath = sys.path[0]+"/synergyTable.txt"
 
-listTabularRegAlg = []
-for i in range(len(listPlayerBridge)):
-	listTabularRegAlg.append(TabularAgentSynergies(playerModelBridge= listPlayerBridge[i], taskModelBridge=taskBridge))
-tabularRegAlg = TabularAgentSynergies(playerModelBridge= playerBridge, taskModelBridge=taskBridge)
+regAlg = KNNRegression(playerModelBridge = playerBridge, numberOfNNs = 5)
+tabularRegAlg = TabularAgentSynergies(playerModelBridge= playerBridge, 
+										taskModelBridge=taskBridge, 
+										syntergyTablePath=syntergyTablePath)
 
 # - - - - - 
 intProfTemplate2D = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 
-# evolutionaryConfigsAlg = EvolutionaryConfigsGenDEAP(
-# 	playerModelBridge = playerBridge, 
-# 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-# 	regAlg = regAlg, 
-# 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-# 	initialPopulationSize = initialPopulationSize, 
-# 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
-	
-# 	probOfCross = probOfCross, 
-# 	probOfMutation = probOfMutation,
-
-# 	probOfMutationConfig = probOfMutationConfig, 
-# 	probOfMutationGIPs = probOfMutationGIPs, 
-	
-# 	numChildrenPerIteration = numChildrenPerIteration,
-# 	numSurvivors = numSurvivors,
-
-# 	cxOp = "simple"
-# )
-# adaptationGA_scx.init(
-# 	playerModelBridge = playerBridge, 
-# 	taskModelBridge = taskBridge,
-# 	configsGenAlg = evolutionaryConfigsAlg, 
-# 	name="GIMME_GA"
-# )
-
-for i in range(len(listPlayers)):
-	if (i == 0):
-		continue
-
-	tempGA = EvolutionaryConfigsGenDEAP(
-		playerModelBridge = listPlayerBridge[i], 
-		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = listRegAlg[i], 
-		preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-		initialPopulationSize = initialPopulationSize, 
-		numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
-		
-		probOfCross = probOfCross, 
-		probOfMutation = probOfMutation,
-
-		probOfMutationConfig = probOfMutationConfig, 
-		probOfMutationGIPs = probOfMutationGIPs, 
-		
-		numChildrenPerIteration = numChildrenPerIteration,
-		numSurvivors = numSurvivors,
-
-		cxOp = "order",
-		# jointPlayerConstraints="[15,1];[3,4]", 
-		# separatedPlayerConstraints="[0,1]"
-	)
-	tempAdaptation = Adaptation()
-	tempAdaptation.init(
-		playerModelBridge = listPlayerBridge[i], 
-		taskModelBridge = taskBridge,
-		configsGenAlg = tempGA, 
-		name="GIMME_GA_" + str(len(listPlayers[i]))
-	)
-	listAdaptationGA.append(tempAdaptation)
 
 evolutionaryConfigsAlg = EvolutionaryConfigsGenDEAP(
 	playerModelBridge = playerBridge, 
@@ -235,29 +164,6 @@ adaptationGA.init(
 )
 
 
-
-for i in range(len(listPlayers)):
-	tempODPIP = ODPIP(
-		playerModelBridge = listPlayerBridge[i],
-		interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-		regAlg = listRegAlg[i],
-		persEstAlg = ExplorationPreferencesEstAlg(
-			playerModelBridge = listPlayerBridge[i], 
-			interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-			regAlg = listRegAlg[i],
-			numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-		preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
-	)
-	tempAdaptation = Adaptation()
-	tempAdaptation.init(
-		playerModelBridge = listPlayerBridge[i], 
-		taskModelBridge = taskBridge,
-		configsGenAlg = tempODPIP, 
-		name="GIMME_ODPIP_" + str(len(listPlayers[i]))
-	)
-
-	listAdaptationODPIP.append(tempAdaptation)
-
 ODPIPconfigsAlg = ODPIP(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
@@ -276,29 +182,6 @@ adaptationODPIP.init(
 	name="GIMME_ODPIP"
 )
 
-
-
-for i in range(len(listPlayers)):
-	tempODPIP = ODPIP(
-		playerModelBridge = listPlayerBridge[i],
-		interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-		regAlg = listTabularRegAlg[i],
-		persEstAlg = ExplorationPreferencesEstAlg(
-			playerModelBridge = listPlayerBridge[i], 
-			interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-			regAlg = listRegAlg[i],
-			numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-		preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
-	)
-	tempAdaptation = Adaptation()
-	tempAdaptation.init(
-		playerModelBridge = listPlayerBridge[i], 
-		taskModelBridge = taskBridge,
-		configsGenAlg = tempODPIP, 
-		name="GIMME_Tabular_ODPIP_" + str(len(listPlayers[i]))
-	)
-
-	listAdaptationTabularODPIP.append(tempAdaptation)
 
 tabularODPIPconfigsAlg = ODPIP(
 	playerModelBridge = playerBridge,
@@ -323,28 +206,6 @@ adaptationTabularODPIP.init(
 )
 
 
-
-for i in range(len(listPlayers)):
-	tempCLink = CLink(
-	playerModelBridge = listPlayerBridge[i],
-	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-	regAlg = listRegAlg[i],
-	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = listPlayerBridge[i], 
-		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = listRegAlg[i],
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
-	)
-	tempAdaptation = Adaptation()
-	tempAdaptation.init(
-		playerModelBridge = listPlayerBridge[i], 
-		taskModelBridge = taskBridge,
-		configsGenAlg = tempCLink, 
-		name="GIMME_CLink_" + str(len(listPlayers[i]))
-	)
-	listAdaptationCLink.append(tempAdaptation)
-
 CLinkconfigsAlg = CLink(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
@@ -363,29 +224,6 @@ adaptationCLink.init(
 	name="GIMME_CLink"
 )
 
-
-
-for i in range(len(listPlayers)):
-	tempTabularCLink = CLink(
-	playerModelBridge = listPlayerBridge[i],
-	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-	regAlg = listTabularRegAlg[i],
-	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = listPlayerBridge[i], 
-		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = listRegAlg[i],
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
-	)
-	tempAdaptation = Adaptation()
-	tempAdaptation.init(
-		playerModelBridge = listPlayerBridge[i], 
-		taskModelBridge = taskBridge,
-		configsGenAlg = tempTabularCLink, 
-		name="GIMME_CLink_Tabular_" + str(len(listPlayers[i]))
-	)
-	listAdaptationTabularCLink.append(tempAdaptation)
-
 tabularCLinkconfigsAlg = CLink(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
@@ -403,33 +241,6 @@ adaptationTabularCLink.init(
 	configsGenAlg = tabularCLinkconfigsAlg, 
 	name="GIMME_CLink_Tabular"
 )
-
-
-
-for i in range(len(listPlayers)):
-	tempPRS = PureRandomSearchConfigsGen(
-		playerModelBridge = listPlayerBridge[i], 
-		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = listRegAlg[i], 
-		persEstAlg = ExplorationPreferencesEstAlg(
-			playerModelBridge = listPlayerBridge[i], 
-			interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-			regAlg = listRegAlg[i],
-			numTestedPlayerProfiles = numTestedPlayerProfilesInEst), 
-		numberOfConfigChoices = numberOfConfigChoices, 
-		preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-		# jointPlayerConstraints="[15,1]", 
-		# separatedPlayerConstraints="[0,1]"
-	)
-	tempAdaptation = Adaptation()
-	tempAdaptation.init(
-		playerModelBridge = listPlayerBridge[i], 
-		taskModelBridge = taskBridge,
-		configsGenAlg = tempPRS, 
-		name="GIMME_PRS_" + str(len(listPlayers[i]))
-	)
-
-	listAdaptationPRS.append(tempAdaptation)
 
 prsConfigsAlg = PureRandomSearchConfigsGen(
 	playerModelBridge = playerBridge, 
@@ -452,26 +263,6 @@ adaptationPRS.init(
 	name="GIMME_PRS"
 )
 
-
-
-for i in range(len(listPlayers)):
-	tempRandom = RandomConfigsGen(
-		playerModelBridge = listPlayerBridge[i], 
-		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-		# jointPlayerConstraints="[15,1]",
-		# separatedPlayerConstraints="[0,1]"
-	)
-
-	tempAdaptation = Adaptation()
-	tempAdaptation.init(
-		playerModelBridge = listPlayerBridge[i], 
-		taskModelBridge = taskBridge,
-		configsGenAlg = tempRandom, 
-		name="Random_" + str(len(listPlayers[i]))
-	)
-
-	listAdaptationRandom.append(tempAdaptation)
 
 randomConfigsAlg = RandomConfigsGen(
 	playerModelBridge = playerBridge, 
@@ -682,7 +473,7 @@ def executionPhase(numRuns, playerBridge, maxNumIterations, startingI, currRun, 
 
 		for x in range(numPlayersToTest):
 			increases = simulateReaction(playerBridge, i, x)
-			logManager.writeToLog("GIMMESims", "results", 
+			logManager.writeToLog("", "results", 
 				{
 					"simsID": str(simsID),
 					"algorithm": adaptation.name,
@@ -708,6 +499,11 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 	numInteractionDimensions = len(profileTemplate.dimensions.keys())
 
 	numPlayersToTest = len(playerBridge.getAllPlayerIds())
+
+
+	# re-init stuff
+	players = [0 for x in range(numPlayers)]
+	tasks = [0 for x in range(numTasks)]
 
 	# create players and tasks
 	for x in range(numPlayersToTest):
@@ -826,6 +622,7 @@ if __name__ == '__main__':
 	print("------------------------------------------")
 	print("NOTE: This example tests several group organization algorithms types.")
 	print("For more details, consult the source code.")
+	print("All results are saved to \'"+newpath+"\'.")
 	print("------------------------------------------")
 
 
@@ -852,13 +649,13 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
 		playerBridge, taskBridge, adaptationODPIP)
 
-	#adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
-	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-		#playerBridge, taskBridge, adaptationTabularODPIP)
-
-	adaptationCLink.name = "GIMME_CLink"
+	adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
-	   	playerBridge, taskBridge, adaptationCLink)
+		playerBridge, taskBridge, adaptationTabularODPIP)
+
+	#adaptationCLink.name = "GIMME_CLink"
+	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	   	#playerBridge, taskBridge, adaptationCLink)
 
 	#adaptationTabularCLink.name = "GIMME_CLink_Tabular"
 	#executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 

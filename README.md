@@ -1,6 +1,6 @@
 # Welcome to the GIMME project repository
 
-<img src="ReadmeImages/logo.png" width="300">
+<img src="ReadmeImages/logo.png" width="300" alt="">
 
 ![version](https://img.shields.io/badge/version-1.3.0-blue)
 ![version](https://img.shields.io/badge/python-v3.7-blue)
@@ -16,8 +16,8 @@ Information about the API internals and examples can be observed in our [wiki](h
 
 ## Requirements
 
-GIMME requires Python 3 in order to be executed (Tested in Python 3.7.0). No additional tools are required.
-GIMME was tested on Windows and Linux. May also work in MacOS, but remains untested in this platform.
+GIMME requires Python 3 in order to be executed (Tested in Python 3.7.0). 
+GIMME was tested on Windows and Linux. The tool may also work in MacOS, but remains untested in this platform.
 
 
 ## Setup
@@ -48,7 +48,7 @@ python examples/simpleExample/simpleExample.py
 python examples/simulations/simulations.py
 ```
 
-*Note: For just testing the code, it is advised to change the numRuns variable of simulations.py to a low value, such as 10. For tendencies to be clearly observed when executing them, it is adviseable to set numRuns to 200.*
+*Note: For just testing the code, it is advised to change the numRuns variable of simulations.py to a low value such as 10. For tendencies to be clearly observed when executing them, it is adviseable to set numRuns to 200.*
 
 This will output the data to a csv file ```examples/simulationResults/latestResults/GIMMESims/results.csv```, summing the results of applying our simulations. Several plots summarizing the results can be built using the r code provided in ```examples/simulationResults/latestResults/plotGenerator.r```.
 
@@ -59,7 +59,7 @@ We have been writing a report about our latest features, currently available [he
 ## Future Improvements
 As of the current version, there are still some on-going exploration pathways. They include:
 - The integration of more refined coalition structure generators (ConfigGenAlg);
-- The integration of the tool in a multiplayer serious scenario (example/ use case);
+- The integration of the tool in a multiplayer serious scenario (example/use case);
 - The improvement of task selection.
 
 *Any help to improve this idea is welcome.*
