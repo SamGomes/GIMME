@@ -24,17 +24,17 @@ print("-----     SIMPLE GIMME API TEST      -----")
 print("-----                                -----")
 print("------------------------------------------")
 
-numPlayers = int(input("How many players would you like? "))
+numPlayers = int(input("How many students would you like? "))
+preferredNumberOfPlayersPerGroup = int(input("How many students per group would you prefer? "))
 numTasks = int(input("How many tasks would you like? "))
+
 adaptationGIMME = Adaptation() 
 
 players = [0 for x in range(numPlayers)]
 tasks = [0 for x in range(numTasks)]
 
-
-preferredNumberOfPlayersPerGroup = 4#int(input("How many players per group would you prefer? "))
-minNumberPlayersPerGroup = 2
-maxNumberPlayersPerGroup = 5
+#minNumberPlayersPerGroup = 2
+#maxNumberPlayersPerGroup = 5
 
 playerBridge = CustomPlayerModelBridge(players)
 taskBridge = CustomTaskModelBridge(tasks)
@@ -48,7 +48,7 @@ for x in range(numPlayers):
 	gridTrimAlg = QualitySortPlayerDataTrimAlg(maxNumModelElements = 30, qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5))
 	playerBridge.registerNewPlayer(
 		playerId = int(x), 
-		name = "name", 
+		name = "Player "+str(x+1), 
 		currState = PlayerState(profile = profileTemplate.generateCopy().reset()), 
 		pastModelIncreasesDataFrame = PlayerStatesDataFrame(
 			interactionsProfileTemplate = profileTemplate.generateCopy().reset(), 
@@ -72,6 +72,7 @@ for x in range(numPlayers):
 	playerBridge.getPlayerStatesDataFrame(x).trimAlg.considerStateResidue(False)
 
 print("Players created.")
+print(json.dumps(playerBridge.players, default=lambda o: o.__dict__, sort_keys=True, indent=2))
 
 print("\nSetting up the tasks...")
 
@@ -80,7 +81,7 @@ for x in range(numTasks):
 	profW = 1 - diffW
 	taskBridge.registerNewTask(
 		taskId = int(x), 
-		description = "description", 
+		description = "Task "+str(x+1), 
 		minRequiredAbility = random.uniform(0, 1), 
 		profile = profileTemplate.randomized(), 
 		minDuration = str(timedelta(minutes=1)), 
@@ -90,12 +91,7 @@ for x in range(numTasks):
 print("Tasks created:")
 print(json.dumps(taskBridge.tasks, default=lambda o: o.__dict__, sort_keys=True, indent=2))
 
-print("\nSetting up a random group. org. algorithm...")
-
-
-
-
-
+print("\nSetting up the adaptation algorithms...")
 def simulateReaction(isBootstrap, playerBridge, playerId):
 	currState = playerBridge.getPlayerCurrState(playerId)
 	newState = calcReaction(
@@ -130,9 +126,6 @@ def calcReaction(isBootstrap, playerBridge, state, playerId):
 
 
 
-
-
-
 numberOfConfigChoices = 100
 numTestedPlayerProfilesInEst = 500
 regAlg = KNNRegression(playerBridge, 5)
@@ -149,8 +142,8 @@ ODPIPConfigsAlg = ODPIP(
 		regAlg = regAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	minNumberOfPlayersPerGroup = minNumberPlayersPerGroup,
-	maxNumberOfPlayersPerGroup = maxNumberPlayersPerGroup
+	#minNumberOfPlayersPerGroup = minNumberPlayersPerGroup,
+	#maxNumberOfPlayersPerGroup = maxNumberPlayersPerGroup
 )
 adaptationGIMME.init(
 	playerModelBridge = playerBridge, 
@@ -158,6 +151,8 @@ adaptationGIMME.init(
 	configsGenAlg = ODPIPConfigsAlg, 
 	name="Test Adaptation"
 )
+print("Adaptation initialized and ready!")
+print("~~~~~~(Initialization Complete)~~~~~~\n\n\n")
 
 
 
@@ -167,31 +162,46 @@ thinking = False
 #here is a loading animation 
 #(source: https://stackoverflow.com/questions/22029562/python-how-to-make-simple-animated-loading-while-process-is-running)
 def animate():
-    for c in itertools.cycle(['|', '/', '-', '\\']):
-        if thinking:
-            break
-        sys.stdout.write('\rcomputing new iteration...' + c)
-        sys.stdout.flush()
-        time.sleep(0.1)
+	for c in itertools.cycle(['()       ','(.....)  ', '(..)(...)  ', '(...)(..)  ']):
+		if not ready:
+			break
+		if not thinking:
+			continue
+		sys.stdout.write('\rcomputing new iteration' + c)
+		sys.stdout.flush()
+		time.sleep(0.3)
 
 t = threading.Thread(target=animate)
 t.start()
 
 
+
 while(True):
 	readyText = ""
-	readyText = str(input("Ready to compute iteration (y/n)? "))
+	readyText = str(input("Ready to compute iteration? (y/n) "))
 	while(readyText!="y" and readyText!="n"):
 		readyText = str(input("Please answer y/n: "))
+		continue
 	ready = (readyText=="y")
 	if(not ready):
 		print("~~~~~~(The End)~~~~~~")
 		break
 
-	thinking = True
 
 	print("----------------------")
-	print("Iteration Summary:\n\n\n"+json.dumps(adaptationGIMME.iterate(), default=lambda o: o.__dict__, sort_keys=True))
+	thinking = True
+	result = ""
+	try:
+		result = json.dumps(adaptationGIMME.iterate(), default=lambda o: o.__dict__, sort_keys=True)
+	except Exception as e:
+		print("An exception occurred. Possibly an impossible class configuration was input...")
+		print("Exception: "+str(e))
+		thinking = False
+		ready=False
+		print("~~~~~~(The End)~~~~~~")
+		break
+		
+	print("\rIteration Summary:\n\n\n"+result)
 	thinking = False
 	print("----------------------\n\n\n")
 	print("Player States:\n\n\n")
