@@ -26,9 +26,6 @@ PyObject* odpip(PyObject* /*unused module reference*/, PyObject* args) {
 	if (!PyArg_ParseTuple(args, "iiiOOO", &numPlayers, &minNumberOfPlayersPerGroup, &maxNumberOfPlayersPerGroup, &arrayOfF, &requiredPlayers, &restrictedPlayers))
 		return NULL;
 
-	//if (!PyArg_ParseTuple(args, "iii", &numPlayers, &minNumberOfPlayersPerGroup, &maxNumberOfPlayersPerGroup))
-		//return NULL;
-
 	PyObject** elems = PySequence_Fast_ITEMS(arrayOfF);
 	size_t len = PySequence_Fast_GET_SIZE(arrayOfF);
 
@@ -80,9 +77,6 @@ PyObject* clink(PyObject* /*unused module reference*/, PyObject* args) {
 
 	if (!PyArg_ParseTuple(args, "iiiO", &numPlayers, &minNumberOfPlayersPerGroup, &maxNumberOfPlayersPerGroup, &arrayOfF))
 		return NULL;
-
-	//if (!PyArg_ParseTuple(args, "iii", &numPlayers, &minNumberOfPlayersPerGroup, &maxNumberOfPlayersPerGroup))
-		//return NULL;
 
 	PyObject** elems = PySequence_Fast_ITEMS(arrayOfF);
 	size_t len = PySequence_Fast_GET_SIZE(arrayOfF);

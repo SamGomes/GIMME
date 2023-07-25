@@ -1,5 +1,4 @@
 #include "ODPIP.h"
-#include <iostream>
 
 ODPIP::ODPIP(int numPlayers, double* coalitionValues, int minNumberOfPlayersPerGroup, int maxNumberOfPlayersPerGroup, std::vector<int> requiredJoinedPlayers, std::vector<int> restrictedJointPlayers)
 {
@@ -107,7 +106,6 @@ int* ODPIP::IP()
 			printf("%ld\n", i);*/
 
 	finalize();
-	//bestCSInBitFormat = getBestCSFoundInBitFormat();
 	
 	//int sortedNodesSize = sortedNodes.size();
 	//for (int i = 0; i < sortedNodesSize; i++)
@@ -120,8 +118,9 @@ int* ODPIP::IP()
 
 void ODPIP::finalize() 
 {	
-	bestCSInBitFormat = getBestCSFoundInBitFormat();
 
+	this->bestCSInBitFormat = getBestCSFoundInBitFormat();
+	
 	long smallCoalition = -1;
 	bool smallCoalitionFound = false;
 	do 

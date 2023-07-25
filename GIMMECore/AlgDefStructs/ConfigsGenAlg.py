@@ -132,7 +132,6 @@ class ConfigsGenAlg(ABC):
 		# 	playersWithoutGroup = listOfPlayersWithJointRequirements.copy()
 
 		# playersWithoutGroupWithoutRestrictions = list(set(playersWithoutGroup) - set(listOfPlayersWithJointRequirements))
-
 		for g in range(numGroups):
 			currGroup = []
 			currGroupSeparationRestrictions = []
@@ -154,32 +153,29 @@ class ConfigsGenAlg(ABC):
 		
 		# append the rest
 		playersWithoutGroupSize = len(playersWithoutGroup)
-		if (playersWithoutGroupSize < (math.ceil(self.maxNumberOfPlayersPerGroup) / 2.0)):
-			while playersWithoutGroupSize > 0:
-				currPlayerIndex = 0;
-				if (playersWithoutGroupSize > 1):
-					currPlayerIndex = random.randint(0, playersWithoutGroupSize - 1)
-				else:
-					currPlayerIndex = 0
-				currPlayerID = playersWithoutGroup[currPlayerIndex]
+		while playersWithoutGroupSize > 0:
+			currPlayerIndex = 0;
+			if (playersWithoutGroupSize > 1):
+				currPlayerIndex = random.randint(0, playersWithoutGroupSize - 1)
+			else:
+				currPlayerIndex = 0
+			currPlayerID = playersWithoutGroup[currPlayerIndex]
 
-				groupsSize = len(returnedConfig)
+			groupsSize = len(returnedConfig)
 
-				availableGroups = returnedConfig.copy()
-				while (len(currGroup) > (self.maxNumberOfPlayersPerGroup - 1)):
-					if(len(availableGroups) < 1):
-						currGroup = random.choice(returnedConfig)
-						break
-					currGroup = random.choice(availableGroups)
-					availableGroups.remove(currGroup)
+			availableGroups = returnedConfig.copy()
+			while (len(currGroup) > (self.maxNumberOfPlayersPerGroup - 1)):
+				if(len(availableGroups) < 1):
+					currGroup = random.choice(returnedConfig)
+					break
+				currGroup = random.choice(availableGroups)
+				availableGroups.remove(currGroup)
 
-				currGroup.append(currPlayerID)
+			currGroup.append(currPlayerID)
 
-				del playersWithoutGroup[currPlayerIndex]
-				playersWithoutGroupSize = len(playersWithoutGroup)
-		else:
-			returnedConfig.append(playersWithoutGroup)
-
+			del playersWithoutGroup[currPlayerIndex]
+			playersWithoutGroupSize = len(playersWithoutGroup)
+		
 		return returnedConfig
 
 	def verifyCoalitionValidity(self, config, playerJointRequirements, playerSeparatedRequirements, playersWithoutGroup):
