@@ -437,12 +437,10 @@ class AnnealedPRSConfigsGen(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(group)
-
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
-
+		
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -559,11 +557,10 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(group)
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
-
+			
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -676,10 +673,9 @@ class AccuratePRSConfigsGen(ConfigsGenAlg):
 					increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
 					currQuality += self.calcQuality(increases)
 
-				
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -1187,10 +1183,10 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 				currState = self.playerModelBridge.getPlayerCurrState(currPlayer)
 				avgCharacteristics.ability += currState.characteristics.ability / groupSize
 				avgCharacteristics.engagement += currState.characteristics.engagement / groupSize
-			
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					avgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
+						
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				avgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 			avgCharacteristicsArray.append(avgCharacteristics)
 
@@ -1361,11 +1357,10 @@ class ODPIP(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(groupInIds)
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(groupInIds)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
- 
+				
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
@@ -1611,12 +1606,10 @@ class CLink(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(groupInIds)
-
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(groupInIds)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
-
+			
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 						
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile

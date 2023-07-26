@@ -58,12 +58,17 @@ class DiversityValueAlg(RegressionAlg):
 		personalities = []  # list of PlayerPersonality objects
 
 		for playerId in groupIds:
-				personalities.append(self.playerModelBridge.getPlayerPersonality(playerId))
+			personality = self.playerModelBridge.getPlayerPersonality(playerId)
+			if personality:
+				personalities.append(personality)
 
 		return personalities
 	
 	def getTeamPersonalityDiveristy(self, personalities):
-		diversity = 0.0
+		if len(personalities) <= 0:
+			return -1
+		
+		diversity = -1
 
 		if isinstance(personalities[0], PersonalityMBTI):
 			diversity = PersonalityMBTI.getTeamPersonalityDiversity(personalities)
