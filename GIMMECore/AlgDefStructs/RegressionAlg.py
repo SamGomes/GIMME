@@ -304,12 +304,12 @@ class TabularCoalitionValueAlg(RegressionAlg):
 # ---------------------- Tabular Agent Synergy Method -------------------------------------
 class TabularAgentSynergies(TabularCoalitionValueAlg):
 
-	def __init__(self, playerModelBridge, taskModelBridge):
+	def __init__(self, playerModelBridge, taskModelBridge, syntergyTablePath):
 		super().__init__(playerModelBridge)
 
 
 		self.taskModelBridge = taskModelBridge
-		tempTable = pd.read_csv('synergyTable.txt', sep=",", dtype={'agent_1': object, 'agent_2': object})
+		tempTable = pd.read_csv(syntergyTablePath, sep=",", dtype={'agent_1': object, 'agent_2': object})
 		synergyTable = tempTable.pivot_table(values='synergy', index='agent_1', columns='agent_2')
 
 		self.synergyMatrix = synergyTable.to_numpy()

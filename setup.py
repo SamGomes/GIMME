@@ -1,43 +1,43 @@
-from setuptools import setup, Extension
+from setuptools import dist, setup, Extension
 import glob
-#import pybind11
 
 sfc_module = Extension(
   'GIMMESolver', 
+  include_dirs = ['solverModules/GIMME_solver_modules'],
   sources = glob.glob('solverModules/GIMME_solver_modules/*.cpp'),
-  #include_dirs=[pybind11.get_include()],
   language='c++',
   )
-print(sfc_module)
+
+with open('README.md', 'r') as file:
+    readmeFile = file.read()
 
 setup(
     name="GIMMECore",
-    version="1.3.0",
+    version="1.6.1",
     license = "CC BY 4.0",
+    python_requires='>=3.7',
     author="Samuel Gomes",
     author_email = "samuel.gomes@tecnico.ulisboa.pt",
+    description="GIMME (Group Interactions Management for Multiplayer sErious games) is a research tool which focuses on the management of interactions in groups so that the collective ability improves.",
+    long_description=readmeFile,
+    long_description_content_type="text/markdown",
+    url='https://github.com/SamGomes/GIMME',
     packages=['GIMMECore', 'GIMMECore.ModelBridge', 'GIMMECore.AlgDefStructs'],
     classifiers = [
-    'Development Status :: Development',
+    'Development Status :: 4 - Beta',
+    'Environment :: Console',
     'Intended Audience :: Science/Research',
-    'Programming Language :: Python',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
-    'Topic :: Scientific/Engineering :: Adaptation'
+    'Topic :: Scientific/Engineering :: Artificial Intelligence'
     ],
     install_requires=[
-      'numpy',
-      'scikit-learn',
-      'deap', 
-      'pymongo'
-    ]
-
-)
-
-setup(
-    name='GIMMESolver',
-    version='1.0',
+      'python-decouple>=3.0',
+      'deap>=1.3.3',
+      'pandas>=1.3.5',
+      'scikit-learn>=1.0.2',
+      'matplotlib>=3.5.3',
+      'pymongo>=4.3.3'
+    ],
     ext_modules=[sfc_module]
-   )
+)
 

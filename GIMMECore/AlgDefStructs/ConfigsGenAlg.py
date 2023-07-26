@@ -13,7 +13,6 @@ from ctypes import *
 from ..InteractionsProfile import InteractionsProfile 
 from ..PlayerStructs import *
 from ..AlgDefStructs.RegressionAlg import *
-import matplotlib.pyplot as plt
 
 
 class ConfigsGenAlg(ABC):
@@ -133,7 +132,6 @@ class ConfigsGenAlg(ABC):
 		# 	playersWithoutGroup = listOfPlayersWithJointRequirements.copy()
 
 		# playersWithoutGroupWithoutRestrictions = list(set(playersWithoutGroup) - set(listOfPlayersWithJointRequirements))
-
 		for g in range(numGroups):
 			currGroup = []
 			currGroupSeparationRestrictions = []
@@ -155,32 +153,29 @@ class ConfigsGenAlg(ABC):
 		
 		# append the rest
 		playersWithoutGroupSize = len(playersWithoutGroup)
-		if (playersWithoutGroupSize < (math.ceil(self.maxNumberOfPlayersPerGroup) / 2.0)):
-			while playersWithoutGroupSize > 0:
-				currPlayerIndex = 0;
-				if (playersWithoutGroupSize > 1):
-					currPlayerIndex = random.randint(0, playersWithoutGroupSize - 1)
-				else:
-					currPlayerIndex = 0
-				currPlayerID = playersWithoutGroup[currPlayerIndex]
+		while playersWithoutGroupSize > 0:
+			currPlayerIndex = 0;
+			if (playersWithoutGroupSize > 1):
+				currPlayerIndex = random.randint(0, playersWithoutGroupSize - 1)
+			else:
+				currPlayerIndex = 0
+			currPlayerID = playersWithoutGroup[currPlayerIndex]
 
-				groupsSize = len(returnedConfig)
+			groupsSize = len(returnedConfig)
 
-				availableGroups = returnedConfig.copy()
-				while (len(currGroup) > (self.maxNumberOfPlayersPerGroup - 1)):
-					if(len(availableGroups) < 1):
-						currGroup = random.choice(returnedConfig)
-						break
-					currGroup = random.choice(availableGroups)
-					availableGroups.remove(currGroup)
+			availableGroups = returnedConfig.copy()
+			while (len(currGroup) > (self.maxNumberOfPlayersPerGroup - 1)):
+				if(len(availableGroups) < 1):
+					currGroup = random.choice(returnedConfig)
+					break
+				currGroup = random.choice(availableGroups)
+				availableGroups.remove(currGroup)
 
-				currGroup.append(currPlayerID)
+			currGroup.append(currPlayerID)
 
-				del playersWithoutGroup[currPlayerIndex]
-				playersWithoutGroupSize = len(playersWithoutGroup)
-		else:
-			returnedConfig.append(playersWithoutGroup)
-
+			del playersWithoutGroup[currPlayerIndex]
+			playersWithoutGroupSize = len(playersWithoutGroup)
+		
 		return returnedConfig
 
 	def verifyCoalitionValidity(self, config, playerJointRequirements, playerSeparatedRequirements, playersWithoutGroup):
@@ -1078,7 +1073,7 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 				totalFitness += profile.sqrDistanceBetween(InteractionsProfile(dimensions = {'dim_0': 0.98, 'dim_1': 0.005}))
 				totalFitness += abs(config[groupI][playerI] - targetConfig[groupI][playerI])
 		
-		print(totalFitness)
+		#print(totalFitness)
 		totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
 		individual.fitness.values = totalFitness,
 		return totalFitness, #must return a tuple
@@ -1202,7 +1197,7 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
-# new algorithms
+# deterministic algorithms
 class ODPIP(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
@@ -1314,6 +1309,14 @@ class ODPIP(ConfigsGenAlg):
 		for player in self.playerIds:
 			playersCurrState[player] = self.playerModelBridge.getPlayerCurrState(player)
 
+
+		# (the +- 1 accounts for non divisor cases that need one more/less member)
+		adjustedMinSize = self.minNumberOfPlayersPerGroup
+		adjustedMaxSize = self.maxNumberOfPlayersPerGroup
+		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
+			adjustedMinSize = adjustedMinSize - 1
+			adjustedMaxSize = adjustedMaxSize + 1
+				
 		# initialize all coalitions
 		for coalition in range(numOfCoalitions-1, 0, -1):
 			group = self.getGroupFromBitFormat(coalition)
@@ -1322,8 +1325,8 @@ class ODPIP(ConfigsGenAlg):
 			currQuality = 0.0
 			groupSize = len(group)
 
-			# calculate the profile and characteristics only for groups in the range defined
-			if groupSize >= self.minNumberOfPlayersPerGroup and groupSize <= self.maxNumberOfPlayersPerGroup:	
+			# calculate the profile and characteristics only for groups in the range defined 
+			if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
@@ -1390,9 +1393,10 @@ class ODPIP(ConfigsGenAlg):
 		bestConfigProfiles = []
 		avgCharacteristicsArray = []
 	
-		for coalition in cSInByteFormat:
-			if not (self.minNumberOfPlayersPerGroup <= len(coalition) <= self.maxNumberOfPlayersPerGroup):
-				return {"groups": [], "profiles": [], "avgCharacteristics": []}
+		#this check was removed because of cases where the preferred group size would not match the integer divisor of the numPlayers
+		#for coalition in cSInByteFormat:
+			#if not (self.minNumberOfPlayersPerGroup <= len(coalition) <= self.maxNumberOfPlayersPerGroup):
+				#return {"groups": [], "profiles": [], "avgCharacteristics": []}
 		
 		for coalition in cSInByteFormat:
 			bestGroups.append(self.convertFromByteToIds(coalition))
@@ -1660,7 +1664,6 @@ class CLink(ConfigsGenAlg):
 		return bestProfile
 
 	def organize(self):
-		print(4)
 		self.playerIds = self.playerModelBridge.getAllPlayerIds()
 		for i in range(len(self.playerIds)):
 			self.playerIds[i] = str(self.playerIds[i])

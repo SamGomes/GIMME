@@ -1,28 +1,37 @@
 # install.packages("stringi", dep = TRUE, repos = 'http://cran.rstudio.com/')
 # install.packages("ggplot2", dep=TRUE, repos = "http://cran.us.r-project.org")
 # install.packages("dplyr", dep=TRUE, repos = "http://cran.us.r-project.org")
-# install.packages("gridExtra", dep=TRUE, repos = "http://cran.us.r-project.org")               # Install gridExtra package
+# install.packages("gridExtra", dep=TRUE, repos = "http://cran.us.r-project.org")
+# install.packages("envDocument", dep=TRUE, repos = "http://cran.us.r-project.org")
+
 suppressMessages(library(gridExtra))
 suppressMessages(library(ggplot2))
 suppressMessages(library(stringr))
 suppressMessages(library(dplyr))
+suppressMessages(library(envDocument))
+
 
 options(warn=-1)
 
 
 print("GeneratingPlots...")
 
-# do.call(file.remove, list(list.files("./plots/", full.names = TRUE)))
+# get current script path (source:'https://stackoverflow.com/questions/1815606/determine-path-of-the-executing-script')
+initial.options <- commandArgs(trailingOnly = FALSE)
+file.arg.name <- "--file="
+scriptName <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
+scriptPath <- paste(dirname(scriptName), "/results/", sep='')
 
-filenames <- dir("GIMMESims/", pattern = ".csv")
-filenames <- paste("GIMMESims/", filenames, sep="")
+filenames <- dir(scriptPath, pattern = ".csv")
+filenames <- paste(scriptPath, filenames, sep="")
+
 
 resultsLog <- do.call(rbind, lapply(filenames, read.csv, header=TRUE, sep=",")) #(file="GIMMESims/resultsEvl.csv", header=TRUE, sep=",")
 resultsLog <- resultsLog[resultsLog$iteration > 19,]
 resultsLog <- resultsLog[complete.cases(resultsLog),]
 
 print(sprintf("nRuns: %f", (nrow(unique(resultsLog[c("simsID", "run", "algorithm")])) / nrow(unique(resultsLog[c("algorithm")]))) ))
-# print(resultsLog)
+
 
 # plot strategies
 avg <- aggregate(abilityInc ~ iteration*algorithm, resultsLog, mean)
@@ -138,18 +147,17 @@ currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP"] <- "GIMME-ODPIP"
 currAvg$algorithm[currAvg$algorithm == "GIMME_Tabular_ODPIP"] <- "GIMME_Tabular_ODPIP" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_CLink_Tabular"] <- "GIMME_Tabular_CLink" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_PRS"] <- "GIMME-PRS" 
-# currAvg$algorithm[currAvg$algorithm == "GIMME_GA_scx"] <- "GIMME GA (Simpler CX)" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_GA"] <- "GIMME-GA" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap"] <- "GIMME-GA-Bootstrap" 
-# currAvg$algorithm[currAvg$algorithm == "Random"] <- "Random" 
+currAvg$algorithm[currAvg$algorithm == "Random"] <- "Random" 
 
 currAvg$linetype <- "solid" 
 # currAvg$linetype[currAvg$algorithm == "Perf. Info."] <- "dashed" 
 
 buildAbIncPlots(currAvg, currSdev, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
-suppressMessages(ggsave(sprintf("plots/%s.png", "simulationsResultsAbilityInc"), height=7, width=15, units="in", dpi=500))
+suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityInc"), height=7, width=15, units="in", dpi=500))
 
-
+q()
 
 # ----------------------------------------------------------------------------------
 # cmp average ability increase of GIMME with different accuracy est
@@ -196,7 +204,7 @@ ggp2 <- buildAbIncPlots(currAvg, currSdev, c("skyblue", "dodgerblue", "navy"))
 
 ggp1 <- ggp1 + theme(plot.margin = margin(2,2,2,2, "cm"))
 ggp2 <- ggp2 + theme(plot.margin = margin(2,2,2,2, "cm"))
-suppressMessages(ggsave(sprintf("plots/%s.png", "simulationsResultsAccuracyComp"), height=7, width=25, units="in", dpi=500, arrangeGrob(ggp1, ggp2, ncol=2)))
+suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAccuracyComp"), height=7, width=25, units="in", dpi=500, arrangeGrob(ggp1, ggp2, ncol=2)))
 
 
 # ----------------------------------------------------------------------------------
@@ -233,7 +241,7 @@ currAvg$linetype <- "solid"
 
 currAvg$algorithm <- factor(currAvg$algorithm, levels=c(sort(unique(currAvg[,"algorithm"]))))
 buildAbIncPlots(currAvg, currSdev)
-suppressMessages(ggsave(sprintf("plots/%s.png", "simulationsResultsAbilityGIPDims"), height=7, width=15, units="in", dpi=500))
+suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityGIPDims"), height=7, width=15, units="in", dpi=500))
 
 
 
@@ -267,5 +275,5 @@ ggp2 <- buildAbIncPlots(currAvg, currSdev, c("dodgerblue", "#d7191c"))
 
 ggp1 <- ggp1 + theme(plot.margin = margin(2,2,2,2, "cm"))
 ggp2 <- ggp2 + theme(plot.margin = margin(2,2,2,2, "cm"))
-suppressMessages(ggsave(sprintf("plots/%s.png", "simulationsResultsAbilityEP"), height=7, width=25, units="in", dpi=500, arrangeGrob(ggp1, ggp2, ncol=2)))
+suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityEP"), height=7, width=25, units="in", dpi=500, arrangeGrob(ggp1, ggp2, ncol=2)))
 
