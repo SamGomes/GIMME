@@ -4,6 +4,7 @@
 #include "IntegerPartitionGraph.h"
 #include "General.h"
 #include "SubsetOfMultiset.h"
+#include <iostream>
 
 class ODPIP
 {

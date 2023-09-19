@@ -132,7 +132,6 @@ class ConfigsGenAlg(ABC):
 		# 	playersWithoutGroup = listOfPlayersWithJointRequirements.copy()
 
 		# playersWithoutGroupWithoutRestrictions = list(set(playersWithoutGroup) - set(listOfPlayersWithJointRequirements))
-
 		for g in range(numGroups):
 			currGroup = []
 			currGroupSeparationRestrictions = []
@@ -154,32 +153,29 @@ class ConfigsGenAlg(ABC):
 		
 		# append the rest
 		playersWithoutGroupSize = len(playersWithoutGroup)
-		if (playersWithoutGroupSize < (math.ceil(self.maxNumberOfPlayersPerGroup) / 2.0)):
-			while playersWithoutGroupSize > 0:
-				currPlayerIndex = 0;
-				if (playersWithoutGroupSize > 1):
-					currPlayerIndex = random.randint(0, playersWithoutGroupSize - 1)
-				else:
-					currPlayerIndex = 0
-				currPlayerID = playersWithoutGroup[currPlayerIndex]
+		while playersWithoutGroupSize > 0:
+			currPlayerIndex = 0;
+			if (playersWithoutGroupSize > 1):
+				currPlayerIndex = random.randint(0, playersWithoutGroupSize - 1)
+			else:
+				currPlayerIndex = 0
+			currPlayerID = playersWithoutGroup[currPlayerIndex]
 
-				groupsSize = len(returnedConfig)
+			groupsSize = len(returnedConfig)
 
-				availableGroups = returnedConfig.copy()
-				while (len(currGroup) > (self.maxNumberOfPlayersPerGroup - 1)):
-					if(len(availableGroups) < 1):
-						currGroup = random.choice(returnedConfig)
-						break
-					currGroup = random.choice(availableGroups)
-					availableGroups.remove(currGroup)
+			availableGroups = returnedConfig.copy()
+			while (len(currGroup) > (self.maxNumberOfPlayersPerGroup - 1)):
+				if(len(availableGroups) < 1):
+					currGroup = random.choice(returnedConfig)
+					break
+				currGroup = random.choice(availableGroups)
+				availableGroups.remove(currGroup)
 
-				currGroup.append(currPlayerID)
+			currGroup.append(currPlayerID)
 
-				del playersWithoutGroup[currPlayerIndex]
-				playersWithoutGroupSize = len(playersWithoutGroup)
-		else:
-			returnedConfig.append(playersWithoutGroup)
-
+			del playersWithoutGroup[currPlayerIndex]
+			playersWithoutGroupSize = len(playersWithoutGroup)
+		
 		return returnedConfig
 
 	def verifyCoalitionValidity(self, config, playerJointRequirements, playerSeparatedRequirements, playersWithoutGroup):
@@ -441,12 +437,10 @@ class AnnealedPRSConfigsGen(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(group)
-
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
-
+		
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -563,11 +557,10 @@ class PureRandomSearchConfigsGen(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(group)
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
-
+			
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -680,10 +673,9 @@ class AccuratePRSConfigsGen(ConfigsGenAlg):
 					increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
 					currQuality += self.calcQuality(increases)
 
-				
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -1191,10 +1183,10 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 				currState = self.playerModelBridge.getPlayerCurrState(currPlayer)
 				avgCharacteristics.ability += currState.characteristics.ability / groupSize
 				avgCharacteristics.engagement += currState.characteristics.engagement / groupSize
-			
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(group)
-					avgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
+						
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
+				avgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 			avgCharacteristicsArray.append(avgCharacteristics)
 
@@ -1313,6 +1305,14 @@ class ODPIP(ConfigsGenAlg):
 		for player in self.playerIds:
 			playersCurrState[player] = self.playerModelBridge.getPlayerCurrState(player)
 
+
+		# (the +- 1 accounts for non divisor cases that need one more/less member)
+		adjustedMinSize = self.minNumberOfPlayersPerGroup
+		adjustedMaxSize = self.maxNumberOfPlayersPerGroup
+		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
+			adjustedMinSize = adjustedMinSize - 1
+			adjustedMaxSize = adjustedMaxSize + 1
+				
 		# initialize all coalitions
 		for coalition in range(numOfCoalitions-1, 0, -1):
 			group = self.getGroupFromBitFormat(coalition)
@@ -1321,8 +1321,8 @@ class ODPIP(ConfigsGenAlg):
 			currQuality = 0.0
 			groupSize = len(group)
 
-			# calculate the profile and characteristics only for groups in the range defined
-			if groupSize >= self.minNumberOfPlayersPerGroup and groupSize <= self.maxNumberOfPlayersPerGroup:	
+			# calculate the profile and characteristics only for groups in the range defined 
+			if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
@@ -1357,11 +1357,10 @@ class ODPIP(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(groupInIds)
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(groupInIds)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
- 
+				
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
@@ -1389,9 +1388,10 @@ class ODPIP(ConfigsGenAlg):
 		bestConfigProfiles = []
 		avgCharacteristicsArray = []
 	
-		for coalition in cSInByteFormat:
-			if not (self.minNumberOfPlayersPerGroup <= len(coalition) <= self.maxNumberOfPlayersPerGroup):
-				return {"groups": [], "profiles": [], "avgCharacteristics": []}
+		#this check was removed because of cases where the preferred group size would not match the integer divisor of the numPlayers
+		#for coalition in cSInByteFormat:
+			#if not (self.minNumberOfPlayersPerGroup <= len(coalition) <= self.maxNumberOfPlayersPerGroup):
+				#return {"groups": [], "profiles": [], "avgCharacteristics": []}
 		
 		for coalition in cSInByteFormat:
 			bestGroups.append(self.convertFromByteToIds(coalition))
@@ -1606,12 +1606,10 @@ class CLink(ConfigsGenAlg):
 
 				if (self.regAlg.isGroupPredict()):
 					currQuality += self.regAlg.groupPredict(groupInIds)
-
-
-				if (isinstance(self.regAlg, DiversityValueAlg)):
-					personalities = self.regAlg.getPersonalitiesListFromPlayerIds(groupInIds)
-					currAvgCharacteristics.group_diversity = self.regAlg.getTeamPersonalityDiveristy(personalities)
-
+			
+				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 						
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
