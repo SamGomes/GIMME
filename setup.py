@@ -38,7 +38,6 @@ setup(
       'matplotlib>=3.5.3',
       'pymongo>=4.3.3'
     ],
-    ext_modules=[sfc_module],
-    headers=glob.glob('solverModules/GIMME_solver_modules/*.h')
+    ext_modules=[sfc_module]
 )
 

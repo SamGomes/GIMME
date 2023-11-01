@@ -1,0 +1,1 @@
+include solverModules/GIMME_solver_modules/*.h
