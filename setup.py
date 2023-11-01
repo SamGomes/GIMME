@@ -2,7 +2,7 @@ from setuptools import dist, setup, Extension
 import glob
 
 sfc_module = Extension(
-  'GIMMESolver', 
+  name="GIMMESolver",
   include_dirs = ['solverModules/GIMME_solver_modules'],
   sources = glob.glob('solverModules/GIMME_solver_modules/*.cpp'),
   language='c++',
@@ -13,7 +13,7 @@ with open('README.md', 'r') as file:
 
 setup(
     name="GIMMECore",
-    version="1.6.2",
+    version="1.6.5",
     license = "CC BY 4.0",
     python_requires='>=3.7',
     author="Samuel Gomes",
@@ -38,6 +38,7 @@ setup(
       'matplotlib>=3.5.3',
       'pymongo>=4.3.3'
     ],
-    ext_modules=[sfc_module]
+    ext_modules=[sfc_module],
+    headers=glob.glob('solverModules/GIMME_solver_modules/*.h')
 )
 
