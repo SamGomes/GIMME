@@ -45,14 +45,15 @@ class Adaptation(object):
 			return
 		
 
-		# print(json.dumps(self.playerModelBridge.getPlayerStatesDataFrame(0).states, default=lambda o: [o.__dict__["quality"],o.__dict__["stateType"],o.__dict__["creationTime"]], sort_keys=True))
-		# print("\n\n")
 		adaptedConfig = self.configsGenAlg.organize()
 
 		adaptedGroups = adaptedConfig["groups"]
 		adaptedProfiles = adaptedConfig["profiles"]
 		adaptedAvgCharacteristics = adaptedConfig["avgCharacteristics"]
 		adaptedConfig["tasks"] = []
+
+		# print(json.dumps(adaptedConfig, default=lambda o: o.__dict__))
+		# print("\n\n")
 
 		for groupIndex in range(len(adaptedGroups)):
 			currGroup = adaptedGroups[groupIndex]
