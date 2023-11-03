@@ -23,10 +23,7 @@ from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 5
-#
-# maxNumTrainingIterations = 20
-# numRealIterations = 20
+numRuns = 10
 
 maxNumTrainingIterations = 20
 numRealIterations = 20
@@ -630,32 +627,31 @@ if __name__ == '__main__':
 
 	# ----------------------- [Execute Algorithms] ----------------------------
 
-	inputtedText = input("<<< All ready! Press Enter to start (Q, then Enter exits the application). >>>") 
-	if (inputtedText== "Q"):
-		exit()
+	# inputtedText = input("<<< All ready! Press Enter to start (Q, then Enter exits the application). >>>")
+	# if (inputtedText== "Q"):
+		# exit()
 
 	
 
 	# Explore Base GIMME
-
 	adaptationPRS.name = "Random"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 	 	playerBridge, taskBridge, adaptationRandom)
-	
+
 	adaptationPRS.name = "GIMME_PRS"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 	 	playerBridge, taskBridge, adaptationPRS)
 
 	adaptationGA.name = "GIMME_GA"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationGA)
 
 	adaptationODPIP.name = "GIMME_ODPIP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationODPIP)
 
 	adaptationTabularODPIP.name = "GIMME_ODPIP_Tabular"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations, 
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationTabularODPIP)
 
 	adaptationCLink.name = "GIMME_CLink"
@@ -666,10 +662,11 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationTabularCLink)
 
+	quit()
+
 
 
 	# Explore GIMME-Bootstrap
-
 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap"
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.1)
@@ -681,6 +678,19 @@ if __name__ == '__main__':
 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_LowAcc"
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
+
+
+	adaptationCLink.name = "GIMME_CLink_Bootstrap"
+	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.1)
+
+	adaptationCLink.name = "GIMME_CLink_Bootstrap_HighAcc"
+	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.05)
+
+	adaptationCLink.name = "GIMME_CLink_Bootstrap_LowAcc"
+	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.2)
 
 
 	adaptationGA.name = "GIMME_GA_Bootstrap"
@@ -711,7 +721,6 @@ if __name__ == '__main__':
 
 
 	# Explore GIP number of dimensions
-
 	executeSimulations(numRuns, intProfTemplate1D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationEvl1D)
 
@@ -730,7 +739,6 @@ if __name__ == '__main__':
 
 
 	# Explore GIMME with extreme profiles
-
 	adaptationCLink.name = "GIMME_CLink_EP"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationCLink, considerExtremePreferencesValues = True)
