@@ -23,7 +23,7 @@ from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 10
+numRuns = 25
 
 maxNumTrainingIterations = 20
 numRealIterations = 20
@@ -634,17 +634,17 @@ if __name__ == '__main__':
 	
 
 	# Explore Base GIMME
-	adaptationPRS.name = "Random"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	 	playerBridge, taskBridge, adaptationRandom)
-
-	adaptationPRS.name = "GIMME_PRS"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	 	playerBridge, taskBridge, adaptationPRS)
-
-	adaptationGA.name = "GIMME_GA"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-		playerBridge, taskBridge, adaptationGA)
+	# adaptationPRS.name = "Random"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	#  	playerBridge, taskBridge, adaptationRandom)
+ #
+	# adaptationPRS.name = "GIMME_PRS"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	#  	playerBridge, taskBridge, adaptationPRS)
+ #
+	# adaptationGA.name = "GIMME_GA"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	# 	playerBridge, taskBridge, adaptationGA)
 
 	adaptationODPIP.name = "GIMME_ODPIP"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,

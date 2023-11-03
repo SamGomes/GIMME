@@ -14,6 +14,41 @@ suppressMessages(library(envDocument))
 options(warn=-1)
 
 
+# functions for calculating confidence intervals using tables for t or z distributions
+# (source: https://www.r-bloggers.com/2021/04/calculating-confidence-interval-in-r/)
+Margin_Errors <- function (x, ci = 0.95)
+{
+	df_out <- CI_t(x,ci)
+	return(df_out$values[df_out$Measurements=="Margin_Error"])
+}
+
+CI_t <- function (x, ci = 0.95)
+{
+`%>%` <- magrittr::`%>%`
+Margin_Error <- qt(ci + (1 - ci)/2, df = length(x) - 1) * sd(x)/sqrt(length(x))
+df_out <- data.frame( sample_size=length(x), Mean=mean(x), sd=sd(x),
+Margin_Error=Margin_Error,
+'CI_LowerLimit'=(mean(x) - Margin_Error),
+'CI_UpperLimit'=(mean(x) + Margin_Error)) %>%
+tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:6)
+return(df_out)
+}
+
+CI_z <- function (x, ci = 0.95)
+{
+`%>%` <- magrittr::`%>%`
+standard_deviation <- sd(x)
+sample_size <- length(x)
+Margin_Error <- abs(qnorm((1-ci)/2))* standard_deviation/sqrt(sample_size)
+df_out <- data.frame( sample_size=length(x), Mean=mean(x), sd=sd(x),
+Margin_Error=Margin_Error,
+'CI_LowerLimit'=(mean(x) - Margin_Error),
+'CI_UpperLimit'=(mean(x) + Margin_Error)) %>%
+tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:6)
+return(df_out)
+}
+
+
 print("GeneratingPlots...")
 
 # get current script path (source:'https://stackoverflow.com/questions/1815606/determine-path-of-the-executing-script')
@@ -34,35 +69,35 @@ print(sprintf("nRuns: %f", (nrow(unique(resultsLog[c("simsID", "run", "algorithm
 
 
 # plot strategies
-avg <- aggregate(abilityInc ~ iteration*algorithm, resultsLog, mean)
 avgPerRun <- aggregate(abilityInc ~ iteration*algorithm*run*simsID, resultsLog, mean)
-sdev <- aggregate(abilityInc ~ iteration*algorithm, avgPerRun, sd)
 
-# sdev <- aggregate(abilityInc ~ iteration*algorithm , resultsLog , sd) 
+avg <- aggregate(abilityInc ~ iteration*algorithm, avgPerRun, mean)
+deviation <- aggregate(abilityInc ~ iteration*algorithm, avgPerRun, Margin_Errors)
+# print(deviation$abilityInc)
+
+# deviation <- aggregate(abilityInc ~ iteration*algorithm , resultsLog , sd)
 # does not make sense, because it would be influenced by the learning rate of the students. 
 # Instead the standard deviation should be of the average of the class, per run.
-
-
-
-# un <- unique(resultsLog[c("simsID","run","algorithm")])
-# print(un %>% count(simsID,algorithm), n=Inf)
-
 
 # upBound <- max(avgPerRun$abilityInc[avgPerRun$algorithm == "accurate"]) #for maximum of all runs
 # # upBound <- max(avg$abilityInc[avg$algorithm == "accurate"]) #for the maximum average value of all runs (more fair)
 # avg$abilityInc[avg$algorithm == "accurate"] <- upBound
-# sdev$abilityInc[sdev$algorithm == "accurate"] <- 0
+# deviation$abilityInc[deviation$algorithm == "accurate"] <- 0
 
 
 
-buildAbIncPlots <- function(logAvg, logSDev, colors = NULL){
+buildAbIncPlots <- function(avg, deviation, colors = NULL){
 
-	plot <- ggplot(logAvg, aes(x = iteration, y=abilityInc, group=algorithm, color=algorithm, alpha = 0.8)) 
+	if(!"linetype" %in% colnames(avg)){
+		avg$linetype <- "solid"
+	}
 
-	plot <- plot + geom_errorbar(width=.1, aes(ymin=logAvg$abilityInc-logSDev$abilityInc, 
-		ymax=logAvg$abilityInc+logSDev$abilityInc), size = 0.8)
+	plot <- ggplot(avg, aes(x = iteration, y=abilityInc, group=algorithm, color=algorithm, alpha = 0.8))
 
-	plot <- plot + geom_line(aes(linetype=factor(logAvg$linetype)), size = 1.5)
+	plot <- plot + geom_errorbar(width=.1, aes(ymin=avg$abilityInc-deviation$abilityInc,
+		ymax=avg$abilityInc+deviation$abilityInc), size = 0.8)
+
+	plot <- plot + geom_line(aes(linetype=factor(avg$linetype)), size = 1.5)
 	plot <- plot + scale_linetype_manual(values=c("solid" = 1, "dashed" = 2), name = "linetype") + guides(linetype = FALSE)
 	
 	plot <- plot + labs(x = "Iteration", y = "Avg. Ability Increase", color="Algorithm") + 
@@ -116,46 +151,80 @@ print("PRS to Random diff")
 print((m_prs/m_rand - 1)*100)
 
 
+
 # q()
+
+
+# ----------------------------------------------------------------------------------
+# cmp Bootstrap with non-Bootstrap
+currAvg = 	avg[
+				avg$algorithm=="GIMME_ODPIP_Bootstrap" |
+				avg$algorithm=="GIMME_CLink_Bootstrap" |
+				avg$algorithm=="GIMME_PRS_Bootstrap" |
+				avg$algorithm=="GIMME_GA_Bootstrap"
+				,]
+
+currDeviation = deviation[
+				deviation$algorithm=="GIMME_ODPIP_Bootstrap" |
+				deviation$algorithm=="GIMME_CLink_Bootstrap" |
+				deviation$algorithm=="GIMME_PRS_Bootstrap" |
+				deviation$algorithm=="GIMME_GA_Bootstrap"
+				,]
+
+# currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap"] <- "GIMME-GA-Bootstrap"
+
+buildAbIncPlots(currAvg, currDeviation, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
+suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityInc_bootstrapComp"), height=7, width=15, units="in", dpi=500))
+
+
 # ----------------------------------------------------------------------------------
 # cmp average ability increase 
 currAvg = 	avg[
 				avg$algorithm=="GIMME_CLink" |
 				avg$algorithm=="GIMME_ODPIP" |
-				avg$algorithm=="GIMME_Tabular_ODPIP" |
-				avg$algorithm=="GIMME_CLink_Tabular" |
 				avg$algorithm=="GIMME_PRS" | 
 				avg$algorithm=="GIMME_GA" |
-				avg$algorithm=="GIMME_GA_Bootstrap" |
 				avg$algorithm=="Random"
 				,]
 
-currSdev = sdev[
-				sdev$algorithm=="GIMME_CLink" |
-				sdev$algorithm=="GIMME_ODPIP" |
-				sdev$algorithm=="GIMME_Tabular_ODPIP" |
-				sdev$algorithm=="GIMME_CLink_Tabular" |
-				sdev$algorithm=="GIMME_PRS" | 
-				sdev$algorithm=="GIMME_GA" |
-				sdev$algorithm=="GIMME_GA_Bootstrap" |
-				sdev$algorithm=="Random"
+currDeviation = deviation[
+				deviation$algorithm=="GIMME_CLink" |
+				deviation$algorithm=="GIMME_ODPIP" |
+				deviation$algorithm=="GIMME_PRS" |
+				deviation$algorithm=="GIMME_GA" |
+				deviation$algorithm=="Random"
 				,]
 
 
-currAvg$algorithm[currAvg$algorithm == "GIMME_CLink"] <- "GIMME-CLink" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP"] <- "GIMME-ODPIP" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_Tabular_ODPIP"] <- "GIMME_Tabular_ODPIP" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_CLink_Tabular"] <- "GIMME_Tabular_CLink" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_PRS"] <- "GIMME-PRS" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_GA"] <- "GIMME-GA" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap"] <- "GIMME-GA-Bootstrap" 
-currAvg$algorithm[currAvg$algorithm == "Random"] <- "Random" 
+currAvg$algorithm[currAvg$algorithm == "GIMME_CLink"] <- "GIMME-CLink"
+currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP"] <- "GIMME-ODPIP"
+currAvg$algorithm[currAvg$algorithm == "GIMME_PRS"] <- "GIMME-PRS"
+currAvg$algorithm[currAvg$algorithm == "GIMME_GA"] <- "GIMME-GA"
+currAvg$algorithm[currAvg$algorithm == "Random"] <- "Random"
 
-currAvg$linetype <- "solid" 
-# currAvg$linetype[currAvg$algorithm == "Perf. Info."] <- "dashed" 
+# currAvg$linetype[currAvg$algorithm == "Perf. Info."] <- "dashed"
 
-buildAbIncPlots(currAvg, currSdev, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
+buildAbIncPlots(currAvg, currDeviation, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
 suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityInc"), height=7, width=15, units="in", dpi=500))
+
+# ----------------------------------------------------------------------------------
+# cmp quality estimation algorithms (KNN vs Tabular)
+currAvg = 	avg[
+				avg$algorithm=="GIMME_ODPIP" |
+				avg$algorithm=="GIMME_CLink" |
+				avg$algorithm=="GIMME_ODPIP_Tabular" |
+				avg$algorithm=="GIMME_CLink_Tabular"
+				,]
+
+currDeviation = deviation[
+				deviation$algorithm=="GIMME_ODPIP" |
+				deviation$algorithm=="GIMME_CLink" |
+				deviation$algorithm=="GIMME_ODPIP_Tabular" |
+				deviation$algorithm=="GIMME_CLink_Tabular"
+				,]
+
+buildAbIncPlots(currAvg, currDeviation, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
+suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityInc_per_qualityEstAlg"), height=7, width=15, units="in", dpi=500))
 
 q()
 
@@ -167,40 +236,61 @@ currAvg = avg[
 			  avg$algorithm=="GIMME_GA_Bootstrap_HighAcc"
 			  ,]
 
-currSdev = sdev[ 
-			  sdev$algorithm=="GIMME_GA_Bootstrap" | 
-			  sdev$algorithm=="GIMME_GA_Bootstrap_LowAcc" | 
-			  sdev$algorithm=="GIMME_GA_Bootstrap_HighAcc"
+currDeviation = deviation[
+			  deviation$algorithm=="GIMME_GA_Bootstrap" |
+			  deviation$algorithm=="GIMME_GA_Bootstrap_LowAcc" |
+			  deviation$algorithm=="GIMME_GA_Bootstrap_HighAcc"
 			  ,]
 
-currAvg$linetype <- "solid" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap"] <- "GIMME-GA-Bootstrapp\n (\u03B3 = 0.1)" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap_LowAcc"] <- "GIMME-GA-Bootstrap\n (\u03B3 = 0.2)" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap_HighAcc"] <- "GIMME-GA-Bootstrap\n (\u03B3 = 0.05)"  
+currAvg$linetype <- "solid"
+currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap"] <- "GIMME-GA-Bootstrapp\n (\u03B3 = 0.1)"
+currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap_LowAcc"] <- "GIMME-GA-Bootstrap\n (\u03B3 = 0.2)"
+currAvg$algorithm[currAvg$algorithm == "GIMME_GA_Bootstrap_HighAcc"] <- "GIMME-GA-Bootstrap\n (\u03B3 = 0.05)"
 currAvg$algorithm <- factor(currAvg$algorithm, levels=sort(unique(currAvg[,"algorithm"]), decreasing=TRUE))
-ggp1 <- buildAbIncPlots(currAvg, currSdev, c("skyblue", "dodgerblue", "navy"))
+ggp1 <- buildAbIncPlots(currAvg, currDeviation, c("skyblue", "dodgerblue", "navy"))
 
 
 # ----------------------------------------------------------------------------------
 # cmp average ability increase of GIMME with different accuracy est
 currAvg = avg[
-			  avg$algorithm=="GIMME_PRS_Bootstrap" | 
-			  avg$algorithm=="GIMME_PRS_Bootstrap_LowAcc" | 
-			  avg$algorithm=="GIMME_PRS_Bootstrap_HighAcc"
+			  avg$algorithm=="GIMME_ODPIP_Bootstrap" |
+			  avg$algorithm=="GIMME_ODPIP_Bootstrap_LowAcc" |
+			  avg$algorithm=="GIMME_ODPIP_Bootstrap_HighAcc"
 			  ,]
 
-currSdev = sdev[ 
-			  sdev$algorithm=="GIMME_PRS_Bootstrap" | 
-			  sdev$algorithm=="GIMME_PRS_Bootstrap_LowAcc" | 
-			  sdev$algorithm=="GIMME_PRS_Bootstrap_HighAcc"
+currDeviation = deviation[
+			  deviation$algorithm=="GIMME_ODPIP_Bootstrap" |
+			  deviation$algorithm=="GIMME_ODPIP_Bootstrap_LowAcc" |
+			  deviation$algorithm=="GIMME_ODPIP_Bootstrap_HighAcc"
 			  ,]
 
-currAvg$linetype <- "solid" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_PRS_Bootstrap"] <- "GIMME-PRS-Bootstrap\n (\u03B3 = 0.1)" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_PRS_Bootstrap_LowAcc"] <- "GIMME-PRS-Bootstrapp\n (\u03B3 = 0.2)" 
-currAvg$algorithm[currAvg$algorithm == "GIMME_PRS_Bootstrap_HighAcc"] <- "GIMME-PRS-Bootstrap\n (\u03B3 = 0.05)"  
+currAvg$linetype <- "solid"
+currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP_Bootstrap"] <- "GIMME-ODPIP-Bootstrap\n (\u03B3 = 0.1)"
+currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP_Bootstrap_LowAcc"] <- "GIMME-ODPIP-Bootstrapp\n (\u03B3 = 0.2)"
+currAvg$algorithm[currAvg$algorithm == "GIMME_ODPIP_Bootstrap_HighAcc"] <- "GIMME-ODPIP-Bootstrap\n (\u03B3 = 0.05)"
 currAvg$algorithm <- factor(currAvg$algorithm, levels=sort(unique(currAvg[,"algorithm"]), decreasing=TRUE))
-ggp2 <- buildAbIncPlots(currAvg, currSdev, c("skyblue", "dodgerblue", "navy"))
+ggp2 <- buildAbIncPlots(currAvg, currDeviation, c("skyblue", "dodgerblue", "navy"))
+
+# # ----------------------------------------------------------------------------------
+# # cmp average ability increase of GIMME with different accuracy est
+# currAvg = avg[
+# 			  avg$algorithm=="GIMME_PRS_Bootstrap" |
+# 			  avg$algorithm=="GIMME_PRS_Bootstrap_LowAcc" |
+# 			  avg$algorithm=="GIMME_PRS_Bootstrap_HighAcc"
+# 			  ,]
+#
+# currDeviation = deviation[
+# 			  deviation$algorithm=="GIMME_PRS_Bootstrap" |
+# 			  deviation$algorithm=="GIMME_PRS_Bootstrap_LowAcc" |
+# 			  deviation$algorithm=="GIMME_PRS_Bootstrap_HighAcc"
+# 			  ,]
+#
+# currAvg$linetype <- "solid"
+# currAvg$algorithm[currAvg$algorithm == "GIMME_PRS_Bootstrap"] <- "GIMME-PRS-Bootstrap\n (\u03B3 = 0.1)"
+# currAvg$algorithm[currAvg$algorithm == "GIMME_PRS_Bootstrap_LowAcc"] <- "GIMME-PRS-Bootstrapp\n (\u03B3 = 0.2)"
+# currAvg$algorithm[currAvg$algorithm == "GIMME_PRS_Bootstrap_HighAcc"] <- "GIMME-PRS-Bootstrap\n (\u03B3 = 0.05)"
+# currAvg$algorithm <- factor(currAvg$algorithm, levels=sort(unique(currAvg[,"algorithm"]), decreasing=TRUE))
+# ggp2 <- buildAbIncPlots(currAvg, currDeviation, c("skyblue", "dodgerblue", "navy"))
 
 ggp1 <- ggp1 + theme(plot.margin = margin(2,2,2,2, "cm"))
 ggp2 <- ggp2 + theme(plot.margin = margin(2,2,2,2, "cm"))
@@ -218,13 +308,13 @@ currAvg = avg[
 				avg$algorithm=="GIMME_GA6D" 
 			,]
 		
-currSdev = sdev[
-				sdev$algorithm=="GIMME_GA1D" | 
-				sdev$algorithm=="GIMME_GA" | 
-				sdev$algorithm=="GIMME_GA3D" | 
-				sdev$algorithm=="GIMME_GA4D" | 
-				sdev$algorithm=="GIMME_GA5D" | 
-				sdev$algorithm=="GIMME_GA6D" 
+currDeviation = deviation[
+				deviation$algorithm=="GIMME_GA1D" |
+				deviation$algorithm=="GIMME_GA" |
+				deviation$algorithm=="GIMME_GA3D" |
+				deviation$algorithm=="GIMME_GA4D" |
+				deviation$algorithm=="GIMME_GA5D" |
+				deviation$algorithm=="GIMME_GA6D"
 			,]
 
 
@@ -240,7 +330,7 @@ currAvg$linetype <- "solid"
 # currAvg$linetype[currAvg$algorithm == "Random"] <- "dashed" 
 
 currAvg$algorithm <- factor(currAvg$algorithm, levels=c(sort(unique(currAvg[,"algorithm"]))))
-buildAbIncPlots(currAvg, currSdev)
+buildAbIncPlots(currAvg, currDeviation)
 suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityGIPDims"), height=7, width=15, units="in", dpi=500))
 
 
@@ -250,13 +340,13 @@ suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "sim
 currAvg = avg[avg$algorithm=="GIMME_GA" | 
 			  avg$algorithm=="GIMME_GA_EP",]
 
-currSdev = sdev[sdev$algorithm=="GIMME_GA" |  
-			    sdev$algorithm=="GIMME_GA_EP",]
+currDeviation = deviation[deviation$algorithm=="GIMME_GA" |
+			    deviation$algorithm=="GIMME_GA_EP",]
 
 currAvg$linetype <- "solid" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_GA"] <- "GIMME-GA" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_GA_EP"] <- "GIMME-GA (extr. prfs)" 			  
-ggp1 <- buildAbIncPlots(currAvg, currSdev, c("dodgerblue", "#d7191c"))
+ggp1 <- buildAbIncPlots(currAvg, currDeviation, c("dodgerblue", "#d7191c"))
 
 
 # ----------------------------------------------------------------------------------
@@ -264,13 +354,13 @@ ggp1 <- buildAbIncPlots(currAvg, currSdev, c("dodgerblue", "#d7191c"))
 currAvg = avg[avg$algorithm=="GIMME_PRS" | 
 			  avg$algorithm=="GIMME_PRS_EP",]
 
-currSdev = sdev[sdev$algorithm=="GIMME_PRS" |  
-			    sdev$algorithm=="GIMME_PRS_EP",]
+currDeviation = deviation[deviation$algorithm=="GIMME_PRS" |
+			    deviation$algorithm=="GIMME_PRS_EP",]
 
 currAvg$linetype <- "solid" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_PRS"] <- "GIMME-PRS" 
 currAvg$algorithm[currAvg$algorithm == "GIMME_PRS_EP"] <- "GIMME-PRS (extr. prfs)" 			  
-ggp2 <- buildAbIncPlots(currAvg, currSdev, c("dodgerblue", "#d7191c"))
+ggp2 <- buildAbIncPlots(currAvg, currDeviation, c("dodgerblue", "#d7191c"))
 
 
 ggp1 <- ggp1 + theme(plot.margin = margin(2,2,2,2, "cm"))

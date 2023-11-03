@@ -1,5 +1,5 @@
 
-$NUM_PROCESSES = 2
+$NUM_PROCESSES = 8
 for ($i=0; $i -lt $NUM_PROCESSES; $i++)
 {
     invoke-expression 'wt -w 0 powershell -Command{
