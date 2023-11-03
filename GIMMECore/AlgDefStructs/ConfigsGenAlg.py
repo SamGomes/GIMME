@@ -1562,6 +1562,13 @@ class CLink(ConfigsGenAlg):
 		for player in self.playerIds:
 			playersCurrState[player] = self.playerModelBridge.getPlayerCurrState(player)
 
+		# (the +- 1 accounts for non divisor cases that need one more/less member)
+		adjustedMinSize = self.minNumberOfPlayersPerGroup
+		adjustedMaxSize = self.maxNumberOfPlayersPerGroup
+		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
+			adjustedMinSize = adjustedMinSize - 1
+			adjustedMaxSize = adjustedMaxSize + 1
+
 		# initialize all coalitions
 		for coalition in range(numOfCoalitions-1, 0, -1):
 			group = self.getGroupFromBitFormat(coalition)
@@ -1571,7 +1578,7 @@ class CLink(ConfigsGenAlg):
 			groupSize = len(group)
 
 			# calculate the profile and characteristics only for groups in the range defined
-			if groupSize <= self.maxNumberOfPlayersPerGroup:	
+			if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
