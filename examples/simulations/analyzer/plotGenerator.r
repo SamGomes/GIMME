@@ -57,11 +57,8 @@ file.arg.name <- "--file="
 scriptName <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
 scriptPath <- paste(dirname(scriptName), "/results/", sep='')
 
-filenames <- list.files(scriptPath, pattern = ".csv", recursive = TRUE)
+filenames <- list.files(scriptPath, pattern = ".csv", recursive = TRUE) #recursive=FALSE to only search on scriptPath
 filenames <- paste(scriptPath, filenames, sep="")
-
-print(filenames)
-q()
 
 resultsLog <- do.call(rbind, lapply(filenames, read.csv, header=TRUE, sep=","))
 resultsLog <- resultsLog[resultsLog$iteration > 19,]
