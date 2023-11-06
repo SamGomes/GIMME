@@ -57,11 +57,13 @@ file.arg.name <- "--file="
 scriptName <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
 scriptPath <- paste(dirname(scriptName), "/results/", sep='')
 
-filenames <- dir(scriptPath, pattern = ".csv")
+filenames <- list.files(scriptPath, pattern = ".csv", recursive = TRUE)
 filenames <- paste(scriptPath, filenames, sep="")
 
+print(filenames)
+q()
 
-resultsLog <- do.call(rbind, lapply(filenames, read.csv, header=TRUE, sep=",")) #(file="GIMMESims/resultsEvl.csv", header=TRUE, sep=",")
+resultsLog <- do.call(rbind, lapply(filenames, read.csv, header=TRUE, sep=","))
 resultsLog <- resultsLog[resultsLog$iteration > 19,]
 resultsLog <- resultsLog[complete.cases(resultsLog),]
 
@@ -88,16 +90,16 @@ deviation <- aggregate(abilityInc ~ iteration*algorithm, avgPerRun, Margin_Error
 
 buildAbIncPlots <- function(avg, deviation, colors = NULL){
 
-	if(!"linetype" %in% colnames(avg)){
-		avg$linetype <- "solid"
-	}
+# 	if(!"linetype" %in% colnames(avg)){
+# 		avg$linetype <- "solid"
+# 	}
 
 	plot <- ggplot(avg, aes(x = iteration, y=abilityInc, group=algorithm, color=algorithm, alpha = 0.8))
 
 	plot <- plot + geom_errorbar(width=.1, aes(ymin=avg$abilityInc-deviation$abilityInc,
 		ymax=avg$abilityInc+deviation$abilityInc), size = 0.8)
 
-	plot <- plot + geom_line(aes(linetype=factor(avg$linetype)), size = 1.5)
+	plot <- plot + geom_line(aes(linetype=factor("solid")), size = 1.5) + geom_point(size = 4)
 	plot <- plot + scale_linetype_manual(values=c("solid" = 1, "dashed" = 2), name = "linetype") + guides(linetype = FALSE)
 	
 	plot <- plot + labs(x = "Iteration", y = "Avg. Ability Increase", color="Algorithm") + 
@@ -136,7 +138,7 @@ print((m_prs/m_rand - 1)*100)
 
 
 # ----------------------------------------------------------------------------------
-# cmp average ability increase 
+# cmp average ability increase
 print("average ability increase")
 m_ga <- mean(resultsLog[resultsLog$algorithm=="GIMME_GA",]$abilityInc)
 m_prs <- mean(resultsLog[resultsLog$algorithm=="GIMME_PRS",]$abilityInc)
@@ -176,7 +178,7 @@ currDeviation = deviation[
 buildAbIncPlots(currAvg, currDeviation, c("#5e3c99", "dodgerblue","#75a352","#75a3e2", "#d7191c", "#d79b19", "#ff29ed"))
 suppressMessages(ggsave(sprintf(paste(scriptPath, "/plots/%s.png", sep=""), "simulationsResultsAbilityInc_bootstrapComp"), height=7, width=15, units="in", dpi=500))
 
-
+# q()
 # ----------------------------------------------------------------------------------
 # cmp average ability increase 
 currAvg = 	avg[
