@@ -91,7 +91,7 @@ buildAbIncPlots <- function(avg, deviation, colors = NULL){
 # 		avg$linetype <- "solid"
 # 	}
 
-	plot <- ggplot(avg, aes(x = iteration, y=abilityInc, group=algorithm, color=algorithm, alpha = 0.8))
+	plot <- ggplot(avg, aes(x = iteration, y=abilityInc, group=algorithm, color=algorithm, shape=algorithm, alpha = 0.8))
 
 	plot <- plot + geom_errorbar(width=.1, aes(ymin=avg$abilityInc-deviation$abilityInc,
 		ymax=avg$abilityInc+deviation$abilityInc), size = 0.8)
@@ -99,7 +99,7 @@ buildAbIncPlots <- function(avg, deviation, colors = NULL){
 	plot <- plot + geom_line(aes(linetype=factor("solid")), size = 1.5) + geom_point(size = 4)
 	plot <- plot + scale_linetype_manual(values=c("solid" = 1, "dashed" = 2), name = "linetype") + guides(linetype = FALSE)
 	
-	plot <- plot + labs(x = "Iteration", y = "Avg. Ability Increase", color="Algorithm") + 
+	plot <- plot + labs(x = "Iteration", y = "Avg. Ability Increase") + 
 					theme(axis.text = element_text(size = 30), 
 					axis.title = element_text(size = 35, face = "bold"), 
 					legend.title = element_blank(), 
@@ -120,38 +120,48 @@ buildAbIncPlots <- function(avg, deviation, colors = NULL){
 
 # ----------------------------------------------------------------------------------
 # cmp avg execution times
-print("avg execution times")
-m_ga <- mean(resultsLog[resultsLog$algorithm=="GIMME_GA",]$iterationElapsedTime)
-m_prs <- mean(resultsLog[resultsLog$algorithm=="GIMME_PRS",]$iterationElapsedTime)
+print("-----------[Avg execution times]----------")
 m_rand <- mean(resultsLog[resultsLog$algorithm=="Random",]$iterationElapsedTime)
-print("GA to PRS diff")
-print((m_ga/m_prs - 1)*100)
-
-print("GA to Random diff")
-print((m_ga/m_rand - 1)*100)
+m_clink <- mean(resultsLog[resultsLog$algorithm=="GIMME_CLink",]$iterationElapsedTime)
+m_prs <- mean(resultsLog[resultsLog$algorithm=="GIMME_PRS",]$iterationElapsedTime)
+m_ga <- mean(resultsLog[resultsLog$algorithm=="GIMME_GA",]$iterationElapsedTime)
+m_odpip <- mean(resultsLog[resultsLog$algorithm=="GIMME_ODPIP",]$iterationElapsedTime)
 
 print("PRS to Random diff")
 print((m_prs/m_rand - 1)*100)
 
+print("GA to PRS diff")
+print((m_ga/m_prs - 1)*100)
+
+print("CLink to GA diff")
+print((m_clink/m_ga - 1)*100)
+
+print("ODPIP to CLink diff")
+print((m_odpip/m_clink - 1)*100)
 
 # ----------------------------------------------------------------------------------
 # cmp average ability increase
-print("average ability increase")
-m_ga <- mean(resultsLog[resultsLog$algorithm=="GIMME_GA",]$abilityInc)
-m_prs <- mean(resultsLog[resultsLog$algorithm=="GIMME_PRS",]$abilityInc)
+print("-----------[Average ability increase]----------")
 m_rand <- mean(resultsLog[resultsLog$algorithm=="Random",]$abilityInc)
+m_clink <- mean(resultsLog[resultsLog$algorithm=="GIMME_CLink",]$abilityInc)
+m_prs <- mean(resultsLog[resultsLog$algorithm=="GIMME_PRS",]$abilityInc)
+m_ga <- mean(resultsLog[resultsLog$algorithm=="GIMME_GA",]$abilityInc)
+m_odpip <- mean(resultsLog[resultsLog$algorithm=="GIMME_ODPIP",]$abilityInc)
+
+print("CLink to Random diff")
+print((m_clink/m_rand - 1)*100)
+
+print("PRS to CLink diff")
+print((m_prs/m_clink - 1)*100)
+
 print("GA to PRS diff")
 print((m_ga/m_prs - 1)*100)
 
-print("GA to Random diff")
-print((m_ga/m_rand - 1)*100)
-
-print("PRS to Random diff")
-print((m_prs/m_rand - 1)*100)
+print("ODPIP to GA diff")
+print((m_odpip/m_ga - 1)*100)
 
 
-
-# q()
+q()
 
 
 # ----------------------------------------------------------------------------------
