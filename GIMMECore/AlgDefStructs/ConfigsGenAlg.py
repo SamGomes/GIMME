@@ -1292,9 +1292,7 @@ class ODPIPConfigsGen(ConfigsGenAlg):
 	def convertSetOfCombinationsFromBitFormat(self, setOfCombinationsInBitFormat):
 		setOfCombinationsInByteFormat = numpy.empty(len(setOfCombinationsInBitFormat), dtype=list)
 		for i in range(len(setOfCombinationsInBitFormat)):
-
 			setOfCombinationsInByteFormat[i] = self.getGroupFromBitFormat(setOfCombinationsInBitFormat[i])
-
 		return setOfCombinationsInByteFormat
 
 	def computeAllCoalitionsValues(self):
@@ -1310,8 +1308,8 @@ class ODPIPConfigsGen(ConfigsGenAlg):
 		adjustedMinSize = self.minNumberOfPlayersPerGroup
 		adjustedMaxSize = self.maxNumberOfPlayersPerGroup
 		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
-			adjustedMinSize = adjustedMinSize - 1
-			adjustedMaxSize = adjustedMaxSize + 1
+			adjustedMinSize = adjustedMinSize
+			adjustedMaxSize = adjustedMaxSize + (self.minNumberOfPlayersPerGroup - 1)
 		
 		# initialize all coalitions
 		for coalition in range(numOfCoalitions-1, 0, -1):

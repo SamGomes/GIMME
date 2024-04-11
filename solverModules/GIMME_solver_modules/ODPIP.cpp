@@ -125,11 +125,11 @@ void ODPIP::finalize()
 	updateIpSolution(ipBestCSFound, getCoalitionStructureValue(ipBestCSFound));
 	this->bestCSInBitFormat = getBestCSFoundInBitFormat();
 	
-	for (int i = 0; i < bestCSInBitFormat.size(); i++)
-	{
-		printf("{%ld}, \n", bestCSInBitFormat[i]);
-	}
-	printf("\n----------\n");
+	// for (int i = 0; i < bestCSInBitFormat.size(); i++)
+	// {
+	// 	printf("{%ld}, \n", bestCSInBitFormat[i]);
+	// }
+	// printf("\n----------\n");
 	
 	vector<long> smallCoalitions = vector<long>();
 	for (int i = 0; i < bestCSInBitFormat.size(); i++)
@@ -148,12 +148,10 @@ void ODPIP::finalize()
 	{
 		for(int smallI=0; smallI < smallCoalitions.size(); smallI++){
 			long smallCoalition = smallCoalitions[smallI];
-			printf("smallC:%d\n",smallCoalition);
 			for(int mask = 1; mask <= smallCoalition; mask <<= 1){
 				printf("%d,", mask);
 				if((mask & smallCoalition) == 0)
 					continue;
-				printf("mask:%d,", (mask & smallCoalition));
 				
 				int indexOfBestCoalition = -1;
 				long bestCoalition = -1;
@@ -172,12 +170,12 @@ void ODPIP::finalize()
 				bestCSInBitFormat[indexOfBestCoalition] = bestCoalition;
 			}
 		}
-		printf("\n");
-		for (int i = 0; i < bestCSInBitFormat.size(); i++)
-		{
-			printf("{%ld}, \n", bestCSInBitFormat[i]);
-		}
-		printf("\n==========\n");
+		// printf("\n");
+		// for (int i = 0; i < bestCSInBitFormat.size(); i++)
+		// {
+		// 	printf("{%ld}, \n", bestCSInBitFormat[i]);
+		// }
+		// printf("\n==========\n");
 		
 	}
 }

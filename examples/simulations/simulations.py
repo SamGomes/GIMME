@@ -32,7 +32,7 @@ preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 15
+numPlayers = 11
 
 numTasks = 1
 

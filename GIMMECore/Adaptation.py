@@ -47,6 +47,11 @@ class Adaptation(object):
 
 		adaptedConfig = self.configsGenAlg.organize()
 
+		# print(json.dumps(adaptedConfig, default=lambda o: o.__dict__, indent=2))
+		# print("\n\n")
+		# input("")
+		# quit()
+		
 		adaptedGroups = adaptedConfig["groups"]
 		adaptedProfiles = adaptedConfig["profiles"]
 		adaptedAvgCharacteristics = adaptedConfig["avgCharacteristics"]
@@ -70,10 +75,6 @@ class Adaptation(object):
 			adaptedConfig["tasks"].append(adaptedTaskId)
 
 			
-		print(json.dumps(adaptedConfig, default=lambda o: o.__dict__, indent=2))
-		print("\n\n")
-		input("")
-		quit()
 
 		# totalFitness = 0.0
 		# for groupI in range(len(adaptedGroups)):
