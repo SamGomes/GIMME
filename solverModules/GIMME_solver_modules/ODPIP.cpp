@@ -149,7 +149,7 @@ void ODPIP::finalize()
 		for(int smallI=0; smallI < smallCoalitions.size(); smallI++){
 			long smallCoalition = smallCoalitions[smallI];
 			for(int mask = 1; mask <= smallCoalition; mask <<= 1){
-				printf("%d,", mask);
+				// printf("%d,", mask);
 				if((mask & smallCoalition) == 0)
 					continue;
 				
@@ -547,8 +547,8 @@ std::vector<std::vector<double>> ODPIP::setMaxValueForEachSize()
 		constraintsExist = true;
 	
 	for (int coalitionInBitFormat = (int)pow(2, numPlayers) - 1; coalitionInBitFormat > 0; coalitionInBitFormat--){
-		// if ((constraintsExist == false) || feasibleCoalitions[coalitionInBitFormat]) 
-		// {
+		if ((constraintsExist == false) || feasibleCoalitions[coalitionInBitFormat]) 
+		{
 			int size = (int)General::getSizeOfCombinationInBitFormat(coalitionInBitFormat);
 			std::vector<double> curMaxValue = maxValue[size-1];
 			int j = numOfRequiredMaxValues[size-1] - 1;
@@ -565,7 +565,7 @@ std::vector<std::vector<double>> ODPIP::setMaxValueForEachSize()
 				curMaxValue[j] = coalitionValue;
 			}
 			maxValue[size-1] = curMaxValue;
-		// }
+		}
 	}
 	delete[] numOfRequiredMaxValues;
 	delete[] numOfCoalitions;

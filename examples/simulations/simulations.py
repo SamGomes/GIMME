@@ -23,7 +23,7 @@ from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 20
+numRuns = 2
 
 maxNumTrainingIterations = 20
 numRealIterations = 20
@@ -32,7 +32,7 @@ preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 11
+numPlayers = 20
 
 numTasks = 1
 
