@@ -1194,7 +1194,7 @@ class EvolutionaryConfigsGenDEAP(ConfigsGenAlg):
 		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
 # deterministic algorithms
-class ODPIP(ConfigsGenAlg):
+class ODPIPConfigsGen(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 
@@ -1312,7 +1312,7 @@ class ODPIP(ConfigsGenAlg):
 		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
 			adjustedMinSize = adjustedMinSize - 1
 			adjustedMaxSize = adjustedMaxSize + 1
-				
+		
 		# initialize all coalitions
 		for coalition in range(numOfCoalitions-1, 0, -1):
 			group = self.getGroupFromBitFormat(coalition)
@@ -1468,7 +1468,7 @@ class ODPIP(ConfigsGenAlg):
 		return self.results(bestCSFound_byteFormat)
 
 
-class CLink(ConfigsGenAlg):
+class CLinkConfigsGen(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 

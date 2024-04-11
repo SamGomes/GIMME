@@ -23,7 +23,7 @@ from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 25
+numRuns = 20
 
 maxNumTrainingIterations = 20
 numRealIterations = 20
@@ -32,7 +32,7 @@ preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 23
+numPlayers = 15
 
 numTasks = 1
 
@@ -165,7 +165,7 @@ adaptationGA.init(
 )
 
 
-ODPIPconfigsAlg = ODPIP(
+ODPIPconfigsAlg = ODPIPConfigsGen(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = regAlg,
@@ -184,7 +184,7 @@ adaptationODPIP.init(
 )
 
 
-tabularODPIPconfigsAlg = ODPIP(
+tabularODPIPconfigsAlg = ODPIPConfigsGen(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = tabularRegAlg,
@@ -206,7 +206,7 @@ adaptationTabularODPIP.init(
 )
 
 
-CLinkconfigsAlg = CLink(
+CLinkconfigsAlg = CLinkConfigsGen(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = regAlg,
@@ -224,7 +224,7 @@ adaptationCLink.init(
 	name="GIMME_CLink"
 )
 
-tabularCLinkconfigsAlg = CLink(
+tabularCLinkconfigsAlg = CLinkConfigsGen(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = tabularRegAlg,
@@ -466,9 +466,10 @@ def executionPhase(numRuns, playerBridge, maxNumIterations, startingI, currRun, 
 		
 
 		start = time.time()
-		adaptation.iterate()
+		groups = adaptation.iterate()
 		end = time.time()
 		deltaTime = (end - start)
+
 
 		for x in range(numPlayersToTest):
 			increases = simulateReaction(playerBridge, i, x)
@@ -645,24 +646,23 @@ if __name__ == '__main__':
 	# adaptationGA.name = "GIMME_GA"
 	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 	# 	playerBridge, taskBridge, adaptationGA)
-
+ # 
 	adaptationODPIP.name = "GIMME_ODPIP"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationODPIP)
+ # 
+	# adaptationTabularODPIP.name = "GIMME_ODPIP_Tabular"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	# 	playerBridge, taskBridge, adaptationTabularODPIP)
+ # 
+	# adaptationCLink.name = "GIMME_CLink"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	#    	playerBridge, taskBridge, adaptationCLink)
+ # 
+	# adaptationTabularCLink.name = "GIMME_CLink_Tabular"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	# 	playerBridge, taskBridge, adaptationTabularCLink)
 
-	adaptationTabularODPIP.name = "GIMME_ODPIP_Tabular"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-		playerBridge, taskBridge, adaptationTabularODPIP)
-
-	adaptationCLink.name = "GIMME_CLink"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	   	playerBridge, taskBridge, adaptationCLink)
-
-	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-		playerBridge, taskBridge, adaptationTabularCLink)
-
-	quit()
 
 
 
@@ -671,6 +671,8 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.1)
 
+	quit()
+	
 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_HighAcc"
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.05)

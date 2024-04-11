@@ -13,6 +13,9 @@ ODPIP::ODPIP(int numPlayers, double* coalitionValues, int minNumberOfPlayersPerG
 	this->totalNumOfExpansions = 0;
 	this->valueOfBestPartitionFound = std::vector<double>((unsigned int)pow(2, numPlayers));
 
+	this->ipLowerBoundOnOptimalValue = 100000000;
+	this->ipUpperBoundOnOptimalValue = 0;
+	
 	this->max_f = new double[numPlayers];
 
 	this->feasibleCoalitions = General::generateFeasibleCoalitionsInBitFormat(numPlayers, minNumberOfPlayersPerGroup, maxNumberOfPlayersPerGroup, requiredJoinedPlayers, restrictedJointPlayers, coalitionValues);
@@ -59,7 +62,7 @@ int* ODPIP::IP()
 	ODP();
 
 	double acceptableValue = ipUpperBoundOnOptimalValue;
-	
+
 	std::vector<Node*> sortedNodes = getListOfSortedNodes(subspaces);
 
 	while (((double)ipLowerBoundOnOptimalValue) < acceptableValue)
@@ -95,12 +98,12 @@ int* ODPIP::IP()
 
 		if (numOfRemainingSubspaces == 0) break;
 	}
-
-	/*for (int i = 0; i < ipBestCSFound.size(); i++)
+/*
+	for (int i = 0; i < ipBestCSFound.size(); i++)
 	{
 		printf("{%ld, %lf}, \n", General::convertCombinationFromByteToBitFormat(ipBestCSFound[i]), coalitionValues[General::convertCombinationFromByteToBitFormat(ipBestCSFound[i])]);
 	}
-
+ 
 	for (int i = 0; i < feasibleCoalitions.size(); i++)
 		if (feasibleCoalitions[i] && General::getSizeOfCombinationInBitFormat(i) == 5)
 			printf("%ld\n", i);*/
@@ -119,78 +122,64 @@ int* ODPIP::IP()
 void ODPIP::finalize() 
 {	
 
+	updateIpSolution(ipBestCSFound, getCoalitionStructureValue(ipBestCSFound));
 	this->bestCSInBitFormat = getBestCSFoundInBitFormat();
 	
-	long smallCoalition = -1;
-	bool smallCoalitionFound = false;
-	do 
-	{	
-		smallCoalition = -1;
+	for (int i = 0; i < bestCSInBitFormat.size(); i++)
+	{
+		printf("{%ld}, \n", bestCSInBitFormat[i]);
+	}
+	printf("\n----------\n");
+	
+	vector<long> smallCoalitions = vector<long>();
+	for (int i = 0; i < bestCSInBitFormat.size(); i++)
+	{
+		// find coalition with lower number of players than min number of players
+		if (General::getSizeOfCombinationInBitFormat(bestCSInBitFormat[i]) < minNumberOfPlayersPerGroup) 
+		{
+			smallCoalitions.push_back(bestCSInBitFormat[i]);
+			std::vector<long>::iterator it = bestCSInBitFormat.begin() + i;
+			bestCSInBitFormat.erase(it);
+		}
+	}
+
+	
+	if (!smallCoalitions.empty())
+	{
+		for(int smallI=0; smallI < smallCoalitions.size(); smallI++){
+			long smallCoalition = smallCoalitions[smallI];
+			printf("smallC:%d\n",smallCoalition);
+			for(int mask = 1; mask <= smallCoalition; mask <<= 1){
+				printf("%d,", mask);
+				if((mask & smallCoalition) == 0)
+					continue;
+				printf("mask:%d,", (mask & smallCoalition));
+				
+				int indexOfBestCoalition = -1;
+				long bestCoalition = -1;
+				double tempBestValue = -1;
+				for (int i = 0; i < bestCSInBitFormat.size(); i++)
+				{
+					long modifiedCoalition = bestCSInBitFormat[i] ^ mask;
+					double value = getCoalitionValue(modifiedCoalition);
+					if (value >= tempBestValue)
+					{
+						tempBestValue = value;
+						indexOfBestCoalition = i;
+						bestCoalition = modifiedCoalition;
+					}
+				}
+				bestCSInBitFormat[indexOfBestCoalition] = bestCoalition;
+			}
+		}
+		printf("\n");
 		for (int i = 0; i < bestCSInBitFormat.size(); i++)
 		{
-			// find coalition with lower number of players than min number of players
-			if (General::getSizeOfCombinationInBitFormat(bestCSInBitFormat[i]) < minNumberOfPlayersPerGroup) 
-			{
-				smallCoalition = bestCSInBitFormat[i];
-				std::vector<long>::iterator it = bestCSInBitFormat.begin() + i;
-				bestCSInBitFormat.erase(it);
-				smallCoalitionFound = true;
-				break;
-			}
+			printf("{%ld}, \n", bestCSInBitFormat[i]);
 		}
-
-		if (smallCoalitionFound)
-		{
-			for (int i = 0; i < bestCSInBitFormat.size(); i++)
-			{
-				// if there is another small coalition, merge the two
-				if (General::getSizeOfCombinationInBitFormat(bestCSInBitFormat[i]) < minNumberOfPlayersPerGroup) 
-				{
-					bestCSInBitFormat[i] |= smallCoalition;
-					smallCoalitionFound = false;
-					break;
-				}
-			}
-
-			if (smallCoalitionFound)
-			{
-				// if not, go member by member of small coalition and see where he fits best
-				for (long mask = 1; mask <= smallCoalition; mask <<= 1)
-				{	
-					int tempCoalition = mask & smallCoalition;
-					if (tempCoalition == 0)
-						continue;
-
-					int indexOfBestCoalition = -1;
-					long bestCoalition = -1;
-					double tempBestValue = -1;
-					for (int i = 0; i < bestCSInBitFormat.size(); i++)
-					{
-						if (General::getSizeOfCombinationInBitFormat(bestCSInBitFormat[i] ^ tempCoalition) <= maxNumberOfPlayersPerGroup)
-						{
-							double value = getCoalitionValue(bestCSInBitFormat[i] ^ tempCoalition);
-							if (value >= tempBestValue)
-							{
-								tempBestValue = value;
-								indexOfBestCoalition = i;
-								bestCoalition = bestCSInBitFormat[i] ^ tempCoalition;
-							}
-						}
-					}
-					if (indexOfBestCoalition != -1) {
-						bestCSInBitFormat[indexOfBestCoalition] = bestCoalition;
-						smallCoalition ^= mask;
-					}
-				}
-			}
-		}
-		if(smallCoalitionFound && smallCoalition != -1 && smallCoalition != 0)
-		{
-			bestCSInBitFormat.push_back(smallCoalition);
-			smallCoalition = -1;
-		}
-
-	} while (smallCoalition != -1);
+		printf("\n==========\n");
+		
+	}
 }
 
 
@@ -367,7 +356,10 @@ long ODPIP::disableSubspacesWithUBLowerThanTheHighestLB()
 		for (int i = 0; i < nodes[level].size(); i++)
 		{
 			if (nodes[level][i]->subspace.enabled)
-				if (nodes[level][i]->subspace.UB - ipLowerBoundOnOptimalValue < -0.000000000005f)
+				// printf("UB:::::> %f;\n", nodes[level][i]->subspace.UB);
+				// printf("LB:::::> %f;\n", nodes[level][i]->subspace.LB);
+				// printf("ipLowerBoundOnOptimalValue:::::> %f;\n", ipLowerBoundOnOptimalValue);
+				if (nodes[level][i]->subspace.UB - ipLowerBoundOnOptimalValue < -0.000000000005)
 				{
 					nodes[level][i]->subspace.enabled = false;
 					numOfSubspacesThatThisMethodHasDisabled++;
@@ -482,14 +474,14 @@ Node* ODPIP::getFirstEnabledNode(std::vector<Node*> sortedNodes)
 void ODPIP::updateIpSolution(std::vector<std::vector<int>> CS, double value) {
 	if (ipValueOfBestCSFound <= value) {
 		ipValueOfBestCSFound = value;
-		ipBestCSFound = CS;
+		ipBestCSFound = std::vector<std::vector<int>>(CS);
 	}
 }
 
 void ODPIP::updateOdpSolution(std::vector<std::vector<int>> CS, double value) {
 	if (odpValueOfBestCSFound <= value) {
 		odpValueOfBestCSFound = value;
-		odpBestCSFound = CS;
+		odpBestCSFound = std::vector<std::vector<int>>(CS);
 	}
 }
 
@@ -556,25 +548,27 @@ std::vector<std::vector<double>> ODPIP::setMaxValueForEachSize()
 	else
 		constraintsExist = true;
 	
-	for (int coalitionInBitFormat = (int)pow(2, numPlayers) - 1; coalitionInBitFormat > 0; coalitionInBitFormat--)
-		if ((constraintsExist == false) || feasibleCoalitions[coalitionInBitFormat]) 
-		{
+	for (int coalitionInBitFormat = (int)pow(2, numPlayers) - 1; coalitionInBitFormat > 0; coalitionInBitFormat--){
+		// if ((constraintsExist == false) || feasibleCoalitions[coalitionInBitFormat]) 
+		// {
 			int size = (int)General::getSizeOfCombinationInBitFormat(coalitionInBitFormat);
-			std::vector<double> curMaxValue = maxValue[size - 1];
-			int j = numOfRequiredMaxValues[size - 1] - 1;
-			if (getCoalitionValue(coalitionInBitFormat) > curMaxValue[j]) 
+			std::vector<double> curMaxValue = maxValue[size-1];
+			int j = numOfRequiredMaxValues[size-1] - 1;
+			double coalitionValue = getCoalitionValue(coalitionInBitFormat);
+			if (coalitionValue > curMaxValue[j]) 
 			{
 
-				while ((j > 0) && (getCoalitionValue(coalitionInBitFormat) > curMaxValue[j - 1])) 
+				while ((j > 0) && (coalitionValue > curMaxValue[j-1])) 
 				{
-					curMaxValue[j] = curMaxValue[j - 1];
+					curMaxValue[j] = curMaxValue[j-1];
 					j--;
 				}
 
-				curMaxValue[j] = getCoalitionValue(coalitionInBitFormat);
+				curMaxValue[j] = coalitionValue;
 			}
-			maxValue[size - 1] = curMaxValue;
-		}
+			maxValue[size-1] = curMaxValue;
+		// }
+	}
 	delete[] numOfRequiredMaxValues;
 	delete[] numOfCoalitions;
 	return maxValue;
@@ -835,7 +829,7 @@ void ODPIP::evaluateSplits(std::vector<int> coalitionInByteFormat, int coalition
 
 		curValue = getValueOfBestPartitionFound(firstHalfInBitFormat) + getValueOfBestPartitionFound(secondHalfInBitFormat);
 
-		if (bestValue <= curValue)
+		if (bestValue < curValue)
 		{
 			bestValue = curValue;
 		}
