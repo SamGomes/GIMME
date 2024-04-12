@@ -1564,8 +1564,8 @@ class CLinkConfigsGen(ConfigsGenAlg):
 		adjustedMinSize = self.minNumberOfPlayersPerGroup
 		adjustedMaxSize = self.maxNumberOfPlayersPerGroup
 		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
-			adjustedMinSize = adjustedMinSize - 1
-			adjustedMaxSize = adjustedMaxSize + 1
+			adjustedMinSize = adjustedMinSize
+			adjustedMaxSize = adjustedMaxSize + (self.minNumberOfPlayersPerGroup - 1)
 
 		# initialize all coalitions
 		for coalition in range(numOfCoalitions-1, 0, -1):

@@ -131,7 +131,7 @@ void ODPIP::finalize()
 	// }
 	// printf("\n----------\n");
 	
-	vector<long> smallCoalitions = vector<long>();
+	std::vector<long> smallCoalitions = std::vector<long>();
 	for (int i = 0; i < bestCSInBitFormat.size(); i++)
 	{
 		// find coalition with lower number of players than min number of players
@@ -146,6 +146,7 @@ void ODPIP::finalize()
 	
 	if (!smallCoalitions.empty())
 	{
+		std::vector<long> bestCSInBitFormatCpy = std::vector<long>(bestCSInBitFormat);
 		for(int smallI=0; smallI < smallCoalitions.size(); smallI++){
 			long smallCoalition = smallCoalitions[smallI];
 			for(int mask = 1; mask <= smallCoalition; mask <<= 1){
@@ -154,20 +155,18 @@ void ODPIP::finalize()
 					continue;
 				
 				int indexOfBestCoalition = -1;
-				long bestCoalition = -1;
 				double tempBestValue = -1;
-				for (int i = 0; i < bestCSInBitFormat.size(); i++)
+				for (int i = 0; i < bestCSInBitFormatCpy.size(); i++)
 				{
-					long modifiedCoalition = bestCSInBitFormat[i] ^ mask;
+					long modifiedCoalition = bestCSInBitFormatCpy[i] ^ mask;
 					double value = getCoalitionValue(modifiedCoalition);
 					if (value >= tempBestValue)
 					{
 						tempBestValue = value;
 						indexOfBestCoalition = i;
-						bestCoalition = modifiedCoalition;
 					}
 				}
-				bestCSInBitFormat[indexOfBestCoalition] = bestCoalition;
+				bestCSInBitFormat[indexOfBestCoalition] = bestCSInBitFormat[indexOfBestCoalition] ^ mask;
 			}
 		}
 		// printf("\n");

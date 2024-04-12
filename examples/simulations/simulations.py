@@ -32,7 +32,7 @@ preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 20
+numPlayers = 19
 
 numTasks = 1
 
@@ -655,9 +655,9 @@ if __name__ == '__main__':
 	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 	# 	playerBridge, taskBridge, adaptationTabularODPIP)
  # 
-	# adaptationCLink.name = "GIMME_CLink"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	#    	playerBridge, taskBridge, adaptationCLink)
+	adaptationCLink.name = "GIMME_CLink"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	   	playerBridge, taskBridge, adaptationCLink)
  # 
 	# adaptationTabularCLink.name = "GIMME_CLink_Tabular"
 	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
@@ -665,21 +665,18 @@ if __name__ == '__main__':
 
 
 
-
 	# Explore GIMME-Bootstrap
 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap"
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.1)
-
-	quit()
-	
-	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_HighAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.05)
-
-	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_LowAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
+# 	
+# 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_HighAcc"
+# 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+# 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.05)
+# 
+# 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_LowAcc"
+# 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+# 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
 
 
 	adaptationCLink.name = "GIMME_CLink_Bootstrap"
@@ -693,6 +690,8 @@ if __name__ == '__main__':
 	adaptationCLink.name = "GIMME_CLink_Bootstrap_LowAcc"
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.2)
+
+	quit()
 
 
 	adaptationGA.name = "GIMME_GA_Bootstrap"
