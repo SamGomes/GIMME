@@ -24,16 +24,16 @@ from ModelMocks import *
 from LogManager import *
 
 
-numRuns = 2
+numRuns = 5
 
-maxNumTrainingIterations = 2
-numRealIterations = 2
+maxNumTrainingIterations = 10
+numRealIterations = 10
 
-preferredNumberOfPlayersPerGroup = 4
+preferredNumberOfPlayersPerGroup = 3
 
 
 playerWindow = 10
-numPlayers = 12
+numPlayers = 15
 
 numTasks = 1
 
@@ -115,8 +115,8 @@ allQuestionnairePreferences = []
 
 # ----------------------- [Init Log Manager] --------------------------------
 print("Initing .csv log manager...")
-# logManager = CSVLogManager(newpath, simsID)
-logManager = SilentLogManager()
+logManager = CSVLogManager(newpath, simsID)
+# logManager = SilentLogManager()
 
 
 
@@ -653,13 +653,13 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationTabularODPIP)
  
-	adaptationCLink.name = "GIMME_CLink"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	   	playerBridge, taskBridge, adaptationCLink)
- 
-	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-		playerBridge, taskBridge, adaptationTabularCLink)
+# 	adaptationCLink.name = "GIMME_CLink"
+# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+# 	   	playerBridge, taskBridge, adaptationCLink)
+#  
+# 	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
+# 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+# 		playerBridge, taskBridge, adaptationTabularCLink)
 
 
 
@@ -677,17 +677,17 @@ if __name__ == '__main__':
 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
 
 
-	adaptationCLink.name = "GIMME_CLink_Bootstrap"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.1)
-
-	adaptationCLink.name = "GIMME_CLink_Bootstrap_HighAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.05)
-
-	adaptationCLink.name = "GIMME_CLink_Bootstrap_LowAcc"
-	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.2)
+	# adaptationCLink.name = "GIMME_CLink_Bootstrap"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+	# 				playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.1)
+ # 
+	# adaptationCLink.name = "GIMME_CLink_Bootstrap_HighAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+	# 				playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.05)
+ # 
+	# adaptationCLink.name = "GIMME_CLink_Bootstrap_LowAcc"
+	# executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+	# 				playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.2)
 
 
 
@@ -737,9 +737,9 @@ if __name__ == '__main__':
 
 
 	# Explore GIMME with extreme profiles
-	adaptationCLink.name = "GIMME_CLink_EP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-		playerBridge, taskBridge, adaptationCLink, considerExtremePreferencesValues = True)
+	# adaptationCLink.name = "GIMME_CLink_EP"
+	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	# 	playerBridge, taskBridge, adaptationCLink, considerExtremePreferencesValues = True)
 
 
 	adaptationODPIP.name = "GIMME_ODPIP_EP"
@@ -759,10 +759,6 @@ if __name__ == '__main__':
 	adaptationPRS.name = "GIMME_PRS_EP"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationPRS, considerExtremePreferencesValues = True)
-
-	adaptationPRS.name = "Random_EP"
-	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-		playerBridge, taskBridge, adaptationRandom, considerExtremePreferencesValues = True)
 
 	print("Done!                        ")
 

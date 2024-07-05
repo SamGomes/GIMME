@@ -351,9 +351,6 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 		# estimate preferences
 		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
 
-		if (self.qualityEvalAlg.isTabular()):
-			self.qualityEvalAlg.playerPrefEstimates = self.playerPrefEstimates
-
 		# generate several random groups, calculate their fitness and select the best one
 		for i in range(self.numberOfConfigChoices):
 			
@@ -830,9 +827,8 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 
 	def organize(self):
 		self.resetGenAlg()
-		if (self.qualityEvalAlg.isTabular()):
+		if (isinstance(self.qualityEvalAlg, TabQualityEvalAlg)):
 			self.playerPrefEstimates = self.persEstAlg.updateEstimates()
-			self.qualityEvalAlg.playerPrefEstimates = self.playerPrefEstimates
 
 		algorithms.eaMuCommaLambda(
 			population = self.pop, 
@@ -909,12 +905,10 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 
 		self.playerPrefEstimates = {}
 
-	
 
 	def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
 		coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat, len(coalitionInByteFormat))
 		return self.f[coalitionInBitFormat]
-
 
 	def getCoalitionStructureInByteFormatValue(self, coalitionStructure):
 		valueOfCS = 0
@@ -922,7 +916,6 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 			valueOfCS += self.getCoalitionInByteFormatValue(coalitionStructure[i])
 		
 		return valueOfCS
-
 
 	def convertCoalitionFromByteToBitFormat(self, coalitionInByteFormat, coalitionSize):
 		coalitionInBitFormat = 0
@@ -1117,6 +1110,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 		gc.collect()
 		return self.results(bestCSFound_byteFormat)
 
+
 # uses the C++ solver for efficiency
 class CLinkConfigsGenAlg(ConfigsGenAlg):
 	def __init__(self, 
@@ -1237,7 +1231,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 					for dim in profile.dimensions:
 						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
 
-				# calculate fitness and average state
+				# calculate average state
 				currAvgCharacteristics = PlayerCharacteristics()
 				currAvgCharacteristics.reset()
 				for i in range(groupSize):
@@ -1247,7 +1241,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 
 					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
 					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
-				
+
 				currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
 				
 				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
@@ -1321,6 +1315,5 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 		del bestCSFound_bitFormat
 		
 		gc.collect()
-
 
 		return self.results(bestCSFound_byteFormat)
