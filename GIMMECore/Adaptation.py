@@ -1,5 +1,5 @@
 import math
-from .AlgDefStructs.RegressionAlg import *
+from .AlgDefStructs.QualityEvalAlg import *
 from .AlgDefStructs.ConfigsGenAlg import *
 from .AlgDefStructs.PreferencesEstAlg import *
 

@@ -1,5 +1,5 @@
 from .Adaptation import Adaptation
-from .AlgDefStructs.RegressionAlg import *
+from .AlgDefStructs.QualityEvalAlg import *
 from .AlgDefStructs.ConfigsGenAlg import *
 from .AlgDefStructs.PreferencesEstAlg import *
 from .AlgDefStructs.PlayerDataTrimAlg import *

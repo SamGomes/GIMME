@@ -17,7 +17,7 @@ class ExploitationPreferencesEstAlg(PreferencesEstAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 
-		regAlg, 
+		qualityEvalAlg, 
 		qualityWeights = None):
 
 		super().__init__(playerModelBridge)
@@ -26,7 +26,7 @@ class ExploitationPreferencesEstAlg(PreferencesEstAlg):
 		self.qualityWeights = PlayerCharacteristics(ability = 0.5, engagement = 0.5) if qualityWeights == None else qualityWeights 
 
 		self.interactionsProfileTemplate = interactionsProfileTemplate
-		self.regAlg = regAlg
+		self.qualityEvalAlg = qualityEvalAlg
 		self.bestQualities = {}
 
 	def calcQuality(self, state):
@@ -51,7 +51,7 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 
-		regAlg, 
+		qualityEvalAlg, 
 		numTestedPlayerProfiles = None):
 		
 		super().__init__(playerModelBridge)
@@ -61,7 +61,7 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 		self.numTestedPlayerProfiles = 100 if numTestedPlayerProfiles == None else numTestedPlayerProfiles
 		self.interactionsProfileTemplate = interactionsProfileTemplate
 
-		self.regAlg = regAlg
+		self.qualityEvalAlg = qualityEvalAlg
 
 
 	def updateEstimates(self):
@@ -72,13 +72,13 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 			currPreferencesEst = self.playerModelBridge.getPlayerPreferencesEst(playerId)
 			newPreferencesEst = currPreferencesEst
 			if(currPreferencesEst != None):
-				bestQuality = self.regAlg.predict(currPreferencesEst, playerId)
+				bestQuality = self.qualityEvalAlg.evaluate(currPreferencesEst, [playerId])
 			else:
 				bestQuality = -1
 			
 			for i in range(self.numTestedPlayerProfiles):
 				profile = self.interactionsProfileTemplate.generateCopy().randomize()
-				currQuality = self.regAlg.predict(profile, playerId)
+				currQuality = self.qualityEvalAlg.evaluate(profile, [playerId])
 				if currQuality >= bestQuality:
 					bestQuality = currQuality
 					newPreferencesEst = profile

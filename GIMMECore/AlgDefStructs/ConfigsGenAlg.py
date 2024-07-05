@@ -12,7 +12,7 @@ from ctypes import *
 
 from ..InteractionsProfile import InteractionsProfile 
 from ..PlayerStructs import *
-from ..AlgDefStructs.RegressionAlg import *
+from ..AlgDefStructs.QualityEvalAlg import *
 
 
 class ConfigsGenAlg(ABC):
@@ -291,11 +291,8 @@ class RandomConfigsGenAlg(ConfigsGenAlg):
 			group = newGroups[groupI]
 			groupSize = len(group)
 
-
-			
 			profile = self.interactionsProfileTemplate.generateCopy().randomize()			
 			newConfigProfiles.append(profile)
-
 
 			currAvgCharacteristics = PlayerCharacteristics().reset()
 			for currPlayer in group:
@@ -303,7 +300,7 @@ class RandomConfigsGenAlg(ConfigsGenAlg):
 				currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
 				currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize			
 			
-			diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+			diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
 			personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
 			currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
@@ -319,7 +316,7 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 
-		regAlg, 
+		qualityEvalAlg, 
 		persEstAlg, 
 		numberOfConfigChoices = None, 
 		preferredNumberOfPlayersPerGroup = None, 
@@ -337,7 +334,7 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 			jointPlayerConstraints = jointPlayerConstraints,
 			separatedPlayerConstraints = separatedPlayerConstraints)
 
-		self.regAlg = regAlg
+		self.qualityEvalAlg = qualityEvalAlg
 		self.persEstAlg = persEstAlg
 		self.numberOfConfigChoices = 100 if numberOfConfigChoices == None else numberOfConfigChoices
 	
@@ -351,12 +348,11 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 		bestConfigProfiles = []
 		bestAvgCharacteristics = []
 
-
 		# estimate preferences
 		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
 
-		if (self.regAlg.isTabular()):
-			self.regAlg.playerPrefEstimates = self.playerPrefEstimates
+		if (self.qualityEvalAlg.isTabular()):
+			self.qualityEvalAlg.playerPrefEstimates = self.playerPrefEstimates
 
 		# generate several random groups, calculate their fitness and select the best one
 		for i in range(self.numberOfConfigChoices):
@@ -394,18 +390,9 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
 					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 				
-					if (self.regAlg.isTabular()):
-						firstPlayerPreferences = self.playerPrefEstimates[group[i]]
-						for j in range(i+1, groupSize):
-							currQuality += self.regAlg.predict(firstPlayerPreferences, group[j]) / math.comb(groupSize, 2)
-
-					elif (not self.regAlg.isGroupPredict()):
-						currQuality += self.regAlg.predict(profile, group[i])
-
-				if (self.regAlg.isGroupPredict()):
-					currQuality += self.regAlg.groupPredict(group)
+				currQuality += self.qualityEvalAlg.evaluate(profile, group)
 			
-				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
 				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
 				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
@@ -419,118 +406,6 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 
 
 			self.completionPerc = i/self.numberOfConfigChoices
-
-		self.updateMetrics(bestGroups)
-
-		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": bestAvgCharacteristics}
-
-class AccuratePRSConfigsGenAlg(ConfigsGenAlg):
-
-	def __init__(self, 
-		playerModelBridge, 
-		interactionsProfileTemplate, 
-		simulationFunc, 
-		numberOfConfigChoices = None, 
-		preferredNumberOfPlayersPerGroup = None, 
-		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None, 
-		qualityWeights = None):
-
-		super().__init__(
-			playerModelBridge = playerModelBridge,
-			interactionsProfileTemplate = interactionsProfileTemplate, 
-			preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-			minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup, 
-			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup)
-
-		self.simulationFunc = simulationFunc
-		self.currIteration = 0
-
-		self.numberOfConfigChoices = 100 if numberOfConfigChoices == None else numberOfConfigChoices 
-		self.qualityWeights = PlayerCharacteristics(ability = 0.5, engagement = 0.5) if qualityWeights == None else qualityWeights
-
-	def init(self):
-		super().init()
-		self.currIteration = 0
-
-	def updateCurrIteration(self, newCurrIteration):
-		self.currIteration = newCurrIteration
-
-	def calcQuality(self, state):
-		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
-	
-	def organize(self):
-		playerIds = self.playerModelBridge.getAllPlayerIds() 
-		minNumGroups = math.ceil(len(playerIds) / self.maxNumberOfPlayersPerGroup)
-		maxNumGroups = math.floor(len(playerIds) / self.minNumberOfPlayersPerGroup)
-
-		currMaxQuality = -float("inf")
-
-		bestGroups = []
-		bestConfigProfiles = []
-		bestAvgCharacteristics = []
-
-		# generate several random groups, calculate their fitness and select the best one
-		for i in range(self.numberOfConfigChoices):
-			
-			# generate several random groups
-			newGroups = self.randomConfigGenerator(playerIds, minNumGroups, maxNumGroups)
-			newConfigSize = len(newGroups)
-			currQuality = 0.0
-			newConfigProfiles = []
-			newAvgCharacteristics = []
-
-			# generate profiles
-			for groupI in range(newConfigSize):
-				group = newGroups[groupI]
-				groupSize = len(group)
-
-				# generate profile as average of the preferences estimates
-				profile = self.interactionsProfileTemplate.generateCopy().reset()
-				for currPlayer in group:
-					preferences = self.playerModelBridge.getPlayerRealPreferences(currPlayer)
-					for dim in profile.dimensions:
-						profile.dimensions[dim] += preferences.dimensions[dim] / groupSize
-				
-				newConfigProfiles.append(profile)
-
-
-				# calculate fitness and average state
-				currAvgCharacteristics = PlayerCharacteristics()
-				currAvgCharacteristics.reset()
-				for currPlayer in group:
-
-					currState = self.playerModelBridge.getPlayerCurrState(currPlayer)
-					currState.profile = profile
-
-					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
-					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
-				
-					# does not matter if its executed as bootstrap or not
-					newState = self.simulationFunc(
-						isBootstrap = False, 
-						playerBridge = self.playerModelBridge, 
-						state = currState, 
-						playerId = currPlayer, 
-						currIteration = self.currIteration)
-					increases = PlayerState()
-					increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-					currQuality += self.calcQuality(increases)
-
-				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
-				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
-
-				newAvgCharacteristics.append(currAvgCharacteristics)
-			
-			if (currQuality > currMaxQuality):
-				bestGroups = newGroups
-				bestConfigProfiles = newConfigProfiles
-				bestAvgCharacteristics = newAvgCharacteristics
-				currMaxQuality = currQuality
-
-			self.completionPerc = i/self.numberOfConfigChoices
-
 
 		self.updateMetrics(bestGroups)
 
@@ -543,7 +418,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 
-		regAlg = None, 
+		qualityEvalAlg = None, 
 		persEstAlg = None,
 		preferredNumberOfPlayersPerGroup = None, 
 		minNumberOfPlayersPerGroup = None, 
@@ -574,7 +449,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 			jointPlayerConstraints = jointPlayerConstraints,
 			separatedPlayerConstraints = separatedPlayerConstraints)
 
-		self.regAlg = regAlg
+		self.qualityEvalAlg = qualityEvalAlg
 		self.persEstAlg = persEstAlg
 
 		self.initialPopulationSize = 100 if initialPopulationSize == None else initialPopulationSize 
@@ -592,8 +467,8 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 		self.numChildrenPerIteration = 5 if numChildrenPerIteration == None else numChildrenPerIteration 
 		self.numSurvivors = 5 if numSurvivors == None else numSurvivors 
 
-		if(regAlg==None):
-			regAlg = KNNRegression(playerModelBridge, 5)
+		if(qualityEvalAlg==None):
+			qualityEvalAlg = KNNRegression(playerModelBridge, 5)
 
 		self.playerIds = self.playerModelBridge.getAllPlayerIds() 
 		self.minNumGroups = math.ceil(len(self.playerIds) / self.maxNumberOfPlayersPerGroup)
@@ -913,7 +788,6 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 			group = config[groupI]
 			profile = profiles[groupI]
 
-
 			for constraint in self.jointPlayersConstraints:
 				hasToBeInGroup = False
 				isNotInGroup = False
@@ -943,17 +817,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 				if allConstrainsSatisfied == False:
 					break
 
-			for i in range(len(group)):
-				if (self.regAlg.isTabular()):
-						firstPlayerPreferences = self.playerPrefEstimates[group[i]]
-						for j in range(i+1, len(group)):
-							totalFitness += self.regAlg.predict(firstPlayerPreferences, group[j]) / math.comb(len(group), 2)
-
-				elif (not self.regAlg.isGroupPredict()):
-					totalFitness += self.regAlg.predict(profile, group[i])
-
-			if (self.regAlg.isGroupPredict()):
-				totalFitness += self.regAlg.groupPredict(group)
+			totalFitness += self.qualityEvalAlg.evaluate(profile, group)
 		
 		totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
 		if allConstrainsSatisfied:
@@ -966,9 +830,9 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 
 	def organize(self):
 		self.resetGenAlg()
-		if (self.regAlg.isTabular()):
+		if (self.qualityEvalAlg.isTabular()):
 			self.playerPrefEstimates = self.persEstAlg.updateEstimates()
-			self.regAlg.playerPrefEstimates = self.playerPrefEstimates
+			self.qualityEvalAlg.playerPrefEstimates = self.playerPrefEstimates
 
 		algorithms.eaMuCommaLambda(
 			population = self.pop, 
@@ -1001,7 +865,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 				avgCharacteristics.ability += currState.characteristics.ability / groupSize
 				avgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 						
-				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
 				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
 				avgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
@@ -1015,7 +879,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 
-		regAlg,
+		qualityEvalAlg,
 		persEstAlg,
 		taskModelBridge = None,
 		preferredNumberOfPlayersPerGroup = None, 
@@ -1033,7 +897,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 		jointPlayerConstraints = jointPlayerConstraints,
 		separatedPlayerConstraints = separatedPlayerConstraints)
 
-		self.regAlg = regAlg
+		self.qualityEvalAlg = qualityEvalAlg
 		self.persEstAlg = persEstAlg
 
 		self.coalitionsProfiles = []
@@ -1141,7 +1005,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
-				# if (self.regAlg.isTabular()):
+				# if (self.qualityEvalAlg.isTabular()):
 				# 	profile = self.findBestProfileForGroup(groupInIds)
 
 				# else:
@@ -1161,19 +1025,9 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
 					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 
-
-					if (self.regAlg.isTabular()):
-						firstPlayerPreferences = self.playerPrefEstimates[groupInIds[i]]
-						for j in range(i+1, groupSize):
-							currQuality += self.regAlg.predict(firstPlayerPreferences, groupInIds[j]) / math.comb(groupSize, 2)
-
-					elif (not self.regAlg.isGroupPredict()):
-						currQuality += self.regAlg.predict(profile, groupInIds[i])
-
-				if (self.regAlg.isGroupPredict()):
-					currQuality += self.regAlg.groupPredict(groupInIds)
+				currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
 				
-				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
 				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
 				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 
@@ -1203,11 +1057,6 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 		bestConfigProfiles = []
 		avgCharacteristicsArray = []
 	
-		#this check was removed because of cases where the preferred group size would not match the integer divisor of the numPlayers
-		#for coalition in cSInByteFormat:
-			#if not (self.minNumberOfPlayersPerGroup <= len(coalition) <= self.maxNumberOfPlayersPerGroup):
-				#return {"groups": [], "profiles": [], "avgCharacteristics": []}
-		
 		for coalition in cSInByteFormat:
 			bestGroups.append(self.convertFromByteToIds(coalition))
 			bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
@@ -1230,7 +1079,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 			bestTaskId = -1
 			
 			for taskId in tasks:
-				currQuality = self.regAlg.predictTasks(taskId, playerId)
+				currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
 
 				if currQuality > bestQuality:
 					bestQuality = currQuality
@@ -1255,9 +1104,6 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 		# estimate preferences
 		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
 
-		if (self.regAlg.isTabular()):
-			self.regAlg.playerPrefEstimates = self.playerPrefEstimates
-			
 		# initialization(compute the value for every coalition between min and max number of players)
 		self.computeAllCoalitionsValues()
 		requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat = self.computeCoalitionsRestrictions()
@@ -1269,17 +1115,6 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 		del bestCSFound_bitFormat
 
 		gc.collect()
-		# i = 0
-		# for coalition in bestCSFound_byteFormat:
-		# 	print("{", end="")
-		# 	for player in coalition:
-		# 		preferences = self.playerModelBridge.getPlayerRealPreferences(player - 1)
-		# 		print(str(player) + ",", end="")
-
-		# 	print(self.coalitionsValues[bestCSFound_bitFormat[i]], end="")
-		# 	print("}")
-
-		
 		return self.results(bestCSFound_byteFormat)
 
 # uses the C++ solver for efficiency
@@ -1287,7 +1122,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 	def __init__(self, 
 		playerModelBridge, 
 		interactionsProfileTemplate, 
-		regAlg,
+		qualityEvalAlg,
 		persEstAlg,
 		taskModelBridge = None,
 		preferredNumberOfPlayersPerGroup = None, 
@@ -1301,7 +1136,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 		minNumberOfPlayersPerGroup, 
 		maxNumberOfPlayersPerGroup)
 
-		self.regAlg = regAlg
+		self.qualityEvalAlg = qualityEvalAlg
 		self.persEstAlg = persEstAlg
 
 		self.coalitionsProfiles = []
@@ -1397,16 +1232,11 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 				# generate profile as average of the preferences estimates
 				profile = self.interactionsProfileTemplate.generateCopy().reset()
 
-				# if (self.regAlg.isTabular()):
-				# 	profile = self.findBestProfileForGroup(groupInIds)
-
-				# else:
 				for currPlayer in groupInIds:
 					preferences = self.playerPrefEstimates[currPlayer]
 					for dim in profile.dimensions:
 						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
 
-					
 				# calculate fitness and average state
 				currAvgCharacteristics = PlayerCharacteristics()
 				currAvgCharacteristics.reset()
@@ -1418,18 +1248,9 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
 					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 				
-					if (self.regAlg.isTabular()):
-						firstPlayerPreferences = self.playerPrefEstimates[groupInIds[i]]
-						for j in range(i+1, groupSize):
-							currQuality += self.regAlg.predict(firstPlayerPreferences, groupInIds[j]) / math.comb(groupSize, 2)
-
-					elif (not self.regAlg.isGroupPredict()):
-						currQuality += self.regAlg.predict(profile, groupInIds[i])
-
-				if (self.regAlg.isGroupPredict()):
-					currQuality += self.regAlg.groupPredict(groupInIds)
-			
-				diversityValueAlg = DiversityValueAlg(self.playerModelBridge, 0)
+				currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
+				
+				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
 				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
 				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
 						
@@ -1466,7 +1287,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 			bestTaskId = -1
 			
 			for taskId in tasks:
-				currQuality = self.regAlg.predictTasks(taskId, playerId)
+				currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
 
 				if currQuality > bestQuality:
 					bestQuality = currQuality
@@ -1490,9 +1311,6 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 
 		# estimate preferences
 		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
-
-		if (self.regAlg.isTabular()):
-			self.regAlg.playerPrefEstimates = self.playerPrefEstimates
 
 		# initialization(compute the value for every coalition between min and max number of players)
 		self.computeAllCoalitionsValues()

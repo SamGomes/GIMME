@@ -58,8 +58,6 @@ numSurvivors = 10
 numChildrenPerIteration = 100
 
 
-
-
 simsID = str(os.getpid())
 
 startTime = str(datetime.datetime.now())
@@ -127,8 +125,8 @@ print("Initing algorithms...")
 
 syntergyTablePath = sys.path[0]+"/synergyTable.txt"
 
-regAlg = KNNRegression(playerModelBridge = playerBridge, numberOfNNs = 5)
-tabularRegAlg = TabularAgentSynergies(playerModelBridge= playerBridge, 
+qualityEvalAlg = KNNRegQualityEvalAlg(playerModelBridge = playerBridge, numberOfNNs = 5)
+tabularQualityEvalAlg = SynergiesTabQualityEvalAlg(playerModelBridge= playerBridge, 
 										taskModelBridge=taskBridge, 
 										syntergyTablePath=syntergyTablePath)
 
@@ -139,7 +137,7 @@ intProfTemplate2D = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 evolutionaryConfigsAlg = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-	regAlg = regAlg, 
+	qualityEvalAlg = qualityEvalAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
@@ -168,11 +166,11 @@ adaptationGA.init(
 ODPIPconfigsAlg = ODPIPConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-	regAlg = regAlg,
+	qualityEvalAlg = qualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = regAlg,
+		qualityEvalAlg = qualityEvalAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 )
@@ -187,11 +185,11 @@ adaptationODPIP.init(
 tabularODPIPconfigsAlg = ODPIPConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-	regAlg = tabularRegAlg,
+	qualityEvalAlg = tabularQualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = regAlg,
+		qualityEvalAlg = qualityEvalAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 	# preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
@@ -209,11 +207,11 @@ adaptationTabularODPIP.init(
 CLinkconfigsAlg = CLinkConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-	regAlg = regAlg,
+	qualityEvalAlg = qualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = regAlg,
+		qualityEvalAlg = qualityEvalAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 )
@@ -227,11 +225,11 @@ adaptationCLink.init(
 tabularCLinkconfigsAlg = CLinkConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
-	regAlg = tabularRegAlg,
+	qualityEvalAlg = tabularQualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = regAlg,
+		qualityEvalAlg = qualityEvalAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
 )
@@ -245,11 +243,11 @@ adaptationTabularCLink.init(
 prsConfigsAlg = PureRandomSearchConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-	regAlg = regAlg, 
+	qualityEvalAlg = qualityEvalAlg, 
 	persEstAlg = ExplorationPreferencesEstAlg(
 		playerModelBridge = playerBridge, 
 		interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
-		regAlg = regAlg,
+		qualityEvalAlg = qualityEvalAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst), 
 	numberOfConfigChoices = numberOfConfigChoices, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
@@ -286,7 +284,7 @@ intProfTemplate1D = InteractionsProfile({"dim_0": 0})
 evolutionaryConfigsAlg1D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate1D.generateCopy(), 
-	regAlg = regAlg, 
+	qualityEvalAlg = qualityEvalAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
@@ -313,7 +311,7 @@ intProfTemplate3D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0})
 evolutionaryConfigsAlg3D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate3D.generateCopy(), 
-	regAlg = regAlg, 
+	qualityEvalAlg = qualityEvalAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
@@ -339,7 +337,7 @@ intProfTemplate4D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "di
 evolutionaryConfigsAlg4D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate4D.generateCopy(), 
-	regAlg = regAlg, 
+	qualityEvalAlg = qualityEvalAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
@@ -367,7 +365,7 @@ intProfTemplate5D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "di
 evolutionaryConfigsAlg5D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate5D.generateCopy(), 
-	regAlg = regAlg, 
+	qualityEvalAlg = qualityEvalAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
@@ -394,7 +392,7 @@ intProfTemplate6D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "di
 evolutionaryConfigsAlg6D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate6D.generateCopy(), 
-	regAlg = regAlg, 
+	qualityEvalAlg = qualityEvalAlg, 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
 	initialPopulationSize = initialPopulationSize, 
 	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
