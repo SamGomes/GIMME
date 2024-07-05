@@ -154,73 +154,58 @@ double CLink::lf(int coalition1, int coalition2)
 // Redistribute remaining coalitions in case not all coalitions respect players per group limitations
 void CLink::finalize()
 {
-	long smallCoalition = -1;
-	bool smallCoalitionFound = false;
-	do
+	// for (int i = 0; i < optimalCSInBitFormat.size(); i++)
+	// {
+	// 	printf("{%ld,%f}, \n", optimalCSInBitFormat[i], coalitionValues[optimalCSInBitFormat[i]]);
+	// }
+	// printf("\n----------\n");
+	
+	std::vector<long> smallCoalitions = std::vector<long>();
+	for (int i = 0; i < optimalCSInBitFormat.size(); i++)
 	{
-		smallCoalition = -1;
-		for (int i = 0; i < optimalCSInBitFormat.size(); i++)
+		// find coalition with lower number of players than min number of players
+		if (General::getSizeOfCombinationInBitFormat(optimalCSInBitFormat[i]) < minNumberOfPlayersPerGroup) 
 		{
-			// find coalition with lower number of players than min number of players
-			if (General::getSizeOfCombinationInBitFormat(optimalCSInBitFormat[i]) < minNumberOfPlayersPerGroup)
-			{
-				smallCoalition = optimalCSInBitFormat[i];
-				std::vector<long>::iterator it = optimalCSInBitFormat.begin() + i;
-				optimalCSInBitFormat.erase(it);
-				smallCoalitionFound = true;
-				break;
-			}
+			smallCoalitions.push_back(optimalCSInBitFormat[i]);
+			std::vector<long>::iterator it = optimalCSInBitFormat.begin() + i;
+			optimalCSInBitFormat.erase(it);
 		}
+	}
 
-		if (smallCoalitionFound)
-		{
-			// if not, go member by member of small coalition and see where he fits best
-			for (long mask = 1; mask <= smallCoalition; mask <<= 1)
-			{
-				int tempCoalition = mask & smallCoalition;
-				if (tempCoalition == 0)
+	
+	if (!smallCoalitions.empty())
+	{
+		std::vector<long> optimalCSInBitFormatCpy = std::vector<long>(optimalCSInBitFormat);
+		for(int smallI=0; smallI < smallCoalitions.size(); smallI++){
+			long smallCoalition = smallCoalitions[smallI];
+			for(int mask = 1; mask <= smallCoalition; mask <<= 1){
+				// printf("%d,", mask);
+				if((mask & smallCoalition) == 0)
 					continue;
-
+				
 				int indexOfBestCoalition = -1;
-				long bestCoalition = -1;
 				double tempBestValue = -1;
-
-				//search first for coalitions with lower than maxNumberOfPlayersPerGroup size
-				bool anotherSmallCoalition = false;
-				for (int i = 0; i < optimalCSInBitFormat.size(); i++)
+				for (int i = 0; i < optimalCSInBitFormatCpy.size(); i++)
 				{
-					if (General::getSizeOfCombinationInBitFormat(optimalCSInBitFormat[i]) < maxNumberOfPlayersPerGroup)
+					long modifiedCoalition = optimalCSInBitFormatCpy[i] ^ mask;
+					double value = coalitionValues[modifiedCoalition];
+					// printf("{%ld,%ld,%f}, \n", optimalCSInBitFormatCpy[i], mask, value);
+					if (value >= tempBestValue)
 					{
-						anotherSmallCoalition = true;
-						double value = coalitionValues[optimalCSInBitFormat[i] ^ tempCoalition];
-						if (value >= tempBestValue)
-						{
-							tempBestValue = value;
-							indexOfBestCoalition = i;
-							bestCoalition = optimalCSInBitFormat[i] ^ tempCoalition;
-						}
+						tempBestValue = value;
+						indexOfBestCoalition = i;
 					}
 				}
-				
-				// if there aren't other small coalitions, find any that does not exceed maxNumberOfPlayersPerGroup
-				if (!anotherSmallCoalition)
-					for (int i = 0; i < optimalCSInBitFormat.size(); i++)
-					{
-						if (General::getSizeOfCombinationInBitFormat(optimalCSInBitFormat[i]) <= maxNumberOfPlayersPerGroup)
-						{
-							double value = coalitionValues[optimalCSInBitFormat[i] ^ tempCoalition];
-							if (value >= tempBestValue)
-							{
-								tempBestValue = value;
-								indexOfBestCoalition = i;
-								bestCoalition = optimalCSInBitFormat[i] ^ tempCoalition;
-							}
-						}
-					}
-				
-				optimalCSInBitFormat[indexOfBestCoalition] = bestCoalition;
+				optimalCSInBitFormat[indexOfBestCoalition] = optimalCSInBitFormat[indexOfBestCoalition] ^ mask;
 			}
 		}
-	} while (smallCoalition != -1);
+		// printf("\n");
+		// for (int i = 0; i < optimalCSInBitFormat.size(); i++)
+		// {
+		// 	printf("{%ld}, \n", optimalCSInBitFormat[i]);
+		// }
+		// printf("\n==========\n");
+		
+	}
 
 }
