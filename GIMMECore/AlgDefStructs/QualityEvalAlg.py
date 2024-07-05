@@ -17,12 +17,13 @@ class QualityEvalAlg(ABC):
 	
 
 
+# ---------------------- Group-Based Quality Evaluation ---------------------------
 class GroupQualityEvalAlg(QualityEvalAlg):
 	
 	def __init__(self, playerModelBridge):
 		super().__init__(playerModelBridge)
 
-# ---------------------- Personality Diversity ---------------------------
+# Personality Diversity
 class DiversityQualityEvalAlg(GroupQualityEvalAlg):
 	#  Consider the task preferences of students in addition to team diversity. People with the same personality can still have different preferences
 	#  Diversity weight is the value determined by the teacher (0 = aligned, 1 = diverse)
@@ -67,16 +68,12 @@ class DiversityQualityEvalAlg(GroupQualityEvalAlg):
 
 
 
-
 # ---------------------- Regression-Based Characteristic Functions ---------------------------
 class RegQualityEvalAlg(QualityEvalAlg):
 	
 	def __init__(self, playerModelBridge, qualityWeights):
 		super().__init__(playerModelBridge)
 		self.qualityWeights = PlayerCharacteristics(ability = 0.5, engagement = 0.5) if qualityWeights == None else qualityWeights
-
-	def isTabular(self):
-		return False
 
 class KNNRegQualityEvalAlg(RegQualityEvalAlg):
 
