@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from numpy import array
 import matplotlib.collections as collections
 
+sys.path.insert(1,sys.path[0].rsplit('/',2)[0])
 
 #hack for fetching the ModelMocks package on the previous directory
 from pathlib import Path
@@ -25,14 +26,14 @@ from LogManager import *
 
 numRuns = 2
 
-maxNumTrainingIterations = 20
-numRealIterations = 20
+maxNumTrainingIterations = 2
+numRealIterations = 2
 
 preferredNumberOfPlayersPerGroup = 4
 
 
 playerWindow = 10
-numPlayers = 19
+numPlayers = 12
 
 numTasks = 1
 
@@ -116,9 +117,8 @@ allQuestionnairePreferences = []
 
 # ----------------------- [Init Log Manager] --------------------------------
 print("Initing .csv log manager...")
-# logManager = MongoDBLogManager("mongodb+srv://studyAC1:studyAC1@cluster0-\
-# nfksn.mongodb.net/test?retryWrites=true&w=majority")
-logManager = CSVLogManager(newpath, simsID)
+# logManager = CSVLogManager(newpath, simsID)
+logManager = SilentLogManager()
 
 
 
@@ -136,7 +136,7 @@ tabularRegAlg = TabularAgentSynergies(playerModelBridge= playerBridge,
 intProfTemplate2D = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 
 
-evolutionaryConfigsAlg = EvolutionaryConfigsGenDEAP(
+evolutionaryConfigsAlg = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 	regAlg = regAlg, 
@@ -165,7 +165,7 @@ adaptationGA.init(
 )
 
 
-ODPIPconfigsAlg = ODPIPConfigsGen(
+ODPIPconfigsAlg = ODPIPConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = regAlg,
@@ -184,7 +184,7 @@ adaptationODPIP.init(
 )
 
 
-tabularODPIPconfigsAlg = ODPIPConfigsGen(
+tabularODPIPconfigsAlg = ODPIPConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = tabularRegAlg,
@@ -206,7 +206,7 @@ adaptationTabularODPIP.init(
 )
 
 
-CLinkconfigsAlg = CLinkConfigsGen(
+CLinkconfigsAlg = CLinkConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = regAlg,
@@ -224,7 +224,7 @@ adaptationCLink.init(
 	name="GIMME_CLink"
 )
 
-tabularCLinkconfigsAlg = CLinkConfigsGen(
+tabularCLinkconfigsAlg = CLinkConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(),
 	regAlg = tabularRegAlg,
@@ -242,7 +242,7 @@ adaptationTabularCLink.init(
 	name="GIMME_CLink_Tabular"
 )
 
-prsConfigsAlg = PureRandomSearchConfigsGen(
+prsConfigsAlg = PureRandomSearchConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 	regAlg = regAlg, 
@@ -264,7 +264,7 @@ adaptationPRS.init(
 )
 
 
-randomConfigsAlg = RandomConfigsGen(
+randomConfigsAlg = RandomConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate2D.generateCopy(), 
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
@@ -283,7 +283,7 @@ adaptationRandom.init(
 
 # - - - - -
 intProfTemplate1D = InteractionsProfile({"dim_0": 0})
-evolutionaryConfigsAlg1D = EvolutionaryConfigsGenDEAP(
+evolutionaryConfigsAlg1D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate1D.generateCopy(), 
 	regAlg = regAlg, 
@@ -310,7 +310,7 @@ adaptationEvl1D.init(
 
 # GIMME is the same as GIMME 2D 
 intProfTemplate3D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0})
-evolutionaryConfigsAlg3D = EvolutionaryConfigsGenDEAP(
+evolutionaryConfigsAlg3D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate3D.generateCopy(), 
 	regAlg = regAlg, 
@@ -336,7 +336,7 @@ adaptationEvl3D.init(
 
 
 intProfTemplate4D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0})
-evolutionaryConfigsAlg4D = EvolutionaryConfigsGenDEAP(
+evolutionaryConfigsAlg4D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate4D.generateCopy(), 
 	regAlg = regAlg, 
@@ -364,7 +364,7 @@ adaptationEvl4D.init(
 
 
 intProfTemplate5D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0})
-evolutionaryConfigsAlg5D = EvolutionaryConfigsGenDEAP(
+evolutionaryConfigsAlg5D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate5D.generateCopy(), 
 	regAlg = regAlg, 
@@ -391,7 +391,7 @@ adaptationEvl5D.init(
 
 
 intProfTemplate6D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0, "dim_5": 0})
-evolutionaryConfigsAlg6D = EvolutionaryConfigsGenDEAP(
+evolutionaryConfigsAlg6D = EvolutionaryConfigsGenAlg(
 	playerModelBridge = playerBridge, 
 	interactionsProfileTemplate = intProfTemplate6D.generateCopy(), 
 	regAlg = regAlg, 
@@ -635,33 +635,33 @@ if __name__ == '__main__':
 	
 
 	# Explore Base GIMME
-	# adaptationPRS.name = "Random"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	#  	playerBridge, taskBridge, adaptationRandom)
- #
-	# adaptationPRS.name = "GIMME_PRS"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	#  	playerBridge, taskBridge, adaptationPRS)
- #
-	# adaptationGA.name = "GIMME_GA"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	# 	playerBridge, taskBridge, adaptationGA)
- # 
+	adaptationPRS.name = "Random"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	 	playerBridge, taskBridge, adaptationRandom)
+ 
+	adaptationPRS.name = "GIMME_PRS"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+	 	playerBridge, taskBridge, adaptationPRS)
+ 
+	adaptationGA.name = "GIMME_GA"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+		playerBridge, taskBridge, adaptationGA)
+ 
 	adaptationODPIP.name = "GIMME_ODPIP"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationODPIP)
- # 
-	# adaptationTabularODPIP.name = "GIMME_ODPIP_Tabular"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	# 	playerBridge, taskBridge, adaptationTabularODPIP)
- # 
+ 
+	adaptationTabularODPIP.name = "GIMME_ODPIP_Tabular"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+		playerBridge, taskBridge, adaptationTabularODPIP)
+ 
 	adaptationCLink.name = "GIMME_CLink"
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 	   	playerBridge, taskBridge, adaptationCLink)
- # 
-	# adaptationTabularCLink.name = "GIMME_CLink_Tabular"
-	# executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-	# 	playerBridge, taskBridge, adaptationTabularCLink)
+ 
+	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
+	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
+		playerBridge, taskBridge, adaptationTabularCLink)
 
 
 
@@ -669,14 +669,14 @@ if __name__ == '__main__':
 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap"
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.1)
-# 	
-# 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_HighAcc"
-# 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-# 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.05)
-# 
-# 	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_LowAcc"
-# 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-# 					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
+	
+	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_HighAcc"
+	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.05)
+
+	adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_LowAcc"
+	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
+					playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy = 0.2)
 
 
 	adaptationCLink.name = "GIMME_CLink_Bootstrap"
@@ -691,7 +691,6 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
 					playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.2)
 
-	quit()
 
 
 	adaptationGA.name = "GIMME_GA_Bootstrap"
@@ -767,9 +766,5 @@ if __name__ == '__main__':
 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
 		playerBridge, taskBridge, adaptationRandom, considerExtremePreferencesValues = True)
 
-	# adaptationTabularODPIP.configsGenAlg.resetPlayersConstraints()
-
 	print("Done!                        ")
 
-
-		

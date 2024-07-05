@@ -13,12 +13,12 @@ with open('README.md', 'r') as file:
 
 setup(
     name="GIMMECore",
-    version="1.6.5 (debug)",
+    version="2.0.0 (debug)",
     license = "CC BY 4.0",
     python_requires='>=3.7',
     author="Samuel Gomes",
     author_email = "samuel.gomes@tecnico.ulisboa.pt",
-    description="GIMME (Group Interactions Management for Multiplayer sErious games) is a research tool which focuses on the management of interactions in groups so that the collective ability improves.",
+    description="GIMME (Group Interactions Management for Multiplayer sErious games) is a research framework that applies preference-driven group management (division of a collective in work groups and attribution of tasks) so that collective ability improves.",
     long_description=readmeFile,
     long_description_content_type="text/markdown",
     url='https://github.com/SamGomes/GIMME',

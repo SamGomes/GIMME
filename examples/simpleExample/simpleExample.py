@@ -11,6 +11,8 @@ import threading
 import time
 import sys
 
+sys.path.insert(1,sys.path[0].rsplit('/',2)[0])
+
 #hack for fetching the ModelMocks package on the previous directory
 sys.path.insert(1,sys.path[0].rsplit('/',1)[0])
 
@@ -130,9 +132,7 @@ numberOfConfigChoices = 100
 numTestedPlayerProfilesInEst = 500
 regAlg = KNNRegression(playerBridge, 5)
 
-
-
-ODPIPConfigsAlg = ODPIP(
+ODPIPConfigsGenAlg = ODPIPConfigsGenAlg(
 	playerModelBridge = playerBridge,
 	interactionsProfileTemplate = profileTemplate.generateCopy(),
 	regAlg = regAlg,
@@ -148,7 +148,7 @@ ODPIPConfigsAlg = ODPIP(
 adaptationGIMME.init(
 	playerModelBridge = playerBridge, 
 	taskModelBridge = taskBridge,
-	configsGenAlg = ODPIPConfigsAlg, 
+	configsGenAlg = ODPIPConfigsGenAlg, 
 	name="Test Adaptation"
 )
 print("Adaptation initialized and ready!")
@@ -173,8 +173,6 @@ def animate():
 
 t = threading.Thread(target=animate)
 t.start()
-
-
 
 while(True):
 	readyText = ""
