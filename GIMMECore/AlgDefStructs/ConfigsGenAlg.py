@@ -10,1310 +10,1267 @@ from abc import ABC, abstractmethod
 import GIMMESolver as gs
 from ctypes import *
 
-from ..InteractionsProfile import InteractionsProfile 
+from ..InteractionsProfile import InteractionsProfile
 from ..PlayerStructs import *
 from ..AlgDefStructs.QualityEvalAlg import *
 
 
 class ConfigsGenAlg(ABC):
 
-	def __init__(self, 
-		playerModelBridge,
-		interactionsProfileTemplate, 
-		taskModelBridge = None, 
-		preferredNumberOfPlayersPerGroup = None, 
-		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None,
-		jointPlayerConstraints = "",
-		separatedPlayerConstraints = ""):
+    def __init__(self,
+                 player_model_bridge,
+                 interactions_profile_template,
+                 task_model_bridge=None,
+                 preferred_number_of_players_per_group=None,
+                 min_num_players_per_group=None,
+                 max_num_players_per_group=None,
+                 joint_player_constraints="",
+                 separated_player_constraints=""):
 
-		self.groupSizeFreqs = {}
-		self.configSizeFreqs = {}
+        self.group_size_freqs = {}
+        self.config_size_freqs = {}
 
-		self.jointPlayersConstraints = []
-		self.separatedPlayersConstraints = []
-		self.allConstraints = []
-		
-		minNumberOfPlayersPerGroup = 2 if minNumberOfPlayersPerGroup == None else minNumberOfPlayersPerGroup 
-		maxNumberOfPlayersPerGroup = 5 if maxNumberOfPlayersPerGroup == None else maxNumberOfPlayersPerGroup
+        self.joint_players_constraints = []
+        self.separated_players_constraints = []
+        self.all_constraints = []
 
-		if(minNumberOfPlayersPerGroup > maxNumberOfPlayersPerGroup):
-			raise ValueError('The min number of players per group cannot be higher than the max!') 
-		
-		if preferredNumberOfPlayersPerGroup == None:
-			self.maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup
-			self.minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup
-		else:
-			self.maxNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
-			self.minNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
+        min_num_players_per_group = 2 if min_num_players_per_group is None else min_num_players_per_group
+        max_num_players_per_group = 5 if max_num_players_per_group is None else max_num_players_per_group
 
-		self.playerModelBridge = playerModelBridge
-		self.taskModelBridge = taskModelBridge
-		self.interactionsProfileTemplate = interactionsProfileTemplate
-		
-		jointPlayerConstraints = self.fromStringConstraintToList(jointPlayerConstraints)
-		separatedPlayerConstraints = self.fromStringConstraintToList(separatedPlayerConstraints)
-		
-		for i in range(len(jointPlayerConstraints)):
-			if jointPlayerConstraints[i] == ['']:
-				continue
-			self.addJointPlayersConstraints(jointPlayerConstraints[i])
-			
-		for i in range(len(separatedPlayerConstraints)):
-			if separatedPlayerConstraints[i] == ['']:
-				continue
-			self.addSeparatedPlayersConstraints(separatedPlayerConstraints[i])
+        if min_num_players_per_group > max_num_players_per_group:
+            raise ValueError('The min number of players per group cannot be higher than the max!')
 
-		self.completionPerc = 0.0
+        if preferred_number_of_players_per_group is None:
+            self.max_num_players_per_group = max_num_players_per_group
+            self.min_num_players_per_group = min_num_players_per_group
+        else:
+            self.max_num_players_per_group = preferred_number_of_players_per_group
+            self.min_num_players_per_group = preferred_number_of_players_per_group
 
+        self.player_model_bridge = player_model_bridge
+        self.task_model_bridge = task_model_bridge
+        self.interactions_profile_template = interactions_profile_template
 
-	def init(self):
-		self.groupSizeFreqs = {}
-		self.configSizeFreqs = {}
-		return self
+        joint_player_constraints = self.from_string_constraint_to_list(joint_player_constraints)
+        separated_player_constraints = self.from_string_constraint_to_list(separated_player_constraints)
 
-	def reset(self):
-		return self.init()
+        for i in range(len(joint_player_constraints)):
+            if joint_player_constraints[i] == ['']:
+                continue
+            self.add_joint_players_constraints(joint_player_constraints[i])
 
-	def randomConfigGenerator(self, playerIds, minNumGroups, maxNumGroups):
-		
-		returnedConfig = []
-		playerJointRequirements = {}
-		playerSeparatedRequirements = {}
-		if self.jointPlayersConstraints != []:
-			for id in playerIds:
-				playerJointRequirements[str(id)] = []
+        for i in range(len(separated_player_constraints)):
+            if separated_player_constraints[i] == ['']:
+                continue
+            self.add_separated_players_constraints(separated_player_constraints[i])
 
-			for constraint in self.jointPlayersConstraints:
-				for i in range(len(constraint)):
-					
-					for j in range(len(constraint)):
-						if constraint[i] == constraint[j]:
-							continue
+        self.completion_percentage = 0.0
 
-						playerJointRequirements[constraint[i]].append(constraint[j])
+    def init(self):
+        self.group_size_freqs = {}
+        self.config_size_freqs = {}
+        return self
 
+    def reset(self):
+        return self.init()
 
-			for id in playerIds:
-				for restrictedId in playerJointRequirements[id]:
-					for restrictionOfRestrictedId in playerJointRequirements[restrictedId]:
-						if restrictionOfRestrictedId not in playerJointRequirements[id] and restrictionOfRestrictedId != restrictedId:
-							playerJointRequirements[id].append(restrictionOfRestrictedId)
+    def random_config_generator(self, player_ids, min_num_groups, max_num_groups):
 
-		if self.separatedPlayersConstraints != []:
-			for id in playerIds:
-				playerSeparatedRequirements[str(id)] = []
+        returned_config = []
+        player_joint_requirements = {}
+        player_separated_requirements = {}
+        if self.joint_players_constraints != []:
+            for player_id in player_ids:
+                player_joint_requirements[str(player_id)] = []
 
-			for constraint in self.separatedPlayersConstraints:
-				for i in range(len(constraint)):
-					
-					for j in range(len(constraint)):
-						if constraint[i] == constraint[j]:
-							continue
+            for constraint in self.joint_players_constraints:
+                for i in range(len(constraint)):
 
-						playerSeparatedRequirements[constraint[i]].append(constraint[j])
+                    for j in range(len(constraint)):
+                        if constraint[i] == constraint[j]:
+                            continue
 
-		if(len(playerIds) < self.minNumberOfPlayersPerGroup):
-			print("number of players is lower than the minimum number of players per group!")
-			return bestGroups
-			
-		# generate random config
-		playersWithoutGroup = playerIds.copy()
+                        player_joint_requirements[constraint[i]].append(constraint[j])
 
-		if(minNumGroups < maxNumGroups):
-			numGroups = numpy.random.randint(minNumGroups, maxNumGroups)
-		else: # players length is 1
-			numGroups = maxNumGroups
+            for player_id in player_ids:
+                for restrictedId in player_joint_requirements[player_id]:
+                    for restrictionOfRestrictedId in player_joint_requirements[restrictedId]:
+                        if (restrictionOfRestrictedId not in player_joint_requirements[player_id] and
+                                restrictionOfRestrictedId != restrictedId):
+                            player_joint_requirements[player_id].append(restrictionOfRestrictedId)
 
-		# generate min num players for each group
-		playersWithoutGroupSize = len(playersWithoutGroup)
+        if self.separated_players_constraints != []:
+            for player_id in player_ids:
+                player_separated_requirements[str(player_id)] = []
 
-		# playersWithoutGroupWithoutRestrictions = list(set(playersWithoutGroup) - set(listOfPlayersWithJointRequirements))
-		for g in range(numGroups):
-			currGroup = []
-			currGroupSeparationRestrictions = []
+            for constraint in self.separated_players_constraints:
+                for i in range(len(constraint)):
 
-			if(playersWithoutGroupSize < 1):
-				break
+                    for j in range(len(constraint)):
+                        if constraint[i] == constraint[j]:
+                            continue
 
-			# add min number of players to the group
-			for p in range(self.minNumberOfPlayersPerGroup):
-				currPlayerIndex = random.randint(0, len(playersWithoutGroup) - 1)
-				
-				currPlayerID = playersWithoutGroup[currPlayerIndex]
-				currGroup.append(currPlayerID)
-				del playersWithoutGroup[currPlayerIndex]
+                        player_separated_requirements[constraint[i]].append(constraint[j])
 
-			if ((playerSeparatedRequirements != {} or playerJointRequirements != {}) and len(playersWithoutGroup) > 0 ):
-				self.verifyCoalitionValidity(currGroup, playerJointRequirements, playerSeparatedRequirements, playersWithoutGroup)
-			returnedConfig.append(currGroup)
-		
-		# append the rest
-		playersWithoutGroupSize = len(playersWithoutGroup)
-		while playersWithoutGroupSize > 0:
-			currPlayerIndex = 0;
-			if (playersWithoutGroupSize > 1):
-				currPlayerIndex = random.randint(0, playersWithoutGroupSize - 1)
-			else:
-				currPlayerIndex = 0
-			currPlayerID = playersWithoutGroup[currPlayerIndex]
+        if len(player_ids) < self.min_num_players_per_group:
+            raise ValueError("number of players is lower than the minimum number of players per group!")
 
-			groupsSize = len(returnedConfig)
+        # generate random config
+        players_without_group = player_ids.copy()
 
-			availableGroups = returnedConfig.copy()
-			while (len(currGroup) > (self.maxNumberOfPlayersPerGroup - 1)):
-				if(len(availableGroups) < 1):
-					currGroup = random.choice(returnedConfig)
-					break
-				currGroup = random.choice(availableGroups)
-				availableGroups.remove(currGroup)
+        if min_num_groups < max_num_groups:
+            num_groups = numpy.random.randint(min_num_groups, max_num_groups)
+        else:  # players length is 1
+            num_groups = max_num_groups
 
-			currGroup.append(currPlayerID)
+        # generate min num players for each group
+        players_without_group_size = len(players_without_group)
 
-			del playersWithoutGroup[currPlayerIndex]
-			playersWithoutGroupSize = len(playersWithoutGroup)
-		
-		return returnedConfig
+        # playersWithoutGroupWithoutRestrictions = list(set(players_without_group) - set(listOfPlayersWithJointRequirements))
+        for g in range(num_groups):
+            curr_group = []
 
-	def verifyCoalitionValidity(self, config, playerJointRequirements, playerSeparatedRequirements, playersWithoutGroup):
-		for i in range(len(config)):
-			if playerJointRequirements[config[i]] != []:
-				playersNotInCoalition = []
-				for player in playerJointRequirements[config[i]]:
-					if player not in config:
-						playersNotInCoalition.append(player)
-				
-				if playersNotInCoalition != []:
-					
-					for j in range(len(config)):
-						if i != j and playersNotInCoalition[0] in playersWithoutGroup and config[j] not in playerJointRequirements[config[i]]:
-							playersWithoutGroup.append(config[j])
-							config[j] = playersNotInCoalition[0]
-							playersWithoutGroup.remove(playersNotInCoalition[0])
-							del playersNotInCoalition[0]
+            if (players_without_group_size < 1):
+                break
 
-							if len(playersNotInCoalition) == 0:
-								break
-			
-			if playerSeparatedRequirements[config[i]] != []:
-				for player in playerSeparatedRequirements[config[i]]:
-					if player in config:
-						currPlayerIndex = random.randint(0, len(playersWithoutGroup) - 1)
-						while playersWithoutGroup[currPlayerIndex] in playerSeparatedRequirements[config[i]]:
-							currPlayerIndex = random.randint(0, len(playersWithoutGroup) - 1)
+            # add min number of players to the group
+            for p in range(self.min_num_players_per_group):
+                curr_player_index = random.randint(0, len(players_without_group) - 1)
 
-						config.remove(player)
-						config.append(playersWithoutGroup[currPlayerIndex])
-						del playersWithoutGroup[currPlayerIndex]
+                curr_player_id = players_without_group[curr_player_index]
+                curr_group.append(curr_player_id)
+                del players_without_group[curr_player_index]
 
-						playersWithoutGroup.append(player)
-					
-		return config
+            if ((player_separated_requirements != {} or player_joint_requirements != {}) and
+                    len(players_without_group) > 0):
+                self.verify_coalition_validity(curr_group, player_joint_requirements, player_separated_requirements,
+                                               players_without_group)
+            returned_config.append(curr_group)
 
+        # append the rest
+        players_without_group_size = len(players_without_group)
+        while players_without_group_size > 0:
+            curr_player_index = 0
+            if players_without_group_size > 1:
+                curr_player_index = random.randint(0, players_without_group_size - 1)
+            curr_player_id = players_without_group[curr_player_index]
 
-	def fromStringConstraintToList(self, constraints):
-		constraints = constraints.split(';')
+            available_groups = returned_config.copy()
+            curr_group = random.choice(available_groups)
+            while len(curr_group) > (self.max_num_players_per_group - 1):
+                if len(available_groups) < 1:
+                    curr_group = random.choice(returned_config)
+                    break
+                curr_group = random.choice(available_groups)
+                available_groups.remove(curr_group)
 
-		for i in range(len(constraints)):
-			constraints[i] = re.sub('[^A-Za-z0-9,_]+', '', constraints[i]).split(',')
-		
-		return constraints
+            curr_group.append(curr_player_id)
 
-	def addJointPlayersConstraints(self, players):
-		self.jointPlayersConstraints.append(players)
-		self.allConstraints.append({"players": players, "type": "JOIN"})
+            del players_without_group[curr_player_index]
+            players_without_group_size = len(players_without_group)
 
-	def addSeparatedPlayersConstraints(self, players):
-		self.separatedPlayersConstraints.append(players)
-		self.allConstraints.append({"players": players, "type": "SEPARATE"})
+        return returned_config
 
+    def verify_coalition_validity(self, config, player_joint_requirements, player_separated_requirements,
+                                  players_without_group):
 
-	def resetPlayersConstraints(self):
-		self.jointPlayersConstraints = []
-		self.separatedPlayersConstraints = []
-		self.allConstraints = []
+        for i in range(len(config)):
+            if player_joint_requirements[config[i]] != []:
+                players_not_in_coalition = []
+                for player in player_joint_requirements[config[i]]:
+                    if player not in config:
+                        players_not_in_coalition.append(player)
 
-	def getPlayerConstraints(self):
-		return self.allConstraints
+                if players_not_in_coalition != []:
+                    for j in range(len(config)):
+                        if i != j and players_not_in_coalition[0] in players_without_group and config[j] not in \
+                                player_joint_requirements[config[i]]:
+                            players_without_group.append(config[j])
+                            config[j] = players_not_in_coalition[0]
+                            players_without_group.remove(players_not_in_coalition[0])
+                            del players_not_in_coalition[0]
 
-	@abstractmethod
-	def organize(self):
-		pass
+                            if len(players_not_in_coalition) == 0:
+                                break
 
-	def updateMetrics(self, groups):
+            if player_separated_requirements[config[i]] != []:
+                for player in player_separated_requirements[config[i]]:
+                    if player in config:
+                        curr_player_index = random.randint(0, len(players_without_group) - 1)
+                        while players_without_group[curr_player_index] in player_separated_requirements[config[i]]:
+                            curr_player_index = random.randint(0, len(players_without_group) - 1)
 
-		# kind of suboptimal, but guarantees encapsulation
-		if(self.configSizeFreqs.get(len(groups))):
-			self.configSizeFreqs[len(groups)]+=1
-		else:
-			self.configSizeFreqs[len(groups)]=1
+                        config.remove(player)
+                        config.append(players_without_group[curr_player_index])
+                        del players_without_group[curr_player_index]
 
-		for group in groups:
-			if(self.configSizeFreqs.get(len(group))):
-				self.configSizeFreqs[len(group)]+=1
-			else:
-				self.configSizeFreqs[len(group)]=1
+                        players_without_group.append(player)
 
+        return config
 
-	def getCompPercentage(self):
-		return self.completionPerc
+    def from_string_constraint_to_list(self, constraints):
+        constraints = constraints.split(';')
+        for i in range(len(constraints)):
+            constraints[i] = re.sub('[^A-Za-z0-9,_]+', '', constraints[i]).split(',')
+        return constraints
+
+    def add_joint_players_constraints(self, players):
+        self.joint_players_constraints.append(players)
+        self.all_constraints.append({"players": players, "type": "JOIN"})
+
+    def add_separated_players_constraints(self, players):
+        self.separated_players_constraints.append(players)
+        self.all_constraints.append({"players": players, "type": "SEPARATE"})
+
+    def reset_players_constraints(self):
+        self.joint_players_constraints = []
+        self.separated_players_constraints = []
+        self.all_constraints = []
+
+    def get_player_constraints(self):
+        return self.all_constraints
+
+    @abstractmethod
+    def organize(self):
+        pass
+
+    def update_metrics(self, groups):
+        # kind of suboptimal, but guarantees encapsulation
+        if (self.config_size_freqs.get(len(groups))):
+            self.config_size_freqs[len(groups)] += 1
+        else:
+            self.config_size_freqs[len(groups)] = 1
+
+        for group in groups:
+            if (self.config_size_freqs.get(len(group))):
+                self.config_size_freqs[len(group)] += 1
+            else:
+                self.config_size_freqs[len(group)] = 1
+
+    def get_completion_percentage(self):
+        return self.completion_percentage
+
 
 class RandomConfigsGenAlg(ConfigsGenAlg):
 
-	def __init__(self, 
-		playerModelBridge, 
-		interactionsProfileTemplate, 
-		preferredNumberOfPlayersPerGroup = None, 
-		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None,
-		jointPlayerConstraints = "",
-		separatedPlayerConstraints = ""):
-		super().__init__(
-			playerModelBridge = playerModelBridge,
-			interactionsProfileTemplate = interactionsProfileTemplate, 
-			preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-			minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup, 
-			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup,
-			jointPlayerConstraints = jointPlayerConstraints,
-			separatedPlayerConstraints = separatedPlayerConstraints)
+    def __init__(self,
+                 player_model_bridge,
+                 interactions_profile_template,
+                 preferred_number_of_players_per_group=None,
+                 min_num_players_per_group=None,
+                 max_num_players_per_group=None,
+                 joint_player_constraints="",
+                 separated_player_constraints=""):
+        super().__init__(
+            player_model_bridge=player_model_bridge,
+            interactions_profile_template=interactions_profile_template,
+            preferred_number_of_players_per_group=preferred_number_of_players_per_group,
+            min_num_players_per_group=min_num_players_per_group,
+            max_num_players_per_group=max_num_players_per_group,
+            joint_player_constraints=joint_player_constraints,
+            separated_player_constraints=separated_player_constraints)
 
-	def organize(self):
-		playerIds = self.playerModelBridge.get_all_player_ids()
-		minNumGroups = math.ceil(len(playerIds) / self.maxNumberOfPlayersPerGroup)
-		maxNumGroups = math.floor(len(playerIds) / self.minNumberOfPlayersPerGroup)
-		
-		newConfigProfiles = []
-		newAvgCharacteristics = []
-		newGroups = self.randomConfigGenerator(playerIds, minNumGroups, maxNumGroups)
-		newConfigSize = len(newGroups)		
-		# generate profiles
-		for groupI in range(newConfigSize):
-			group = newGroups[groupI]
-			groupSize = len(group)
+    def organize(self):
+        player_ids = self.player_model_bridge.get_all_player_ids()
+        min_num_groups = math.ceil(len(player_ids) / self.max_num_players_per_group)
+        max_num_groups = math.floor(len(player_ids) / self.min_num_players_per_group)
 
-			profile = self.interactionsProfileTemplate.generate_copy().randomize()
-			newConfigProfiles.append(profile)
+        new_config_profiles = []
+        new_avg_characteristics = []
+        new_groups = self.random_config_generator(player_ids, min_num_groups, max_num_groups)
+        new_config_size = len(new_groups)
+        # generate profiles
+        for groupI in range(new_config_size):
+            group = new_groups[groupI]
+            group_size = len(group)
 
-			currAvgCharacteristics = PlayerCharacteristics().reset()
-			for currPlayer in group:
-				currState = self.playerModelBridge.get_player_curr_state(currPlayer)
-				currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
-				currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize			
-			
-			diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-			personalities = diversityValueAlg.get_personalities_list_from_player_ids(group)
-			currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
+            profile = self.interactions_profile_template.generate_copy().randomize()
+            new_config_profiles.append(profile)
 
-			newAvgCharacteristics.append(currAvgCharacteristics)
+            curr_avg_characteristics = PlayerCharacteristics().reset()
+            for currPlayer in group:
+                curr_state = self.player_model_bridge.get_player_curr_state(currPlayer)
+                curr_avg_characteristics.ability += curr_state.characteristics.ability / group_size
+                curr_avg_characteristics.engagement += curr_state.characteristics.engagement / group_size
 
-			self.completionPerc = groupI/newConfigSize
+            diversity_value_alg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
+            personalities = diversity_value_alg.get_personalities_list_from_player_ids(group)
+            curr_avg_characteristics.group_diversity = diversity_value_alg.get_team_personality_diveristy(personalities)
 
-		self.updateMetrics(newGroups)
-		return {"groups": newGroups, "profiles": newConfigProfiles, "avgCharacteristics": newAvgCharacteristics}
+            new_avg_characteristics.append(curr_avg_characteristics)
+
+            self.completion_percentage = groupI / new_config_size
+
+        self.update_metrics(new_groups)
+        return {"groups": new_groups, "profiles": new_config_profiles, "avgCharacteristics": new_avg_characteristics}
+
 
 class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 
-	def __init__(self, 
-		playerModelBridge, 
-		interactionsProfileTemplate, 
-		qualityEvalAlg, 
-		persEstAlg, 
-		numberOfConfigChoices = None, 
-		preferredNumberOfPlayersPerGroup = None, 
-		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None,
-		jointPlayerConstraints = "",
-		separatedPlayerConstraints = ""):
-		
-		super().__init__(
-			playerModelBridge = playerModelBridge,
-			interactionsProfileTemplate = interactionsProfileTemplate, 
-			preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-			minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup, 
-			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup,
-			jointPlayerConstraints = jointPlayerConstraints,
-			separatedPlayerConstraints = separatedPlayerConstraints)
+    def __init__(self,
+                 player_model_bridge,
+                 interactions_profile_template,
+                 quality_eval_alg,
+                 pers_est_alg,
+                 number_of_config_choices=None,
+                 preferred_number_of_players_per_group=None,
+                 min_num_players_per_group=None,
+                 max_num_players_per_group=None,
+                 joint_player_constraints="",
+                 separated_player_constraints=""):
 
-		self.qualityEvalAlg = qualityEvalAlg
-		self.persEstAlg = persEstAlg
-		self.numberOfConfigChoices = 100 if numberOfConfigChoices == None else numberOfConfigChoices
-	
-	def organize(self):
-		playerIds = self.playerModelBridge.get_all_player_ids()
-		minNumGroups = math.ceil(len(playerIds) / self.maxNumberOfPlayersPerGroup)
-		maxNumGroups = math.floor(len(playerIds) / self.minNumberOfPlayersPerGroup)
+        super().__init__(
+            player_model_bridge=player_model_bridge,
+            interactions_profile_template=interactions_profile_template,
+            preferred_number_of_players_per_group=preferred_number_of_players_per_group,
+            min_num_players_per_group=min_num_players_per_group,
+            max_num_players_per_group=max_num_players_per_group,
+            joint_player_constraints=joint_player_constraints,
+            separated_player_constraints=separated_player_constraints)
 
-		currMaxQuality = -float("inf")
-		bestGroups = []
-		bestConfigProfiles = []
-		bestAvgCharacteristics = []
+        self.qualityEvalAlg = quality_eval_alg
+        self.persEstAlg = pers_est_alg
+        self.numberOfConfigChoices = 100 if number_of_config_choices is None else number_of_config_choices
 
-		# estimate preferences
-		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
+    def organize(self):
+        player_ids = self.player_model_bridge.get_all_player_ids()
+        min_num_groups = math.ceil(len(player_ids) / self.max_num_players_per_group)
+        max_num_groups = math.floor(len(player_ids) / self.min_num_players_per_group)
 
-		# generate several random groups, calculate their fitness and select the best one
-		for i in range(self.numberOfConfigChoices):
-			
-			# generate several random groups
-			newGroups = self.randomConfigGenerator(playerIds, minNumGroups, maxNumGroups)
-			newConfigSize = len(newGroups)
-			currQuality = 0.0
-			newConfigProfiles = []
-			newAvgCharacteristics = []
+        curr_max_quality = -float("inf")
+        best_groups = []
+        best_config_profiles = []
+        best_avg_characteristics = []
 
-			# generate profiles
-			for groupI in range(newConfigSize):
-				group = newGroups[groupI]
-				groupSize = len(group)
+        # estimate preferences
+        player_pref_estimates = self.persEstAlg.update_estimates()
 
-				# generate profile as average of the preferences estimates
-				profile = self.interactionsProfileTemplate.generate_copy().reset()
-				
-				for currPlayer in group:
-					preferences = self.playerPrefEstimates[currPlayer]
-					for dim in profile.dimensions:
-						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
+        # generate several random groups, calculate their fitness and select the best one
+        for i in range(self.numberOfConfigChoices):
 
-				newConfigProfiles.append(profile)
+            # generate several random groups
+            new_groups = self.random_config_generator(player_ids, min_num_groups, max_num_groups)
+            new_config_size = len(new_groups)
+            curr_quality = 0.0
+            new_config_profiles = []
+            new_avg_characteristics = []
 
-				# calculate fitness and average state
-				currAvgCharacteristics = PlayerCharacteristics()
-				currAvgCharacteristics.reset()
-				for i in range(len(group)):
+            # generate profiles
+            for groupI in range(new_config_size):
+                group = new_groups[groupI]
+                group_size = len(group)
 
-					currState = self.playerModelBridge.get_player_curr_state(group[i])
-					currState.profile = profile
+                # generate profile as average of the preferences estimates
+                profile = self.interactions_profile_template.generate_copy().reset()
 
-					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
-					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
-				
-				currQuality += self.qualityEvalAlg.evaluate(profile, group)
-			
-				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.get_personalities_list_from_player_ids(group)
-				currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
+                for currPlayer in group:
+                    preferences = player_pref_estimates[currPlayer]
+                    for dim in profile.dimensions:
+                        profile.dimensions[dim] += (preferences.dimensions[dim] / group_size)
 
-				newAvgCharacteristics.append(currAvgCharacteristics)
-			
-			if (currQuality > currMaxQuality):
-				bestGroups = newGroups
-				bestConfigProfiles = newConfigProfiles
-				bestAvgCharacteristics = newAvgCharacteristics
-				currMaxQuality = currQuality
+                new_config_profiles.append(profile)
 
+                # calculate quality and average state
+                curr_avg_characteristics = PlayerCharacteristics()
+                curr_avg_characteristics.reset()
+                for i in range(len(group)):
+                    curr_state = self.player_model_bridge.get_player_curr_state(group[i])
+                    curr_state.profile = profile
 
-			self.completionPerc = i/self.numberOfConfigChoices
+                    curr_avg_characteristics.ability += curr_state.characteristics.ability / group_size
+                    curr_avg_characteristics.engagement += curr_state.characteristics.engagement / group_size
 
-		self.updateMetrics(bestGroups)
+                curr_quality += self.qualityEvalAlg.evaluate(profile, group)
 
-		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": bestAvgCharacteristics}
+                diversity_value_alg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
+                personalities = diversity_value_alg.get_personalities_list_from_player_ids(group)
+                curr_avg_characteristics.group_diversity = diversity_value_alg.get_team_personality_diveristy(
+                    personalities)
+
+                new_avg_characteristics.append(curr_avg_characteristics)
+
+            if curr_quality > curr_max_quality:
+                best_groups = new_groups
+                best_config_profiles = new_config_profiles
+                best_avg_characteristics = new_avg_characteristics
+                curr_max_quality = curr_quality
+
+            self.completion_percentage = i / self.numberOfConfigChoices
+
+        self.update_metrics(best_groups)
+
+        return {"groups": best_groups, "profiles": best_config_profiles, "avgCharacteristics": best_avg_characteristics}
+
 
 from deap import base, creator, tools, algorithms
 from collections import *
 
+
 class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
-	def __init__(self, 
-		playerModelBridge, 
-		interactionsProfileTemplate, 
-		qualityEvalAlg = None, 
-		persEstAlg = None,
-		preferredNumberOfPlayersPerGroup = None, 
-		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None, 
+    def __init__(self,
+                 player_model_bridge,
+                 interactions_profile_template,
+                 quality_eval_alg,
+                 pers_est_alg,
+                 min_num_players_per_group=None,
+                 max_num_players_per_group=None,
+                 preferred_number_of_players_per_group=None,
 
-		initialPopulationSize = None, 
-		numberOfEvolutionsPerIteration = None,  
-		probOfCross = None, 
+                 initial_population_size=None,
+                 num_evolutions_per_iteration=None,
+                 prob_cross=None,
 
-		probOfMutation = None,
-		probOfMutationConfig = None, 
-		probOfMutationGIPs = None, 
+                 prob_mut=None,
+                 prob_mut_config=None,
+                 prob_mut_profiles=None,
 
-		numChildrenPerIteration = None,
-		numSurvivors = None,
+                 num_children_per_iteration=None,
+                 num_survivors=None,
 
-		cxOp = None,
-		
-		jointPlayerConstraints = "",
-		separatedPlayerConstraints = ""):
+                 cx_op=None,
 
-		super().__init__(
-			playerModelBridge = playerModelBridge,
-			interactionsProfileTemplate = interactionsProfileTemplate, 
-			preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-			minNumberOfPlayersPerGroup = minNumberOfPlayersPerGroup, 
-			maxNumberOfPlayersPerGroup = maxNumberOfPlayersPerGroup,
-			jointPlayerConstraints = jointPlayerConstraints,
-			separatedPlayerConstraints = separatedPlayerConstraints)
+                 joint_player_constraints="",
+                 separated_player_constraints=""):
 
-		self.qualityEvalAlg = qualityEvalAlg
-		self.persEstAlg = persEstAlg
+        super().__init__(
+            player_model_bridge=player_model_bridge,
+            interactions_profile_template=interactions_profile_template,
+            preferred_number_of_players_per_group=preferred_number_of_players_per_group,
+            min_num_players_per_group=min_num_players_per_group,
+            max_num_players_per_group=max_num_players_per_group,
+            joint_player_constraints=joint_player_constraints,
+            separated_player_constraints=separated_player_constraints)
 
-		self.initialPopulationSize = 100 if initialPopulationSize == None else initialPopulationSize 
+        self.quality_eval_alg = quality_eval_alg
+        self.pers_est_alg = pers_est_alg
 
+        self.initial_population_size = 100 if initial_population_size is None else initial_population_size
 
-		self.numberOfEvolutionsPerIteration = 500 if numberOfEvolutionsPerIteration == None else numberOfEvolutionsPerIteration
-		
-		self.probOfMutation = 0.2 if probOfMutation == None else probOfMutation
-		self.probOfCross = 0.7 if probOfCross == None else probOfCross
-		
-		self.probOfMutationConfig = 0.2 if probOfMutationConfig == None else probOfMutationConfig
-		self.probOfMutationGIPs = 0.2 if probOfMutationGIPs == None else probOfMutationGIPs
-		
+        self.num_evolutions_per_iteration = 500 if num_evolutions_per_iteration is None \
+            else num_evolutions_per_iteration
 
-		self.numChildrenPerIteration = 5 if numChildrenPerIteration == None else numChildrenPerIteration 
-		self.numSurvivors = 5 if numSurvivors == None else numSurvivors 
+        self.prob_mut = 0.2 if prob_mut is None else prob_mut
+        self.prob_cross = 0.7 if prob_cross is None else prob_cross
 
-		if(qualityEvalAlg==None):
-			qualityEvalAlg = KNNRegression(playerModelBridge, 5)
+        self.prob_mut_config = 0.2 if prob_mut_config is None else prob_mut_config
+        self.prob_mut_profiles = 0.2 if prob_mut_profiles is None else prob_mut_profiles
 
-		self.playerIds = self.playerModelBridge.get_all_player_ids()
-		self.minNumGroups = math.ceil(len(self.playerIds) / self.maxNumberOfPlayersPerGroup)
-		self.maxNumGroups = math.floor(len(self.playerIds) / self.minNumberOfPlayersPerGroup)
+        self.num_children_per_iteration = 5 if num_children_per_iteration is None else num_children_per_iteration
+        self.num_survivors = 5 if num_survivors is None else num_survivors
 
-		self.searchID = str(id(self)) 
+        self.quality_eval_alg = KNNRegQualityEvalAlg(player_model_bridge=player_model_bridge, k=5) \
+            if quality_eval_alg is None else quality_eval_alg
 
-		fitnessFuncId = "FitnessMax"+self.searchID
-		individualId = "Individual"+self.searchID
+        self.player_ids = self.player_model_bridge.get_all_player_ids()
+        self.min_num_groups = math.ceil(len(self.player_ids) / self.max_num_players_per_group)
+        self.max_num_groups = math.floor(len(self.player_ids) / self.min_num_players_per_group)
 
-		creator.create(fitnessFuncId, base.Fitness, weights=(1.0,))
-		creator.create(individualId, list, fitness=getattr(creator, fitnessFuncId))
+        self.searchID = str(id(self))
 
-		# # conv test
-		# creator.create(fitnessFuncId, base.Fitness, weights=(-1.0,))
-		# creator.create(individualId, list, fitness=getattr(creator, fitnessFuncId))
+        fitness_func_id = "FitnessMax" + self.searchID
+        individual_id = "Individual" + self.searchID
 
-		
-		self.toolbox = base.Toolbox()
+        creator.create(fitness_func_id, base.Fitness, weights=(1.0,))
+        creator.create(individual_id, list, fitness=getattr(creator, fitness_func_id))
 
-		self.toolbox.register("indices", self.randomIndividualGenerator, self.playerIds, self.minNumGroups, self.maxNumGroups)
+        # # conv test
+        # creator.create(fitness_func_id, base.Fitness, weights=(-1.0,))
+        # creator.create(individual_id, list, fitness=getattr(creator, fitness_func_id))
 
-		self.toolbox.register("individual", tools.initIterate, getattr(creator, individualId), self.toolbox.indices)
-		self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
+        self.toolbox = base.Toolbox()
 
-		self.cxOp = "order" if cxOp == None else cxOp
-		if self.cxOp == "order":
-			self.toolbox.register("mate", self.cxGIMME_Order)
-		else:
-			self.toolbox.register("mate", self.cxGIMME_Simple)
+        self.toolbox.register("indices", self.random_individual_generator,
+                              self.player_ids, self.min_num_groups, self.max_num_groups)
 
-		self.toolbox.register("mutate", self.mutGIMME, pGIPs=self.probOfMutationGIPs, pConfig=self.probOfMutationConfig)
+        self.toolbox.register("individual", tools.initIterate, getattr(creator, individual_id),
+                              self.toolbox.indices)
+        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
-		# self.toolbox.register("select", tools.selRoulette)
-		# self.toolbox.register("select", tools.selBest, k=self.numFitSurvivors)
-		self.toolbox.register("select", self.selGIMME)
+        self.cx_op = "order" if cx_op is None else cx_op
+        if self.cx_op == "order":
+            self.toolbox.register("mate", self.cx_gimme_order)
+        else:
+            self.toolbox.register("mate", self.cx_gimme_simple)
 
-		# self.toolbox.register("evaluate", self.calcFitness_convergenceTest)
-		self.toolbox.register("evaluate", self.calcFitness)
+        self.toolbox.register("mutate", self.mut_gimme, pGIPs=self.prob_mut_profiles, pConfig=self.prob_mut_config)
 
-		self.resetGenAlg()
+        # self.toolbox.register("select", tools.selRoulette)
+        # self.toolbox.register("select", tools.selBest, k=self.numFitSurvivors)
+        self.toolbox.register("select", self.sel_gimme)
 
+        # self.toolbox.register("evaluate", self.calcFitness_convergenceTest)
+        self.toolbox.register("evaluate", self.calc_fitness)
 
-	def resetGenAlg(self):
+        self.reset_gen_alg()
 
-		if hasattr(self, "pop"):
-			del self.pop
-		if hasattr(self, "hof"):
-			del self.hof
+    def reset_gen_alg(self):
 
-		self.pop = self.toolbox.population(n = self.initialPopulationSize)
-		self.hof = tools.HallOfFame(1)
+        if hasattr(self, "pop"):
+            del self.pop
+        if hasattr(self, "hof"):
+            del self.hof
 
+        self.pop = self.toolbox.population(n=self.initial_population_size)
+        self.hof = tools.HallOfFame(1)
 
+    def random_individual_generator(self, player_ids, min_num_groups, max_num_groups):
+        groups = self.random_config_generator(player_ids, min_num_groups, max_num_groups)
+        profs = [self.interactions_profile_template.randomized() for i in range(len(groups))]
+        return [groups, profs]
 
-	def randomIndividualGenerator(self, playerIds, minNumGroups, maxNumGroups):
-		groups = self.randomConfigGenerator(playerIds, minNumGroups, maxNumGroups)
-		profs = [self.randomProfileGenerator() for i in range(len(groups))]
-		return [groups, profs]
+    def cx_gimme_order(self, ind1, ind2):
 
-	def randomProfileGenerator(self):
-		return self.interactionsProfileTemplate.randomized()
+        # configs
+        config1 = ind1[0]
+        config2 = ind2[0]
 
+        new_config1 = []
+        new_config2 = []
 
-	def cxGIMME_Order(self, ind1, ind2):
+        l1 = len(config1)
+        l2 = len(config2)
 
-		# configs
-		config1 = ind1[0]
-		config2 = ind2[0]
+        if l1 > l2:
+            max_len_config = config1
+            min_len_config = config2
+            min_len = l2
+        else:
+            max_len_config = config2
+            min_len_config = config1
+            min_len = l1
 
-		newConfig1 = []
-		newConfig2 = []
+        cxpoints = []
 
-		l1 = len(config1)
-		l2 = len(config2)
+        clist1 = []
+        clist2 = []
 
-		if (l1 > l2):
-			maxLenConfig = config1
-			maxLen = l1
-			minLenConfig = config2
-			minLen = l2
-		else:
-			maxLenConfig = config2
-			maxLen = l2
-			minLenConfig = config1
-			minLen = l1
+        remainder1 = []
+        remainder2 = []
+        for i in range(min_len):
+            parent1 = min_len_config[i]
+            parent2 = max_len_config[i]
 
-		cxpoints = [] 
-		
-		clist1 = []
-		clist2 = []
+            cxpoint = random.randint(0, len(min_len_config[i]))
+            cxpoints.append(cxpoint)
 
-		remainder1 = []
-		remainder2 = []
-		for i in range(minLen):
-			parent1 = minLenConfig[i]
-			parent2 = maxLenConfig[i]
+            clist1.extend(parent1)
+            clist2.extend(parent2)
 
-			cxpoint = random.randint(0,len(minLenConfig[i]))
-			cxpoints.append(cxpoint) 
+            remainder1.extend(parent1[cxpoint:])
+            remainder2.extend(parent2[cxpoint:])
 
-			clist1.extend(parent1)
-			clist2.extend(parent2)
+        d1 = {k: v for v, k in enumerate(clist1)}
+        d2 = {k: v for v, k in enumerate(clist2)}
 
-			remainder1.extend(parent1[cxpoint:])
-			remainder2.extend(parent2[cxpoint:])
+        remainder1.sort(key=d2.get)
+        remainder2.sort(key=d1.get)
 
+        for i in range(min_len):
+            parent1 = min_len_config[i]
+            parent2 = max_len_config[i]
 
-		d1 = {k:v for v,k in enumerate(clist1)}
-		d2 = {k:v for v,k in enumerate(clist2)}
+            cxpoint = cxpoints[i]
 
-		remainder1.sort(key=d2.get)
-		remainder2.sort(key=d1.get)
+            #C1 Implementation
+            # maintain left part
+            child1, child2 = parent1[:cxpoint], parent2[:cxpoint]
 
-		for i in range(minLen):
-			parent1 = minLenConfig[i]
-			parent2 = maxLenConfig[i]
+            # reorder right part
+            missing_len1 = len(parent1) - len(child1)
+            child1.extend(remainder1[:missing_len1])
+            remainder1 = remainder1[missing_len1:]
 
-			cxpoint = cxpoints[i] 
+            missing_len2 = len(parent2) - len(child2)
+            child2.extend(remainder2[:missing_len2])
+            remainder2 = remainder2[missing_len2:]
 
-			#C1 Implementation
-			# maintain left part
-			child1, child2 = parent1[:cxpoint], parent2[:cxpoint]
+            new_config1.append(child1)
+            new_config2.append(child2)
 
+        #the inds become children
+        ind1[0] = new_config1
+        ind2[0] = new_config2
 
-			# reorder right part
-			missingLen1 = len(parent1) - len(child1)
-			child1.extend(remainder1[:missingLen1])
-			remainder1 = remainder1[missingLen1:]
+        # profiles are crossed with one point (no need for that when profiles are 1D)
 
-			missingLen2 = len(parent2) - len(child2)
-			child2.extend(remainder2[:missingLen2])
-			remainder2 = remainder2[missingLen2:]
+        # if self.interactionsProfileTemplate.dimensionality > 1:
+        for i in range(min_len):
+            prof1 = ind1[1][i].flattened()
+            prof2 = ind2[1][i].flattened()
 
-			newConfig1.append(child1)
-			newConfig2.append(child2)
+            new_profiles = tools.cxUniform(prof1, prof2, 0.5)
+            # new_profiles = tools.cxOnePoint(prof1, prof2)
 
+            #the inds become children
+            ind1[1][i] = self.interactions_profile_template.unflattened(new_profiles[0])
+            ind2[1][i] = self.interactions_profile_template.unflattened(new_profiles[1])
 
-		#the inds become children
-		ind1[0] = newConfig1
-		ind2[0] = newConfig2
+        del ind1.fitness.values
+        del ind2.fitness.values
 
-		# profiles are crossed with one point (no need for that when profiles are 1D)
-		
-		# if self.interactionsProfileTemplate.dimensionality > 1:
-		for i in range(minLen):
-			prof1 = ind1[1][i].flattened()
-			prof2 = ind2[1][i].flattened()
+        return ind1, ind2
 
-			newProfiles = tools.cxUniform(prof1, prof2, 0.5)
-			# newProfiles = tools.cxOnePoint(prof1, prof2)
-			
-			#the inds become children
-			ind1[1][i] = self.interactionsProfileTemplate.unflattened(newProfiles[0])
-			ind2[1][i] = self.interactionsProfileTemplate.unflattened(newProfiles[1])
+    def cx_gimme_simple(self, ind1, ind2):
 
-		del ind1.fitness.values
-		del ind2.fitness.values
+        # configs
+        config1 = ind1[0]
+        config2 = ind2[0]
 
-		return (ind1, ind2)
+        l1 = len(config1)
+        l2 = len(config2)
 
+        if l1 > l2:
+            max_len_config = config1
+            min_len_config = config2
+            min_len = l2
+        else:
+            max_len_config = config2
+            min_len_config = config1
+            min_len = l1
 
-	def cxGIMME_Simple(self, ind1, ind2):
+        clist1 = []
+        clist2 = []
 
-		# configs
-		config1 = ind1[0]
-		config2 = ind2[0]
+        for i in range(min_len):
+            parent1 = [None, None]
+            parent2 = [None, None]
 
-		newConfig1 = []
-		newConfig2 = []
+            parent1[0] = min_len_config[i]
+            parent1[1] = ind1[1][i].flattened()
+            parent2[0] = max_len_config[i]
+            parent2[1] = ind2[1][i].flattened()
 
-		l1 = len(config1)
-		l2 = len(config2)
+            clist1.append(parent1)
+            clist2.append(parent2)
 
-		if (l1 > l2):
-			maxLenConfig = config1
-			maxLen = l1
-			minLenConfig = config2
-			minLen = l2
-		else:
-			maxLenConfig = config2
-			maxLen = l2
-			minLenConfig = config1
-			minLen = l1
+        for ind, clist in zip([ind1, ind2], [clist1, clist2]):
+            rand_i1 = random.randint(0, len(clist1) - 1)
+            rand_i2 = random.randint(0, len(clist1) - 1)
 
-		cxpoints = [] 
-		
-		clist1 = []
-		clist2 = []
+            new_profiles_config = tools.cxOnePoint(ind1=clist[rand_i1][0], ind2=clist[rand_i2][0])
+            new_profiles_gip = tools.cxOnePoint(ind1=clist[rand_i1][1], ind2=clist[rand_i2][1])
 
-		remainder1 = []
-		remainder2 = []
-		for i in range(minLen):
-		
-			parent1 = [None, None]
-			parent2 = [None, None]
+            ind[0][rand_i1] = new_profiles_config[0]
+            ind[1][rand_i1] = self.interactions_profile_template.unflattened(new_profiles_gip[0])
 
-			parent1[0] = minLenConfig[i]
-			parent1[1] = ind1[1][i].flattened()
-			parent2[0] = maxLenConfig[i]
-			parent2[1] = ind2[1][i].flattened()
+            ind[0][rand_i2] = new_profiles_config[1]
+            ind[1][rand_i2] = self.interactions_profile_template.unflattened(new_profiles_gip[1])
 
-			clist1.append(parent1)
-			clist2.append(parent2)
+        del ind1.fitness.values
+        del ind2.fitness.values
 
-		for ind,clist in zip([ind1,ind2], [clist1,clist2]):
-			randI1 = random.randint(0, len(clist1) - 1)
-			randI2 = random.randint(0, len(clist1) - 1)
-			
+        return ind1, ind2
 
-			newProfilesConfig = tools.cxOnePoint(ind1 = clist[randI1][0], ind2 = clist[randI2][0])
-			newProfilesGIP = tools.cxOnePoint(ind1 = clist[randI1][1], ind2 = clist[randI2][1])
-			
-			ind[0][randI1] = newProfilesConfig[0]
-			ind[1][randI1] = self.interactionsProfileTemplate.unflattened(newProfilesGIP[0])
+    def mut_gimme(self, individual, p_profiles, p_configs):
 
-			ind[0][randI2] = newProfilesConfig[1]
-			ind[1][randI2] = self.interactionsProfileTemplate.unflattened(newProfilesGIP[1])
+        # mutate config
+        if random.uniform(0, 1) <= p_configs:
 
-		del ind1.fitness.values
-		del ind2.fitness.values
+            num_mutations = 1
+            for i in range(num_mutations):
+                ind_cpy = copy.copy(individual)
 
-		return (ind1, ind2)
+                rand_i1 = random.randint(0, len(ind_cpy[0]) - 1)
+                inner_rand_i1 = random.randint(0, len(ind_cpy[0][rand_i1]) - 1)
 
+                rand_i2 = inner_rand_i2 = -1
+                while rand_i2 < 0 or rand_i1 == rand_i2:
+                    rand_i2 = random.randint(0, len(ind_cpy[0]) - 1)
+                while inner_rand_i2 < 0 or inner_rand_i1 == inner_rand_i2:
+                    inner_rand_i2 = random.randint(0, len(ind_cpy[0][rand_i2]) - 1)
 
-	def mutGIMME(self, individual, pGIPs, pConfig):
-		
-		# mutate config
-		if random.uniform(0, 1) <= pConfig:
-			
-			numberOfMutations = 1
-			for i in range(numberOfMutations):
-				indCpy = copy.copy(individual)
-				
-				randI1 = random.randint(0, len(indCpy[0]) - 1)
-				innerRandI1 = random.randint(0, len(indCpy[0][randI1]) - 1)
-
-				randI2 = innerRandI2 = -1
-				while(randI2 < 0 or randI1 == randI2):
-					randI2 = random.randint(0, len(indCpy[0]) - 1)
-				while(innerRandI2 < 0 or innerRandI1 == innerRandI2):
-					innerRandI2 = random.randint(0, len(indCpy[0][randI2]) - 1)
-
-
-				elem1 = indCpy[0][randI1][innerRandI1]
-				elem2 = indCpy[0][randI2][innerRandI2]
-
-
-				indCpy[0][randI1][innerRandI1] = elem2
-				indCpy[0][randI2][innerRandI2] = elem1
-
-				individual[0] = indCpy[0]
-			
-
-		#mutate GIPs
-		numberOfMutations = 1
-		for i in range(numberOfMutations):
-			profs = individual[1]
-			keys = list(profs[0].dimensions.keys())
-			for i in range(len(profs)):
-				if random.uniform(0, 1) <= pGIPs:
-					# profs[i].randomize()
-					for key in keys:
-						if random.uniform(0, 1) <= 0.5:
-							profs[i].dimensions[key] += random.uniform(0, min(0.2, 1.0 - profs[i].dimensions[key])) 
-						else:
-							profs[i].dimensions[key] -= random.uniform(0, min(0.2, profs[i].dimensions[key])) 
-
-			individual[1] = profs
-		
-		del individual.fitness.values
-		return individual,
-
-
-	def reset(self):
-		super().reset()
-		self.resetGenAlg()
-
-	def calcFitness_convergenceTest(self, individual):
-		config = individual[0]
-		profiles = individual[1]
-
-		totalFitness = 0.0
-
-		targetConfig = [[0,1,2,3], [4,5,6,7], [8,9,10,11], [12,13,14,15], [16,17,18,19], [20,21,22,23]]
-
-		lenConfig = len(config)
-		for groupI in range(lenConfig):
-			
-			group = config[groupI]
-			profile = profiles[groupI]
-			
-			for playerI in range(len(group)):
-				totalFitness += profile.sqr_distance_between(InteractionsProfile(dimensions = {'dim_0': 0.98, 'dim_1': 0.005}))
-				totalFitness += abs(config[groupI][playerI] - targetConfig[groupI][playerI])
-		
-		#print(totalFitness)
-		totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
-		individual.fitness.values = totalFitness,
-		return totalFitness, #must return a tuple
-
-
-	def selGIMME(self, individuals, k, fit_attr="fitness"):
-		return tools.selBest(individuals, k, fit_attr)
-
-	def calcFitness(self, individual):
-		config = individual[0]
-		profiles = individual[1]
-
-		totalFitness = 0.0
-
-		lenConfig = len(config)
-
-		allConstrainsSatisfied = True
-		for groupI in range(lenConfig):
-			
-			group = config[groupI]
-			profile = profiles[groupI]
-
-			for constraint in self.jointPlayersConstraints:
-				hasToBeInGroup = False
-				isNotInGroup = False
-				for player in constraint:
-					if player in group and isNotInGroup == False:
-						hasToBeInGroup = True
-					
-					elif player not in group and hasToBeInGroup == False:
-						isNotInGroup = True
-
-					else:
-						allConstrainsSatisfied = False
-						break
-				
-				if allConstrainsSatisfied == False:
-					break
-
-			for constraint in self.separatedPlayersConstraints:
-				hasToNotBeInGroup = False
-				for player in constraint:
-					if player in group:
-						if hasToNotBeInGroup:
-							allConstrainsSatisfied = False
-							break
-						hasToNotBeInGroup = True
-				
-				if allConstrainsSatisfied == False:
-					break
-
-			totalFitness += self.qualityEvalAlg.evaluate(profile, group)
-		
-		totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
-		if allConstrainsSatisfied:
-			totalFitness += 1000
-		individual.fitness.values = totalFitness,
-
-		return totalFitness, #must return a tuple
-
-
-
-	def organize(self):
-		self.resetGenAlg()
-		if (isinstance(self.qualityEvalAlg, TabQualityEvalAlg)):
-			self.playerPrefEstimates = self.persEstAlg.updateEstimates()
-
-		algorithms.eaMuCommaLambda(
-			population = self.pop, 
-			toolbox = self.toolbox, 
-
-			lambda_ = self.numChildrenPerIteration, 
-			mu = self.numSurvivors, 
-			
-			cxpb = self.probOfCross, 
-			mutpb = self.probOfMutation, 
-			
-			ngen = self.numberOfEvolutionsPerIteration, 
-			
-			halloffame = self.hof, 
-			verbose = False
-		)
-
-
-		self.completionPerc = len(tools.Logbook())/ self.numberOfEvolutionsPerIteration
-
-		bestGroups = self.hof[0][0]
-		bestConfigProfiles = self.hof[0][1]
-
-		avgCharacteristicsArray = []
-		for group in bestGroups:
-			groupSize = len(group)
-			avgCharacteristics = PlayerCharacteristics()
-			for currPlayer in group:
-				currState = self.playerModelBridge.get_player_curr_state(currPlayer)
-				avgCharacteristics.ability += currState.characteristics.ability / groupSize
-				avgCharacteristics.engagement += currState.characteristics.engagement / groupSize
-						
-				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.get_personalities_list_from_player_ids(group)
-				avgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
-
-			avgCharacteristicsArray.append(avgCharacteristics)
-
-
-		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
+                elem1 = ind_cpy[0][rand_i1][inner_rand_i1]
+                elem2 = ind_cpy[0][rand_i2][inner_rand_i2]
+
+                ind_cpy[0][rand_i1][inner_rand_i1] = elem2
+                ind_cpy[0][rand_i2][inner_rand_i2] = elem1
+
+                individual[0] = ind_cpy[0]
+
+        #mutate GIPs
+        num_mutations = 1
+        for i in range(num_mutations):
+            profs = individual[1]
+            keys = list(profs[0].dimensions.keys())
+            for i in range(len(profs)):
+                if random.uniform(0, 1) <= p_profiles:
+                    # profs[i].randomize()
+                    for key in keys:
+                        if random.uniform(0, 1) <= 0.5:
+                            profs[i].dimensions[key] += random.uniform(0, min(0.2, 1.0 - profs[i].dimensions[key]))
+                        else:
+                            profs[i].dimensions[key] -= random.uniform(0, min(0.2, profs[i].dimensions[key]))
+
+            individual[1] = profs
+
+        del individual.fitness.values
+        return individual,
+
+    def reset(self):
+        super().reset()
+        self.reset_gen_alg()
+
+    def calc_fitness_convergence_test(self, individual):
+        config = individual[0]
+        profiles = individual[1]
+
+        total_fitness = 0.0
+
+        target_config = [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15], [16, 17, 18, 19],
+                         [20, 21, 22, 23]]
+
+        len_config = len(config)
+        for groupI in range(len_config):
+
+            group = config[groupI]
+            profile = profiles[groupI]
+
+            for playerI in range(len(group)):
+                total_fitness += profile.sqr_distance_between(
+                    InteractionsProfile(dimensions={'dim_0': 0.98, 'dim_1': 0.005}))
+                total_fitness += abs(config[groupI][playerI] - target_config[groupI][playerI])
+
+        # print(total_fitness)
+
+        total_fitness = total_fitness + 1.0 # helps selection (otherwise Pchoice would always be 0)
+        individual.fitness.values = total_fitness,
+        return total_fitness, # must return a tuple
+
+    def sel_gimme(self, individuals, k, fit_attr="fitness"):
+        return tools.selBest(individuals, k, fit_attr)
+
+    def calc_fitness(self, individual):
+        config = individual[0]
+        profiles = individual[1]
+
+        total_fitness = 0.0
+
+        len_config = len(config)
+
+        all_constrains_satisfied = True
+        for groupI in range(len_config):
+
+            group = config[groupI]
+            profile = profiles[groupI]
+
+            for constraint in self.joint_players_constraints:
+                must_be_grouped = False
+                is_not_in_group = False
+                for player in constraint:
+                    if player in group and is_not_in_group == False:
+                        must_be_grouped = True
+
+                    elif player not in group and must_be_grouped == False:
+                        is_not_in_group = True
+
+                    else:
+                        all_constrains_satisfied = False
+                        break
+
+                if all_constrains_satisfied == False:
+                    break
+
+            for constraint in self.separated_players_constraints:
+                must_be_sep = False
+                for player in constraint:
+                    if player in group:
+                        if must_be_sep:
+                            all_constrains_satisfied = False
+                            break
+                        must_be_sep = True
+
+                if all_constrains_satisfied == False:
+                    break
+
+            total_fitness += self.quality_eval_alg.evaluate(profile, group)
+
+        total_fitness = total_fitness + 1.0  # helps selection (otherwise Pchoice would always be 0)
+        if all_constrains_satisfied:
+            total_fitness += 1000
+        individual.fitness.values = total_fitness,
+
+        return total_fitness,  # must return a tuple
+
+    def organize(self):
+        self.reset_gen_alg()
+        # if isinstance(self.quality_eval_alg, TabQualityEvalAlg):
+        #     self.playerPrefEstimates = self.pers_est_alg.update_estimates()
+
+        algorithms.eaMuCommaLambda(
+            population=self.pop,
+            toolbox=self.toolbox,
+
+            lambda_=self.num_children_per_iteration,
+            mu=self.num_survivors,
+
+            cxpb=self.prob_cross,
+            mutpb=self.prob_mut,
+
+            ngen=self.num_evolutions_per_iteration,
+
+            halloffame=self.hof,
+            verbose=False
+        )
+
+        self.completion_percentage = len(tools.Logbook()) / self.num_evolutions_per_iteration
+
+        best_groups = self.hof[0][0]
+        best_profiles = self.hof[0][1]
+
+        avg_characteristics_array = []
+        for group in best_groups:
+            group_size = len(group)
+            avg_characteristics = PlayerCharacteristics()
+            for currPlayer in group:
+                curr_state = self.player_model_bridge.get_player_curr_state(currPlayer)
+                avg_characteristics.ability += curr_state.characteristics.ability / group_size
+                avg_characteristics.engagement += curr_state.characteristics.engagement / group_size
+
+                diversity_value_alg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
+                personalities = diversity_value_alg.get_personalities_list_from_player_ids(group)
+                avg_characteristics.group_diversity = diversity_value_alg.get_team_personality_diveristy(personalities)
+
+            avg_characteristics_array.append(avg_characteristics)
+
+        return {"groups": best_groups, "profiles": best_profiles, "avgCharacteristics": avg_characteristics_array}
+
 
 # uses the C++ solver for efficiency
 class ODPIPConfigsGenAlg(ConfigsGenAlg):
-	def __init__(self, 
-		playerModelBridge, 
-		interactionsProfileTemplate, 
-		qualityEvalAlg,
-		persEstAlg,
-		taskModelBridge = None,
-		preferredNumberOfPlayersPerGroup = None, 
-		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None,
-		jointPlayerConstraints = "",
-		separatedPlayerConstraints = ""):
+    def __init__(self,
+                 player_model_bridge,
+                 interactions_profile_template,
+                 qualityEvalAlg,
+                 persEstAlg,
+                 task_model_bridge=None,
+                 preferred_number_of_players_per_group=None,
+                 min_num_players_per_group=None,
+                 max_num_players_per_group=None,
+                 joint_player_constraints="",
+                 separated_player_constraints=""):
 
-		super().__init__(playerModelBridge, 
-		interactionsProfileTemplate, 
-		taskModelBridge,
-		preferredNumberOfPlayersPerGroup, 
-		minNumberOfPlayersPerGroup, 
-		maxNumberOfPlayersPerGroup,
-		jointPlayerConstraints = jointPlayerConstraints,
-		separatedPlayerConstraints = separatedPlayerConstraints)
+        super().__init__(player_model_bridge,
+                         interactions_profile_template,
+                         task_model_bridge,
+                         preferred_number_of_players_per_group,
+                         min_num_players_per_group,
+                         max_num_players_per_group,
+                         joint_player_constraints=joint_player_constraints,
+                         separated_player_constraints=separated_player_constraints)
 
-		self.qualityEvalAlg = qualityEvalAlg
-		self.persEstAlg = persEstAlg
+        self.qualityEvalAlg = qualityEvalAlg
+        self.persEstAlg = persEstAlg
 
-		self.coalitionsProfiles = []
-		self.coalitionsAvgCharacteristics = []
-		self.coalitionsValues = []
+        self.coalitionsProfiles = []
+        self.coalitionsAvgCharacteristics = []
+        self.coalitionsValues = []
 
-		self.playerIds = []	
-		
+        self.playerIds = []
 
-		self.playerPrefEstimates = {}
+        self.playerPrefEstimates = {}
 
+    def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
+        coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat,
+                                                                        len(coalitionInByteFormat))
+        return self.f[coalitionInBitFormat]
 
-	def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
-		coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat, len(coalitionInByteFormat))
-		return self.f[coalitionInBitFormat]
+    def getCoalitionStructureInByteFormatValue(self, coalitionStructure):
+        valueOfCS = 0
+        for i in range(len(coalitionStructure)):
+            valueOfCS += self.getCoalitionInByteFormatValue(coalitionStructure[i])
 
-	def getCoalitionStructureInByteFormatValue(self, coalitionStructure):
-		valueOfCS = 0
-		for i in range(len(coalitionStructure)):
-			valueOfCS += self.getCoalitionInByteFormatValue(coalitionStructure[i])
-		
-		return valueOfCS
+        return valueOfCS
 
-	def convertCoalitionFromByteToBitFormat(self, coalitionInByteFormat, coalitionSize):
-		coalitionInBitFormat = 0
+    def convertCoalitionFromByteToBitFormat(self, coalitionInByteFormat, coalitionSize):
+        coalitionInBitFormat = 0
 
-		for i in range(coalitionSize):
-			coalitionInBitFormat += 1 << (coalitionInByteFormat[i] - 1)
+        for i in range(coalitionSize):
+            coalitionInBitFormat += 1 << (coalitionInByteFormat[i] - 1)
 
-		return coalitionInBitFormat
+        return coalitionInBitFormat
 
-	# convert group in bit format to group with the player ids
-	def getGroupFromBitFormat(self, coalition):
-		group = []
-		tempCoalition = coalition
-		playerNumber = 0
-		while tempCoalition != 0:
-			if tempCoalition & 1:
-				group.append(playerNumber + 1)
+    # convert group in bit format to group with the player ids
+    def getGroupFromBitFormat(self, coalition):
+        group = []
+        tempCoalition = coalition
+        playerNumber = 0
+        while tempCoalition != 0:
+            if tempCoalition & 1:
+                group.append(playerNumber + 1)
 
-			playerNumber += 1
-			tempCoalition >>= 1
+            playerNumber += 1
+            tempCoalition >>= 1
 
-		
-		return group
+        return group
 
-	def convertFromByteToIds(self, coalition):
-		group = []
+    def convertFromByteToIds(self, coalition):
+        group = []
 
-		for agent in coalition:
-			group.append(self.playerIds[agent - 1])
+        for agent in coalition:
+            group.append(self.playerIds[agent - 1])
 
-		return group
+        return group
 
-	def convertFromIdsToBytes(self, coalition):
-		group = []
+    def convertFromIdsToBytes(self, coalition):
+        group = []
 
-		for agent in coalition:
-			for i in range(len(self.playerIds)):
-				if self.playerIds[i] == agent:
-					group.append(i + 1)
+        for agent in coalition:
+            for i in range(len(self.playerIds)):
+                if self.playerIds[i] == agent:
+                    group.append(i + 1)
 
-		return group
+        return group
 
+    def getSizeOfCombinationInBitFormat(self, combinationInBitFormat):
+        return bin(combinationInBitFormat).count("1")
 
-	def getSizeOfCombinationInBitFormat(self, combinationInBitFormat):
-		return bin(combinationInBitFormat).count("1")
+    def convertSetOfCombinationsFromBitFormat(self, setOfCombinationsInBitFormat):
+        setOfCombinationsInByteFormat = numpy.empty(len(setOfCombinationsInBitFormat), dtype=list)
+        for i in range(len(setOfCombinationsInBitFormat)):
+            setOfCombinationsInByteFormat[i] = self.getGroupFromBitFormat(setOfCombinationsInBitFormat[i])
+        return setOfCombinationsInByteFormat
 
+    def computeAllCoalitionsValues(self):
+        numOfAgents = len(self.playerIds)
+        numOfCoalitions = 1 << (numOfAgents)
 
-	def convertSetOfCombinationsFromBitFormat(self, setOfCombinationsInBitFormat):
-		setOfCombinationsInByteFormat = numpy.empty(len(setOfCombinationsInBitFormat), dtype=list)
-		for i in range(len(setOfCombinationsInBitFormat)):
-			setOfCombinationsInByteFormat[i] = self.getGroupFromBitFormat(setOfCombinationsInBitFormat[i])
-		return setOfCombinationsInByteFormat
+        playersCurrState = {}
+        for player in self.playerIds:
+            playersCurrState[player] = self.player_model_bridge.get_player_curr_state(player)
 
-	def computeAllCoalitionsValues(self):
-		numOfAgents = len(self.playerIds)
-		numOfCoalitions = 1 << (numOfAgents)
+        # (the +- 1 accounts for non divisor cases that need one more/less member)
+        adjustedMinSize = self.min_num_players_per_group
+        adjustedMaxSize = self.max_num_players_per_group
+        if (adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
+            adjustedMinSize = adjustedMinSize
+            adjustedMaxSize = adjustedMaxSize + (self.min_num_players_per_group - 1)
 
-		playersCurrState = {}
-		for player in self.playerIds:
-			playersCurrState[player] = self.playerModelBridge.get_player_curr_state(player)
+        # initialize all coalitions
+        for coalition in range(numOfCoalitions - 1, 0, -1):
+            group = self.getGroupFromBitFormat(coalition)
+            groupInIds = self.convertFromByteToIds(group)
 
+            currQuality = 0.0
+            groupSize = len(group)
 
-		# (the +- 1 accounts for non divisor cases that need one more/less member)
-		adjustedMinSize = self.minNumberOfPlayersPerGroup
-		adjustedMaxSize = self.maxNumberOfPlayersPerGroup
-		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
-			adjustedMinSize = adjustedMinSize
-			adjustedMaxSize = adjustedMaxSize + (self.minNumberOfPlayersPerGroup - 1)
-		
-		# initialize all coalitions
-		for coalition in range(numOfCoalitions-1, 0, -1):
-			group = self.getGroupFromBitFormat(coalition)
-			groupInIds = self.convertFromByteToIds(group)
+            # calculate the profile and characteristics only for groups in the range defined
+            if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
+                # generate profile as average of the preferences estimates
+                profile = self.interactions_profile_template.generate_copy().reset()
 
-			currQuality = 0.0
-			groupSize = len(group)
+                # if (self.qualityEvalAlg.isTabular()):
+                # 	profile = self.findBestProfileForGroup(groupInIds)
 
-			# calculate the profile and characteristics only for groups in the range defined 
-			if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
-				# generate profile as average of the preferences estimates
-				profile = self.interactionsProfileTemplate.generate_copy().reset()
+                # else:
+                for currPlayer in groupInIds:
+                    preferences = self.playerPrefEstimates[currPlayer]
+                    for dim in profile.dimensions:
+                        profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
 
-				# if (self.qualityEvalAlg.isTabular()):
-				# 	profile = self.findBestProfileForGroup(groupInIds)
+                # calculate fitness and average state
+                currAvgCharacteristics = PlayerCharacteristics()
+                currAvgCharacteristics.reset()
+                for i in range(groupSize):
+                    currState = playersCurrState[groupInIds[i]]
+                    currState.profile = profile
 
-				# else:
-				for currPlayer in groupInIds:
-					preferences = self.playerPrefEstimates[currPlayer]
-					for dim in profile.dimensions:
-						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
+                    currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
+                    currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 
-				# calculate fitness and average state
-				currAvgCharacteristics = PlayerCharacteristics()
-				currAvgCharacteristics.reset()
-				for i in range(groupSize):
+                currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
 
-					currState = playersCurrState[groupInIds[i]]
-					currState.profile = profile
+                diversityValueAlg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
+                personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
+                currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
 
-					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
-					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
+                self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
+                self.coalitionsProfiles[coalition] = profile
 
-				currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
-				
-				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
-				currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
+            self.coalitionsValues[coalition] = currQuality
 
-				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
-				self.coalitionsProfiles[coalition] = profile
-			
-			self.coalitionsValues[coalition] = currQuality
+    def computeCoalitionsRestrictions(self):
+        jointPlayersConstraintInBitFormat = self.joint_players_constraints[:]
+        separatedPlayersConstraintInBitFormat = self.separated_players_constraints[:]
 
-	def computeCoalitionsRestrictions(self):
-		jointPlayersConstraintInBitFormat = self.jointPlayersConstraints[:]
-		separatedPlayersConstraintInBitFormat = self.separatedPlayersConstraints[:]
+        for i in range(len(jointPlayersConstraintInBitFormat)):
+            jointPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(jointPlayersConstraintInBitFormat[i])
+            jointPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(
+                jointPlayersConstraintInBitFormat[i], len(jointPlayersConstraintInBitFormat[i]))
 
-		for i in range(len(jointPlayersConstraintInBitFormat)):
-			jointPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(jointPlayersConstraintInBitFormat[i])
-			jointPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(jointPlayersConstraintInBitFormat[i], len(jointPlayersConstraintInBitFormat[i]))
+        for i in range(len(separatedPlayersConstraintInBitFormat)):
+            separatedPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(
+                separatedPlayersConstraintInBitFormat[i])
+            separatedPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(
+                separatedPlayersConstraintInBitFormat[i], len(separatedPlayersConstraintInBitFormat[i]))
 
-		for i in range(len(separatedPlayersConstraintInBitFormat)):
-			separatedPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(separatedPlayersConstraintInBitFormat[i])
-			separatedPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(separatedPlayersConstraintInBitFormat[i], len(separatedPlayersConstraintInBitFormat[i]))
+        return jointPlayersConstraintInBitFormat, separatedPlayersConstraintInBitFormat
 
-		return jointPlayersConstraintInBitFormat, separatedPlayersConstraintInBitFormat
+    def results(self, cSInByteFormat):
+        bestGroups = []
+        bestGroupsInBitFormat = []
+        bestConfigProfiles = []
+        avgCharacteristicsArray = []
 
+        for coalition in cSInByteFormat:
+            bestGroups.append(self.convertFromByteToIds(coalition))
+            bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
 
-	def results(self, cSInByteFormat):
-		bestGroups = []
-		bestGroupsInBitFormat = []
-		bestConfigProfiles = []
-		avgCharacteristicsArray = []
-	
-		for coalition in cSInByteFormat:
-			bestGroups.append(self.convertFromByteToIds(coalition))
-			bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
+        for group in bestGroupsInBitFormat:
+            bestConfigProfiles.append(self.coalitionsProfiles[group])
+            avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
 
-		for group in bestGroupsInBitFormat:
-			bestConfigProfiles.append(self.coalitionsProfiles[group])
-			avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
+        return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
-		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
+    # function to compute best profile for group according to each players preferences about the task
+    def findBestProfileForGroup(self, groupInIds):
+        groupSize = len(groupInIds)
+        bestProfile = self.interactions_profile_template.generate_copy().reset()
 
-	# function to compute best profile for group according to each players preferences about the task
-	def findBestProfileForGroup(self, groupInIds):
-		groupSize = len(groupInIds)
-		bestProfile = self.interactionsProfileTemplate.generate_copy().reset()
+        tasks = self.task_model_bridge.getAllTasksIds()
 
-		tasks = self.taskModelBridge.getAllTasksIds()
-		
-		for playerId in groupInIds:
-			bestQuality = -1
-			bestTaskId = -1
-			
-			for taskId in tasks:
-				currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
+        for playerId in groupInIds:
+            bestQuality = -1
+            bestTaskId = -1
 
-				if currQuality > bestQuality:
-					bestQuality = currQuality
-					bestTaskId = taskId
+            for taskId in tasks:
+                currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
 
-			taskProfile = self.taskModelBridge.get_task_interactions_profile(bestTaskId)
-			for dim in bestProfile.dimensions:
-				bestProfile += taskProfile.dimensions[dim] / groupSize
+                if currQuality > bestQuality:
+                    bestQuality = currQuality
+                    bestTaskId = taskId
 
-		return bestProfile
+            taskProfile = self.task_model_bridge.get_task_interactions_profile(bestTaskId)
+            for dim in bestProfile.dimensions:
+                bestProfile += taskProfile.dimensions[dim] / groupSize
 
-	def organize(self):
-		self.playerIds = self.playerModelBridge.get_all_player_ids()
-		for i in range(len(self.playerIds)):
-			self.playerIds[i] = str(self.playerIds[i])
-		self.numPlayers = len(self.playerIds)
+        return bestProfile
 
-		self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
-		self.coalitionsAvgCharacteristics = numpy.empty(1 << self.numPlayers, dtype=PlayerCharacteristics)
-		self.coalitionsValues = numpy.empty(1 << self.numPlayers)
+    def organize(self):
+        self.playerIds = self.player_model_bridge.get_all_player_ids()
+        for i in range(len(self.playerIds)):
+            self.playerIds[i] = str(self.playerIds[i])
+        self.numPlayers = len(self.playerIds)
 
-		# estimate preferences
-		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
+        self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
+        self.coalitionsAvgCharacteristics = numpy.empty(1 << self.numPlayers, dtype=PlayerCharacteristics)
+        self.coalitionsValues = numpy.empty(1 << self.numPlayers)
 
-		# initialization(compute the value for every coalition between min and max number of players)
-		self.computeAllCoalitionsValues()
-		requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat = self.computeCoalitionsRestrictions()
+        # estimate preferences
+        self.playerPrefEstimates = self.persEstAlg.update_estimates()
 
+        # initialization(compute the value for every coalition between min and max number of players)
+        self.computeAllCoalitionsValues()
+        requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat = self.computeCoalitionsRestrictions()
 
-		bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist(), requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
-		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
+        bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.min_num_players_per_group,
+                                         self.max_num_players_per_group, self.coalitionsValues.tolist(),
+                                         requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
+        bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
 
-		del bestCSFound_bitFormat
+        del bestCSFound_bitFormat
 
-		gc.collect()
-		return self.results(bestCSFound_byteFormat)
+        gc.collect()
+        return self.results(bestCSFound_byteFormat)
 
 
 # uses the C++ solver for efficiency
 class CLinkConfigsGenAlg(ConfigsGenAlg):
-	def __init__(self, 
-		playerModelBridge, 
-		interactionsProfileTemplate, 
-		qualityEvalAlg,
-		persEstAlg,
-		taskModelBridge = None,
-		preferredNumberOfPlayersPerGroup = None, 
-		minNumberOfPlayersPerGroup = None, 
-		maxNumberOfPlayersPerGroup = None):
+    def __init__(self,
+                 player_model_bridge,
+                 interactions_profile_template,
+                 qualityEvalAlg,
+                 persEstAlg,
+                 task_model_bridge=None,
+                 preferred_number_of_players_per_group=None,
+                 min_num_players_per_group=None,
+                 max_num_players_per_group=None):
 
-		super().__init__(playerModelBridge, 
-		interactionsProfileTemplate, 
-		taskModelBridge,
-		preferredNumberOfPlayersPerGroup, 
-		minNumberOfPlayersPerGroup, 
-		maxNumberOfPlayersPerGroup)
+        super().__init__(player_model_bridge,
+                         interactions_profile_template,
+                         task_model_bridge,
+                         preferred_number_of_players_per_group,
+                         min_num_players_per_group,
+                         max_num_players_per_group)
 
-		self.qualityEvalAlg = qualityEvalAlg
-		self.persEstAlg = persEstAlg
+        self.qualityEvalAlg = qualityEvalAlg
+        self.persEstAlg = persEstAlg
 
-		self.coalitionsProfiles = []
-		self.coalitionsAvgCharacteristics = []
-		self.coalitionsValues = []
+        self.coalitionsProfiles = []
+        self.coalitionsAvgCharacteristics = []
+        self.coalitionsValues = []
 
-		self.playerIds = []	
+        self.playerIds = []
 
-		self.playerPrefEstimates = {}
+        self.playerPrefEstimates = {}
 
+    def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
+        coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat,
+                                                                        len(coalitionInByteFormat))
+        return self.f[coalitionInBitFormat]
 
-	def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
-		coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat, len(coalitionInByteFormat))
-		return self.f[coalitionInBitFormat]
+    def getCoalitionStructureInByteFormatValue(self, coalitionStructure):
+        valueOfCS = 0
+        for i in range(len(coalitionStructure)):
+            valueOfCS += self.getCoalitionInByteFormatValue(coalitionStructure[i])
 
+        return valueOfCS
 
-	def getCoalitionStructureInByteFormatValue(self, coalitionStructure):
-		valueOfCS = 0
-		for i in range(len(coalitionStructure)):
-			valueOfCS += self.getCoalitionInByteFormatValue(coalitionStructure[i])
-		
-		return valueOfCS
+    def convertCoalitionFromByteToBitFormat(self, coalitionInByteFormat, coalitionSize):
+        coalitionInBitFormat = 0
 
+        for i in range(coalitionSize):
+            coalitionInBitFormat += 1 << (coalitionInByteFormat[i] - 1)
 
-	def convertCoalitionFromByteToBitFormat(self, coalitionInByteFormat, coalitionSize):
-		coalitionInBitFormat = 0
+        return coalitionInBitFormat
 
-		for i in range(coalitionSize):
-			coalitionInBitFormat += 1 << (coalitionInByteFormat[i] - 1)
+    # convert group in bit format to group with the player ids
+    def getGroupFromBitFormat(self, coalition):
+        group = []
+        tempCoalition = coalition
+        playerNumber = 0
+        while tempCoalition != 0:
+            if tempCoalition & 1:
+                group.append(playerNumber + 1)
 
-		return coalitionInBitFormat
+            playerNumber += 1
+            tempCoalition >>= 1
 
-	# convert group in bit format to group with the player ids
-	def getGroupFromBitFormat(self, coalition):
-		group = []
-		tempCoalition = coalition
-		playerNumber = 0
-		while tempCoalition != 0:
-			if tempCoalition & 1:
-				group.append(playerNumber + 1)
+        return group
 
-			playerNumber += 1
-			tempCoalition >>= 1
+    def convertFromByteToIds(self, coalition):
+        group = []
 
-		
-		return group
+        for agent in coalition:
+            group.append(self.playerIds[agent - 1])
 
-	def convertFromByteToIds(self, coalition):
-		group = []
+        return group
 
-		for agent in coalition:
-			group.append(self.playerIds[agent - 1])
+    def getSizeOfCombinationInBitFormat(self, combinationInBitFormat):
+        return bin(combinationInBitFormat).count("1")
 
-		return group
+    def convertSetOfCombinationsFromBitFormat(self, setOfCombinationsInBitFormat):
+        setOfCombinationsInByteFormat = numpy.empty(len(setOfCombinationsInBitFormat), dtype=list)
+        for i in range(len(setOfCombinationsInBitFormat)):
+            setOfCombinationsInByteFormat[i] = self.getGroupFromBitFormat(setOfCombinationsInBitFormat[i])
 
-	def getSizeOfCombinationInBitFormat(self, combinationInBitFormat):
-		return bin(combinationInBitFormat).count("1")
+        return setOfCombinationsInByteFormat
 
+    def computeAllCoalitionsValues(self):
+        numOfAgents = len(self.playerIds)
+        numOfCoalitions = 1 << (numOfAgents)
 
-	def convertSetOfCombinationsFromBitFormat(self, setOfCombinationsInBitFormat):
-		setOfCombinationsInByteFormat = numpy.empty(len(setOfCombinationsInBitFormat), dtype=list)
-		for i in range(len(setOfCombinationsInBitFormat)):
+        playersCurrState = {}
+        for player in self.playerIds:
+            playersCurrState[player] = self.player_model_bridge.get_player_curr_state(player)
 
-			setOfCombinationsInByteFormat[i] = self.getGroupFromBitFormat(setOfCombinationsInBitFormat[i])
+        # (the +- 1 accounts for non divisor cases that need one more/less member)
+        adjustedMinSize = self.min_num_players_per_group
+        adjustedMaxSize = self.max_num_players_per_group
+        if (adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
+            adjustedMinSize = adjustedMinSize
+            adjustedMaxSize = adjustedMaxSize + (self.min_num_players_per_group - 1)
 
-		return setOfCombinationsInByteFormat
+        # initialize all coalitions
+        for coalition in range(numOfCoalitions - 1, 0, -1):
+            group = self.getGroupFromBitFormat(coalition)
+            groupInIds = self.convertFromByteToIds(group)
 
-	def computeAllCoalitionsValues(self):
-		numOfAgents = len(self.playerIds)
-		numOfCoalitions = 1 << (numOfAgents)
+            currQuality = 0.0
+            groupSize = len(group)
 
-		playersCurrState = {}
-		for player in self.playerIds:
-			playersCurrState[player] = self.playerModelBridge.get_player_curr_state(player)
+            # calculate the profile and characteristics only for groups in the range defined
+            if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
+                # generate profile as average of the preferences estimates
+                profile = self.interactions_profile_template.generate_copy().reset()
 
-		# (the +- 1 accounts for non divisor cases that need one more/less member)
-		adjustedMinSize = self.minNumberOfPlayersPerGroup
-		adjustedMaxSize = self.maxNumberOfPlayersPerGroup
-		if(adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
-			adjustedMinSize = adjustedMinSize
-			adjustedMaxSize = adjustedMaxSize + (self.minNumberOfPlayersPerGroup - 1)
+                for currPlayer in groupInIds:
+                    preferences = self.playerPrefEstimates[currPlayer]
+                    for dim in profile.dimensions:
+                        profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
 
-		# initialize all coalitions
-		for coalition in range(numOfCoalitions-1, 0, -1):
-			group = self.getGroupFromBitFormat(coalition)
-			groupInIds = self.convertFromByteToIds(group)
+                # calculate average state
+                currAvgCharacteristics = PlayerCharacteristics()
+                currAvgCharacteristics.reset()
+                for i in range(groupSize):
+                    currState = playersCurrState[groupInIds[i]]
+                    currState.profile = profile
 
-			currQuality = 0.0
-			groupSize = len(group)
+                    currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
+                    currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 
-			# calculate the profile and characteristics only for groups in the range defined
-			if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
-				# generate profile as average of the preferences estimates
-				profile = self.interactionsProfileTemplate.generate_copy().reset()
+                currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
 
-				for currPlayer in groupInIds:
-					preferences = self.playerPrefEstimates[currPlayer]
-					for dim in profile.dimensions:
-						profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
+                diversityValueAlg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
+                personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
+                currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
 
-				# calculate average state
-				currAvgCharacteristics = PlayerCharacteristics()
-				currAvgCharacteristics.reset()
-				for i in range(groupSize):
+                self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
+                self.coalitionsProfiles[coalition] = profile
 
-					currState = playersCurrState[groupInIds[i]]
-					currState.profile = profile
+            self.coalitionsValues[coalition] = currQuality
 
-					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
-					currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
+    def results(self, cSInByteFormat):
+        bestGroups = []
+        bestGroupsInBitFormat = []
+        bestConfigProfiles = []
+        avgCharacteristicsArray = []
+        for coalition in cSInByteFormat:
+            bestGroups.append(self.convertFromByteToIds(coalition))
+            bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
 
-				currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
-				
-				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
-				currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
-						
-				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
-				self.coalitionsProfiles[coalition] = profile
-			
-			self.coalitionsValues[coalition] = currQuality
+        for group in bestGroupsInBitFormat:
+            bestConfigProfiles.append(self.coalitionsProfiles[group])
+            avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
 
+        return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
 
-	def results(self, cSInByteFormat):
-		bestGroups = []
-		bestGroupsInBitFormat = []
-		bestConfigProfiles = []
-		avgCharacteristicsArray = []
-		for coalition in cSInByteFormat:
-			bestGroups.append(self.convertFromByteToIds(coalition))
-			bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
+    # function to compute best profile for group according to each players preferences about the task
+    def findBestProfileForGroup(self, groupInIds):
+        groupSize = len(groupInIds)
+        bestProfile = self.interactions_profile_template.generate_copy().reset()
 
-		for group in bestGroupsInBitFormat:
-			bestConfigProfiles.append(self.coalitionsProfiles[group])
-			avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
+        tasks = self.task_model_bridge.getAllTasksIds()
 
-		return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
+        for playerId in groupInIds:
+            bestQuality = -1
+            bestTaskId = -1
 
-	# function to compute best profile for group according to each players preferences about the task
-	def findBestProfileForGroup(self, groupInIds):
-		groupSize = len(groupInIds)
-		bestProfile = self.interactionsProfileTemplate.generate_copy().reset()
+            for taskId in tasks:
+                currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
 
-		tasks = self.taskModelBridge.getAllTasksIds()
-		
-		for playerId in groupInIds:
-			bestQuality = -1
-			bestTaskId = -1
-			
-			for taskId in tasks:
-				currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
+                if currQuality > bestQuality:
+                    bestQuality = currQuality
+                    bestTaskId = taskId
 
-				if currQuality > bestQuality:
-					bestQuality = currQuality
-					bestTaskId = taskId
+            taskProfile = self.task_model_bridge.get_task_interactions_profile(bestTaskId)
+            for dim in bestProfile.dimensions:
+                bestProfile += taskProfile.dimensions[dim] / groupSize
 
-			taskProfile = self.taskModelBridge.get_task_interactions_profile(bestTaskId)
-			for dim in bestProfile.dimensions:
-				bestProfile += taskProfile.dimensions[dim] / groupSize
+        return bestProfile
 
-		return bestProfile
+    def organize(self):
+        self.playerIds = self.player_model_bridge.get_all_player_ids()
+        for i in range(len(self.playerIds)):
+            self.playerIds[i] = str(self.playerIds[i])
+        self.numPlayers = len(self.playerIds)
 
-	def organize(self):
-		self.playerIds = self.playerModelBridge.get_all_player_ids()
-		for i in range(len(self.playerIds)):
-			self.playerIds[i] = str(self.playerIds[i])
-		self.numPlayers = len(self.playerIds)
+        self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
+        self.coalitionsAvgCharacteristics = numpy.empty(1 << self.numPlayers, dtype=PlayerCharacteristics)
+        self.coalitionsValues = numpy.empty(1 << self.numPlayers)
 
-		self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
-		self.coalitionsAvgCharacteristics = numpy.empty(1 << self.numPlayers, dtype=PlayerCharacteristics)
-		self.coalitionsValues = numpy.empty(1 << self.numPlayers)
+        # estimate preferences
+        self.playerPrefEstimates = self.persEstAlg.update_estimates()
 
-		# estimate preferences
-		self.playerPrefEstimates = self.persEstAlg.updateEstimates()
+        # initialization(compute the value for every coalition between min and max number of players)
+        self.computeAllCoalitionsValues()
 
-		# initialization(compute the value for every coalition between min and max number of players)
-		self.computeAllCoalitionsValues()
+        bestCSFound_bitFormat = (
+            gs.clink(self.numPlayers, self.min_num_players_per_group, self.max_num_players_per_group,
+                     self.coalitionsValues.tolist()))
+        bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
 
-		bestCSFound_bitFormat = (gs.clink(self.numPlayers, self.minNumberOfPlayersPerGroup, self.maxNumberOfPlayersPerGroup, self.coalitionsValues.tolist()))
-		bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
+        del bestCSFound_bitFormat
 
-		del bestCSFound_bitFormat
-		
-		gc.collect()
+        gc.collect()
 
-		return self.results(bestCSFound_byteFormat)
+        return self.results(bestCSFound_byteFormat)

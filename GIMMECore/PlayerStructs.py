@@ -19,7 +19,7 @@ class PlayerCharacteristics(object):
 class PlayerState(object):
 	def __init__(self, state_type=None, profile=None, characteristics=None, dist=None, quality=None, group=None,
 				 tasks=None):
-		self.creationTime = time.time()
+		self.creation_time = time.time()
 
 		self.state_type = 1 if state_type is None else state_type
 		self.profile = InteractionsProfile() if profile is None else profile
@@ -33,7 +33,7 @@ class PlayerState(object):
 	def reset(self):
 		self.characteristics.reset()
 		self.profile.reset()
-		self.creationTime = time.time()
+		self.creation_time = time.time()
 		self.state_type = 1
 		self.quality = -1
 		self.dist = -1
@@ -87,11 +87,11 @@ class PersonalityMBTI(PlayerPersonality):
 			raise Exception("[ERROR] Comparison between different personality models not allowed.")
 
 		difference = 0
-		otherLetters = other.get_letters_list()
-		selfLetters = self.get_letters_list()
+		other_letters = other.get_letters_list()
+		self_letters = self.get_letters_list()
 
-		for i in range(0, len(selfLetters)):
-			difference += 0 if selfLetters[i] == otherLetters[i] else self.maxDifferenceValue / 4
+		for i in range(0, len(self_letters)):
+			difference += 0 if self_letters[i] == other_letters[i] else self.maxDifferenceValue / 4
 
 		return difference
 
@@ -170,7 +170,7 @@ class PlayerStatesDataFrame(object):
 		self.flat_abilities.append(player_state.characteristics.ability)
 		self.flat_engagements.append(player_state.characteristics.engagement)
 
-		trimmed_list_and_remainder = self.trim_alg.trimmedList(self.states)
+		trimmed_list_and_remainder = self.trim_alg.trimmed_list(self.states)
 		trimmed_list = trimmed_list_and_remainder[0]
 		remainder_indexes = trimmed_list_and_remainder[1]
 

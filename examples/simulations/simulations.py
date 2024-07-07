@@ -135,23 +135,23 @@ intProfTemplate2D = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 
 
 evolutionaryConfigsAlg = EvolutionaryConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate2D.generate_copy(),
+	quality_eval_alg= qualityEvalAlg,
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
+	initial_population_size= initialPopulationSize,
+	num_evolutions_per_iteration= numberOfEvolutionsPerIteration,
 	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
+	prob_cross= probOfCross,
+	prob_mut= probOfMutation,
 
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
+	prob_mut_config= probOfMutationConfig,
+	prob_mut_profiles= probOfMutationGIPs,
 	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors,
+	num_children_per_iteration= numChildrenPerIteration,
+	num_survivors= numSurvivors,
 
-	cxOp = "order",
+	cx_op="order",
 	# jointPlayerConstraints="[15,1];[3,4]", 
 	# separatedPlayerConstraints="[0,1]"
 )
@@ -164,15 +164,15 @@ adaptationGA.init(
 
 
 ODPIPconfigsAlg = ODPIPConfigsGenAlg(
-	playerModelBridge = playerBridge,
-	interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate2D.generate_copy(),
 	qualityEvalAlg = qualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = playerBridge, 
-		interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-		qualityEvalAlg = qualityEvalAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
+		player_model_bridge= playerBridge,
+		interactions_profile_template= intProfTemplate2D.generate_copy(),
+		quality_eval_alg= qualityEvalAlg,
+		num_tested_player_profiles= numTestedPlayerProfilesInEst),
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup
 )
 adaptationODPIP.init(
 	player_model_bridge= playerBridge,
@@ -183,15 +183,15 @@ adaptationODPIP.init(
 
 
 tabularODPIPconfigsAlg = ODPIPConfigsGenAlg(
-	playerModelBridge = playerBridge,
-	interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate2D.generate_copy(),
 	qualityEvalAlg = tabularQualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = playerBridge, 
-		interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-		qualityEvalAlg = qualityEvalAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
+		player_model_bridge= playerBridge,
+		interactions_profile_template= intProfTemplate2D.generate_copy(),
+		quality_eval_alg= qualityEvalAlg,
+		num_tested_player_profiles= numTestedPlayerProfilesInEst),
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup
 	# preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
 	#jointPlayerConstraints="[15,1];[2,7];[3,4];[12,13];[14,15];[0,12];[9,15]",
 	# separatedPlayerConstraints="[0,1]"
@@ -205,15 +205,15 @@ adaptationTabularODPIP.init(
 
 
 CLinkconfigsAlg = CLinkConfigsGenAlg(
-	playerModelBridge = playerBridge,
-	interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate2D.generate_copy(),
 	qualityEvalAlg = qualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = playerBridge, 
-		interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-		qualityEvalAlg = qualityEvalAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
+		player_model_bridge= playerBridge,
+		interactions_profile_template= intProfTemplate2D.generate_copy(),
+		quality_eval_alg= qualityEvalAlg,
+		num_tested_player_profiles= numTestedPlayerProfilesInEst),
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup
 )
 adaptationCLink.init(
 	player_model_bridge= playerBridge,
@@ -223,15 +223,15 @@ adaptationCLink.init(
 )
 
 tabularCLinkconfigsAlg = CLinkConfigsGenAlg(
-	playerModelBridge = playerBridge,
-	interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate2D.generate_copy(),
 	qualityEvalAlg = tabularQualityEvalAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = playerBridge, 
-		interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-		qualityEvalAlg = qualityEvalAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup
+		player_model_bridge= playerBridge,
+		interactions_profile_template= intProfTemplate2D.generate_copy(),
+		quality_eval_alg= qualityEvalAlg,
+		num_tested_player_profiles= numTestedPlayerProfilesInEst),
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup
 )
 adaptationTabularCLink.init(
 	player_model_bridge= playerBridge,
@@ -241,16 +241,16 @@ adaptationTabularCLink.init(
 )
 
 prsConfigsAlg = PureRandomSearchConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg, 
-	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = playerBridge, 
-		interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-		qualityEvalAlg = qualityEvalAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst), 
-	numberOfConfigChoices = numberOfConfigChoices, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate2D.generate_copy(),
+	quality_eval_alg= qualityEvalAlg,
+	pers_est_alg= ExplorationPreferencesEstAlg(
+		player_model_bridge= playerBridge,
+		interactions_profile_template= intProfTemplate2D.generate_copy(),
+		quality_eval_alg= qualityEvalAlg,
+		num_tested_player_profiles= numTestedPlayerProfilesInEst),
+	number_of_config_choices= numberOfConfigChoices,
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
 	# jointPlayerConstraints="[15,1]", 
 	# separatedPlayerConstraints="[0,1]"
 )
@@ -263,9 +263,9 @@ adaptationPRS.init(
 
 
 randomConfigsAlg = RandomConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate2D.generate_copy(),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate2D.generate_copy(),
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
 	# jointPlayerConstraints="[15,1]",
 	# separatedPlayerConstraints="[0,1]"
 )
@@ -282,21 +282,21 @@ adaptationRandom.init(
 # - - - - -
 intProfTemplate1D = InteractionsProfile({"dim_0": 0})
 evolutionaryConfigsAlg1D = EvolutionaryConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate1D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate1D.generate_copy(),
+	quality_eval_alg= qualityEvalAlg,
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
+	initial_population_size= initialPopulationSize,
+	num_evolutions_per_iteration= numberOfEvolutionsPerIteration,
 	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
+	prob_cross= probOfCross,
+	prob_mut= probOfMutation,
 
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
+	prob_mut_config= probOfMutationConfig,
+	prob_mut_profiles= probOfMutationGIPs,
 	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors
+	num_children_per_iteration= numChildrenPerIteration,
+	num_survivors= numSurvivors
 )
 adaptationEvl1D.init(
 	player_model_bridge= playerBridge,
@@ -309,21 +309,21 @@ adaptationEvl1D.init(
 # GIMME is the same as GIMME 2D 
 intProfTemplate3D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0})
 evolutionaryConfigsAlg3D = EvolutionaryConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate3D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate3D.generate_copy(),
+	quality_eval_alg= qualityEvalAlg,
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
+	initial_population_size= initialPopulationSize,
+	num_evolutions_per_iteration= numberOfEvolutionsPerIteration,
 	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
+	prob_cross= probOfCross,
+	prob_mut= probOfMutation,
 
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
+	prob_mut_config= probOfMutationConfig,
+	prob_mut_profiles= probOfMutationGIPs,
 	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors
+	num_children_per_iteration= numChildrenPerIteration,
+	num_survivors= numSurvivors
 )
 adaptationEvl3D.init(
 	player_model_bridge= playerBridge,
@@ -335,21 +335,21 @@ adaptationEvl3D.init(
 
 intProfTemplate4D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0})
 evolutionaryConfigsAlg4D = EvolutionaryConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate4D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate4D.generate_copy(),
+	quality_eval_alg= qualityEvalAlg,
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
+	initial_population_size= initialPopulationSize,
+	num_evolutions_per_iteration= numberOfEvolutionsPerIteration,
 	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
+	prob_cross= probOfCross,
+	prob_mut= probOfMutation,
 
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
+	prob_mut_config= probOfMutationConfig,
+	prob_mut_profiles= probOfMutationGIPs,
 	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors
+	num_children_per_iteration= numChildrenPerIteration,
+	num_survivors= numSurvivors
 )
 adaptationEvl4D.init(
 	player_model_bridge= playerBridge,
@@ -363,21 +363,21 @@ adaptationEvl4D.init(
 
 intProfTemplate5D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0})
 evolutionaryConfigsAlg5D = EvolutionaryConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate5D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate5D.generate_copy(),
+	quality_eval_alg= qualityEvalAlg,
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
+	initial_population_size= initialPopulationSize,
+	num_evolutions_per_iteration= numberOfEvolutionsPerIteration,
 	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
+	prob_cross= probOfCross,
+	prob_mut= probOfMutation,
 
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
+	prob_mut_config= probOfMutationConfig,
+	prob_mut_profiles= probOfMutationGIPs,
 	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors
+	num_children_per_iteration= numChildrenPerIteration,
+	num_survivors= numSurvivors
 )
 adaptationEvl5D.init(
 	player_model_bridge= playerBridge,
@@ -390,21 +390,21 @@ adaptationEvl5D.init(
 
 intProfTemplate6D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0, "dim_5": 0})
 evolutionaryConfigsAlg6D = EvolutionaryConfigsGenAlg(
-	playerModelBridge = playerBridge, 
-	interactionsProfileTemplate = intProfTemplate6D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg, 
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup, 
-	initialPopulationSize = initialPopulationSize, 
-	numberOfEvolutionsPerIteration = numberOfEvolutionsPerIteration, 
+	player_model_bridge= playerBridge,
+	interactions_profile_template= intProfTemplate6D.generate_copy(),
+	quality_eval_alg= qualityEvalAlg,
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
+	initial_population_size= initialPopulationSize,
+	num_evolutions_per_iteration= numberOfEvolutionsPerIteration,
 	
-	probOfCross = probOfCross, 
-	probOfMutation = probOfMutation,
+	prob_cross= probOfCross,
+	prob_mut= probOfMutation,
 
-	probOfMutationConfig = probOfMutationConfig, 
-	probOfMutationGIPs = probOfMutationGIPs, 
+	prob_mut_config= probOfMutationConfig,
+	prob_mut_profiles= probOfMutationGIPs,
 	
-	numChildrenPerIteration = numChildrenPerIteration,
-	numSurvivors = numSurvivors
+	num_children_per_iteration= numChildrenPerIteration,
+	num_survivors= numSurvivors
 )
 adaptationEvl6D.init(
 	player_model_bridge= playerBridge,
@@ -512,7 +512,7 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 			pastModelIncreasesDataFrame = PlayerStatesDataFrame(
 				interactions_profile_template= profileTemplate.generate_copy().reset(),
 				trim_alg= ProximitySortPlayerDataTrimAlg(
-					maxNumModelElements = playerWindow, 
+					max_num_model_elements= playerWindow,
 					epsilon = 0.005
 					)
 				), 
@@ -575,7 +575,7 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 			playerBridge.setPlayerRealPreferences(x, questionnairePreferences)
 			playerBridge.setBaseLearningRate(x, 0.5)
 
-			playerBridge.get_player_states_data_frame(x).trim_alg.considerStateResidue(False)
+			playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
 
 		playersDimsStr += "],\n"
 
@@ -592,7 +592,7 @@ def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, first
 			playerBridge.setPlayerRealPreferences(x, realPreferences)
 			playerBridge.setBaseLearningRate(x, random.gauss(0.5, 0.05))
 
-			playerBridge.get_player_states_data_frame(x).trim_alg.considerStateResidue(True)
+			playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(True)
 		
 		if r > 0:
 			adaptation.configs_gen_alg.reset()

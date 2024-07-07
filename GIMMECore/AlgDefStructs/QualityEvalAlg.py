@@ -11,14 +11,14 @@ class QualityEvalAlg(ABC):
 
     def __init__(self, player_model_bridge):
         self.player_model_bridge = player_model_bridge
-        self.comp_percentage = 0.0
+        self.completion_percentage = 0.0
 
     @abstractmethod
     def evaluate(self, profile, group_player_ids):
         pass
 
-    def get_comp_percentage(self, profile, group_player_ids):
-        return self.comp_percentage
+    def get_completion_percentage(self, profile, group_player_ids):
+        return self.completion_percentage
 
 
 # ---------------------- Group-Based Quality Evaluation ---------------------------

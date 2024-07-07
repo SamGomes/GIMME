@@ -47,7 +47,7 @@ profileTemplate = InteractionsProfile({"Focus": 0, "Challenge": 0})
 print("Setting up the players...")
 
 for x in range(numPlayers):
-	gridTrimAlg = QualitySortPlayerDataTrimAlg(maxNumModelElements = 30, qualityWeights = PlayerCharacteristics(ability=0.5, engagement=0.5))
+	gridTrimAlg = QualitySortPlayerDataTrimAlg(max_num_model_elements= 30, quality_weights= PlayerCharacteristics(ability=0.5, engagement=0.5))
 	playerBridge.registerNewPlayer(
 		playerId = int(x), 
 		name = "Player "+str(x+1), 
@@ -59,7 +59,7 @@ for x in range(numPlayers):
 		preferencesEst = profileTemplate.generate_copy().reset(),
 		realPreferences = profileTemplate.generate_copy().reset())
 	playerBridge.resetState(x)
-	playerBridge.get_player_states_data_frame(x).trim_alg.considerStateResidue(True)
+	playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(True)
 
 	# init players including predicted preferences
 	playerBridge.reset_player(x)
@@ -71,7 +71,7 @@ for x in range(numPlayers):
 	playerBridge.setPlayerRealPreferences(x, profileTemplate.randomized())
 	playerBridge.setBaseLearningRate(x, 0.5)
 
-	playerBridge.get_player_states_data_frame(x).trim_alg.considerStateResidue(False)
+	playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
 
 print("Players created.")
 print(json.dumps(playerBridge.players, default=lambda o: o.__dict__, sort_keys=True, indent=2))
@@ -133,15 +133,15 @@ numTestedPlayerProfilesInEst = 500
 regAlg = KNNRegression(playerBridge, 5)
 
 ODPIPConfigsGenAlg = ODPIPConfigsGenAlg(
-	playerModelBridge = playerBridge,
-	interactionsProfileTemplate = profileTemplate.generate_copy(),
+	player_model_bridge= playerBridge,
+	interactions_profile_template= profileTemplate.generate_copy(),
 	regAlg = regAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
-		playerModelBridge = playerBridge, 
-		interactionsProfileTemplate = profileTemplate.generate_copy(),
+		player_model_bridge= playerBridge,
+		interactions_profile_template= profileTemplate.generate_copy(),
 		regAlg = regAlg,
-		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
-	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+		num_tested_player_profiles= numTestedPlayerProfilesInEst),
+	preferred_number_of_players_per_group= preferredNumberOfPlayersPerGroup,
 	#minNumberOfPlayersPerGroup = minNumberPlayersPerGroup,
 	#maxNumberOfPlayersPerGroup = maxNumberPlayersPerGroup
 )

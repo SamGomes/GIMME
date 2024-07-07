@@ -43,7 +43,7 @@ class Adaptation(object):
         self.player_ids = self.player_model_bridge.get_all_player_ids()
         self.task_ids = self.task_model_bridge.get_all_task_ids()
 
-        if len(self.player_ids) < self.configs_gen_alg.minNumberOfPlayersPerGroup:
+        if len(self.player_ids) < self.configs_gen_alg.min_num_players_per_group:
             raise ValueError('Not enough players to form a group.')
 
         adapted_config = self.configs_gen_alg.organize()
