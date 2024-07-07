@@ -51,6 +51,8 @@ class ConfigsGenAlg(ABC):
         self.task_model_bridge = task_model_bridge
         self.interactions_profile_template = interactions_profile_template
 
+        self.player_ids = self.player_model_bridge.get_all_player_ids()
+
         joint_player_constraints = self.from_string_constraint_to_list(joint_player_constraints)
         separated_player_constraints = self.from_string_constraint_to_list(separated_player_constraints)
 
@@ -229,6 +231,82 @@ class ConfigsGenAlg(ABC):
 
     def get_player_constraints(self):
         return self.all_constraints
+
+    # the next methods can be used to operate coalitions with a bit representation
+    def convert_coalition_from_byte_to_bit_format(self, coalition_in_byte_format, coalition_size):
+        coalition_in_bit_format = 0
+        for i in range(coalition_size):
+            coalition_in_bit_format += 1 << (coalition_in_byte_format[i] - 1)
+        return coalition_in_bit_format
+
+    # convert group in bit format to group with the player ids
+    def get_group_from_bit_format(self, coalition):
+        group = []
+        temp_coalition = coalition
+        player_number = 0
+        while temp_coalition != 0:
+            if temp_coalition & 1:
+                group.append(player_number + 1)
+
+            player_number += 1
+            temp_coalition >>= 1
+        return group
+
+    def convert_from_byte_to_ids(self, coalition):
+        group = []
+        for agent in coalition:
+            group.append(self.player_ids[agent - 1])
+        return group
+
+    def convert_from_ids_to_bytes(self, coalition):
+        group = []
+        for agent in coalition:
+            for i in range(len(self.player_ids)):
+                if self.player_ids[i] == agent:
+                    group.append(i + 1)
+        return group
+
+    def convert_set_of_combinations_from_bit_format(self, set_of_combinations_in_bit_format):
+        set_of_combinations_in_byte_format = numpy.empty(len(set_of_combinations_in_bit_format), dtype=list)
+        for i in range(len(set_of_combinations_in_bit_format)):
+            set_of_combinations_in_byte_format[i] = self.get_group_from_bit_format(set_of_combinations_in_bit_format[i])
+        return set_of_combinations_in_byte_format
+
+    def compute_coalitions_restrictions(self):
+        joint_players_constraint_in_bit_format = self.joint_players_constraints[:]
+        separated_players_constraint_in_bit_format = self.separated_players_constraints[:]
+
+        for i in range(len(joint_players_constraint_in_bit_format)):
+            joint_players_constraint_in_bit_format[i] = (
+                self.convert_from_ids_to_bytes(joint_players_constraint_in_bit_format[i]))
+            joint_players_constraint_in_bit_format[i] = self.convert_coalition_from_byte_to_bit_format(
+                joint_players_constraint_in_bit_format[i], len(joint_players_constraint_in_bit_format[i]))
+
+        for i in range(len(separated_players_constraint_in_bit_format)):
+            separated_players_constraint_in_bit_format[i] = self.convert_from_ids_to_bytes(
+                separated_players_constraint_in_bit_format[i])
+            separated_players_constraint_in_bit_format[i] = self.convert_coalition_from_byte_to_bit_format(
+                separated_players_constraint_in_bit_format[i], len(separated_players_constraint_in_bit_format[i]))
+
+        return joint_players_constraint_in_bit_format, separated_players_constraint_in_bit_format
+
+    def convert_cs_bytes_to_dict(self, cs_in_byte_format):
+        best_groups = []
+        best_groups_in_bit_format = []
+        best_config_profiles = []
+        avg_characteristics_array = []
+
+        for coalition in cs_in_byte_format:
+            best_groups.append(self.convert_from_byte_to_ids(coalition))
+            best_groups_in_bit_format.append(self.convert_coalition_from_byte_to_bit_format(coalition, len(coalition)))
+
+        for group in best_groups_in_bit_format:
+            best_config_profiles.append(self.coalitions_profiles[group])
+            avg_characteristics_array.append(self.coalitions_avg_characteristics[group])
+
+        return {"groups": best_groups,
+                "profiles": best_config_profiles,
+                "avgCharacteristics": avg_characteristics_array}
 
     @abstractmethod
     def organize(self):
@@ -732,9 +810,9 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 
         # print(total_fitness)
 
-        total_fitness = total_fitness + 1.0 # helps selection (otherwise Pchoice would always be 0)
+        total_fitness = total_fitness + 1.0  # helps selection (otherwise Pchoice would always be 0)
         individual.fitness.values = total_fitness,
-        return total_fitness, # must return a tuple
+        return total_fitness,  # must return a tuple
 
     def sel_gimme(self, individuals, k, fit_attr="fitness"):
         return tools.selBest(individuals, k, fit_attr)
@@ -840,15 +918,14 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
     def __init__(self,
                  player_model_bridge,
                  interactions_profile_template,
-                 qualityEvalAlg,
-                 persEstAlg,
+                 quality_eval_alg,
+                 pers_est_alg,
                  task_model_bridge=None,
                  preferred_number_of_players_per_group=None,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None,
                  joint_player_constraints="",
                  separated_player_constraints=""):
-
         super().__init__(player_model_bridge,
                          interactions_profile_template,
                          task_model_bridge,
@@ -858,219 +935,114 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
                          joint_player_constraints=joint_player_constraints,
                          separated_player_constraints=separated_player_constraints)
 
-        self.qualityEvalAlg = qualityEvalAlg
-        self.persEstAlg = persEstAlg
+        self.quality_eval_alg = quality_eval_alg
+        self.pers_est_alg = pers_est_alg
 
-        self.coalitionsProfiles = []
-        self.coalitionsAvgCharacteristics = []
-        self.coalitionsValues = []
+        self.coalitions_profiles = []
+        self.coalitions_avg_characteristics = []
+        self.coalitions_values = []
 
-        self.playerIds = []
+        self.player_pref_estimates = self.pers_est_alg.update_estimates()
 
-        self.playerPrefEstimates = {}
+    def compute_all_coalitions_values(self):
+        num_of_agents = len(self.player_ids)
+        num_of_coalitions = 1 << num_of_agents
 
-    def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
-        coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat,
-                                                                        len(coalitionInByteFormat))
-        return self.f[coalitionInBitFormat]
-
-    def getCoalitionStructureInByteFormatValue(self, coalitionStructure):
-        valueOfCS = 0
-        for i in range(len(coalitionStructure)):
-            valueOfCS += self.getCoalitionInByteFormatValue(coalitionStructure[i])
-
-        return valueOfCS
-
-    def convertCoalitionFromByteToBitFormat(self, coalitionInByteFormat, coalitionSize):
-        coalitionInBitFormat = 0
-
-        for i in range(coalitionSize):
-            coalitionInBitFormat += 1 << (coalitionInByteFormat[i] - 1)
-
-        return coalitionInBitFormat
-
-    # convert group in bit format to group with the player ids
-    def getGroupFromBitFormat(self, coalition):
-        group = []
-        tempCoalition = coalition
-        playerNumber = 0
-        while tempCoalition != 0:
-            if tempCoalition & 1:
-                group.append(playerNumber + 1)
-
-            playerNumber += 1
-            tempCoalition >>= 1
-
-        return group
-
-    def convertFromByteToIds(self, coalition):
-        group = []
-
-        for agent in coalition:
-            group.append(self.playerIds[agent - 1])
-
-        return group
-
-    def convertFromIdsToBytes(self, coalition):
-        group = []
-
-        for agent in coalition:
-            for i in range(len(self.playerIds)):
-                if self.playerIds[i] == agent:
-                    group.append(i + 1)
-
-        return group
-
-    def getSizeOfCombinationInBitFormat(self, combinationInBitFormat):
-        return bin(combinationInBitFormat).count("1")
-
-    def convertSetOfCombinationsFromBitFormat(self, setOfCombinationsInBitFormat):
-        setOfCombinationsInByteFormat = numpy.empty(len(setOfCombinationsInBitFormat), dtype=list)
-        for i in range(len(setOfCombinationsInBitFormat)):
-            setOfCombinationsInByteFormat[i] = self.getGroupFromBitFormat(setOfCombinationsInBitFormat[i])
-        return setOfCombinationsInByteFormat
-
-    def computeAllCoalitionsValues(self):
-        numOfAgents = len(self.playerIds)
-        numOfCoalitions = 1 << (numOfAgents)
-
-        playersCurrState = {}
-        for player in self.playerIds:
-            playersCurrState[player] = self.player_model_bridge.get_player_curr_state(player)
+        players_curr_state = {}
+        for player in self.player_ids:
+            players_curr_state[player] = self.player_model_bridge.get_player_curr_state(player)
 
         # (the +- 1 accounts for non divisor cases that need one more/less member)
-        adjustedMinSize = self.min_num_players_per_group
-        adjustedMaxSize = self.max_num_players_per_group
-        if (adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
-            adjustedMinSize = adjustedMinSize
-            adjustedMaxSize = adjustedMaxSize + (self.min_num_players_per_group - 1)
+        adjusted_min_size = self.min_num_players_per_group
+        adjusted_max_size = self.max_num_players_per_group
+        if adjusted_min_size == adjusted_max_size and num_of_agents % adjusted_max_size != 0:
+            adjusted_min_size = adjusted_min_size
+            adjusted_max_size = adjusted_max_size + (self.min_num_players_per_group - 1)
 
         # initialize all coalitions
-        for coalition in range(numOfCoalitions - 1, 0, -1):
-            group = self.getGroupFromBitFormat(coalition)
-            groupInIds = self.convertFromByteToIds(group)
+        for coalition in range(num_of_coalitions - 1, 0, -1):
+            group = self.get_group_from_bit_format(coalition)
+            group_in_ids = self.convert_from_byte_to_ids(group)
 
-            currQuality = 0.0
-            groupSize = len(group)
+            curr_quality = 0.0
+            group_size = len(group)
 
             # calculate the profile and characteristics only for groups in the range defined
-            if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
+            if group_size >= adjusted_min_size and group_size <= adjusted_max_size:
                 # generate profile as average of the preferences estimates
                 profile = self.interactions_profile_template.generate_copy().reset()
-
-                # if (self.qualityEvalAlg.isTabular()):
-                # 	profile = self.findBestProfileForGroup(groupInIds)
-
-                # else:
-                for currPlayer in groupInIds:
-                    preferences = self.playerPrefEstimates[currPlayer]
+                for currPlayer in group_in_ids:
+                    preferences = self.player_pref_estimates[currPlayer]
                     for dim in profile.dimensions:
-                        profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
+                        profile.dimensions[dim] += (preferences.dimensions[dim] / group_size)
 
-                # calculate fitness and average state
-                currAvgCharacteristics = PlayerCharacteristics()
-                currAvgCharacteristics.reset()
-                for i in range(groupSize):
-                    currState = playersCurrState[groupInIds[i]]
-                    currState.profile = profile
+                # calculate quality and average state
+                curr_avg_characteristics = PlayerCharacteristics()
+                curr_avg_characteristics.reset()
+                for i in range(group_size):
+                    curr_state = players_curr_state[group_in_ids[i]]
+                    curr_state.profile = profile
 
-                    currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
-                    currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
+                    curr_avg_characteristics.ability += curr_state.characteristics.ability / group_size
+                    curr_avg_characteristics.engagement += curr_state.characteristics.engagement / group_size
 
-                currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
+                curr_quality += self.quality_eval_alg.evaluate(profile, group_in_ids)
 
-                diversityValueAlg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
-                personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
-                currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
+                diversity_value_alg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
+                personalities = diversity_value_alg.get_personalities_list_from_player_ids(group_in_ids)
+                curr_avg_characteristics.group_diversity = diversity_value_alg.get_team_personality_diveristy(
+                    personalities)
 
-                self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
-                self.coalitionsProfiles[coalition] = profile
+                self.coalitions_avg_characteristics[coalition] = curr_avg_characteristics
+                self.coalitions_profiles[coalition] = profile
 
-            self.coalitionsValues[coalition] = currQuality
-
-    def computeCoalitionsRestrictions(self):
-        jointPlayersConstraintInBitFormat = self.joint_players_constraints[:]
-        separatedPlayersConstraintInBitFormat = self.separated_players_constraints[:]
-
-        for i in range(len(jointPlayersConstraintInBitFormat)):
-            jointPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(jointPlayersConstraintInBitFormat[i])
-            jointPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(
-                jointPlayersConstraintInBitFormat[i], len(jointPlayersConstraintInBitFormat[i]))
-
-        for i in range(len(separatedPlayersConstraintInBitFormat)):
-            separatedPlayersConstraintInBitFormat[i] = self.convertFromIdsToBytes(
-                separatedPlayersConstraintInBitFormat[i])
-            separatedPlayersConstraintInBitFormat[i] = self.convertCoalitionFromByteToBitFormat(
-                separatedPlayersConstraintInBitFormat[i], len(separatedPlayersConstraintInBitFormat[i]))
-
-        return jointPlayersConstraintInBitFormat, separatedPlayersConstraintInBitFormat
-
-    def results(self, cSInByteFormat):
-        bestGroups = []
-        bestGroupsInBitFormat = []
-        bestConfigProfiles = []
-        avgCharacteristicsArray = []
-
-        for coalition in cSInByteFormat:
-            bestGroups.append(self.convertFromByteToIds(coalition))
-            bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
-
-        for group in bestGroupsInBitFormat:
-            bestConfigProfiles.append(self.coalitionsProfiles[group])
-            avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
-
-        return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
+            self.coalitions_values[coalition] = curr_quality
 
     # function to compute best profile for group according to each players preferences about the task
-    def findBestProfileForGroup(self, groupInIds):
-        groupSize = len(groupInIds)
-        bestProfile = self.interactions_profile_template.generate_copy().reset()
-
-        tasks = self.task_model_bridge.getAllTasksIds()
-
-        for playerId in groupInIds:
-            bestQuality = -1
-            bestTaskId = -1
-
-            for taskId in tasks:
-                currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
-
-                if currQuality > bestQuality:
-                    bestQuality = currQuality
-                    bestTaskId = taskId
-
-            taskProfile = self.task_model_bridge.get_task_interactions_profile(bestTaskId)
-            for dim in bestProfile.dimensions:
-                bestProfile += taskProfile.dimensions[dim] / groupSize
-
-        return bestProfile
+    # def find_best_profile_for_group(self, group_in_ids):
+    #     group_size = len(group_in_ids)
+    #     best_profile = self.interactions_profile_template.generate_copy().reset()
+    #     tasks = self.task_model_bridge.getAllTasksIds()
+    #
+    #     for playerId in group_in_ids:
+    #         best_quality = -1
+    #         best_task_id = -1
+    #         for taskId in tasks:
+    #             curr_quality = self.quality_eval_alg.predictTasks(taskId, playerId)
+    #             if curr_quality > best_quality:
+    #                 best_quality = curr_quality
+    #                 best_task_id = taskId
+    #
+    #         task_profile = self.task_model_bridge.get_task_interactions_profile(best_task_id)
+    #         for dim in best_profile.dimensions:
+    #             best_profile += task_profile.dimensions[dim] / group_size
+    #     return best_profile
 
     def organize(self):
-        self.playerIds = self.player_model_bridge.get_all_player_ids()
-        for i in range(len(self.playerIds)):
-            self.playerIds[i] = str(self.playerIds[i])
-        self.numPlayers = len(self.playerIds)
+        self.player_ids = self.player_model_bridge.get_all_player_ids()
+        for i in range(len(self.player_ids)):
+            self.player_ids[i] = str(self.player_ids[i])
+        num_players = len(self.player_ids)
 
-        self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
-        self.coalitionsAvgCharacteristics = numpy.empty(1 << self.numPlayers, dtype=PlayerCharacteristics)
-        self.coalitionsValues = numpy.empty(1 << self.numPlayers)
+        self.coalitions_profiles = numpy.empty(1 << num_players, dtype=InteractionsProfile)
+        self.coalitions_avg_characteristics = numpy.empty(1 << num_players, dtype=PlayerCharacteristics)
+        self.coalitions_values = numpy.empty(1 << num_players)
 
-        # estimate preferences
-        self.playerPrefEstimates = self.persEstAlg.update_estimates()
+        # re-estimate preferences
+        self.player_pref_estimates = self.pers_est_alg.update_estimates()
 
-        # initialization(compute the value for every coalition between min and max number of players)
-        self.computeAllCoalitionsValues()
-        requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat = self.computeCoalitionsRestrictions()
+        # compute the value for every valid coalition before execution
+        self.compute_all_coalitions_values()
+        required_joint_players_in_bits, required_sep_players_in_bits = self.compute_coalitions_restrictions()
 
-        bestCSFound_bitFormat = gs.odpip(self.numPlayers, self.min_num_players_per_group,
-                                         self.max_num_players_per_group, self.coalitionsValues.tolist(),
-                                         requiredJointPlayersInBitFormat, restrictedPlayersToJoinInBitFormat)
-        bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
+        best_cs_in_bits = gs.odpip(num_players, self.min_num_players_per_group,
+                                   self.max_num_players_per_group, self.coalitions_values.tolist(),
+                                   required_joint_players_in_bits, required_sep_players_in_bits)
+        best_cs_in_bytes = self.convert_set_of_combinations_from_bit_format(best_cs_in_bits)
 
-        del bestCSFound_bitFormat
-
+        del best_cs_in_bits
         gc.collect()
-        return self.results(bestCSFound_byteFormat)
+        return self.convert_cs_bytes_to_dict(best_cs_in_bytes)
 
 
 # uses the C++ solver for efficiency
@@ -1078,13 +1050,12 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
     def __init__(self,
                  player_model_bridge,
                  interactions_profile_template,
-                 qualityEvalAlg,
-                 persEstAlg,
+                 quality_eval_alg,
+                 pers_est_alg,
                  task_model_bridge=None,
                  preferred_number_of_players_per_group=None,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None):
-
         super().__init__(player_model_bridge,
                          interactions_profile_template,
                          task_model_bridge,
@@ -1092,185 +1063,90 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
                          min_num_players_per_group,
                          max_num_players_per_group)
 
-        self.qualityEvalAlg = qualityEvalAlg
-        self.persEstAlg = persEstAlg
+        self.qualityEvalAlg = quality_eval_alg
+        self.pers_est_alg = pers_est_alg
 
-        self.coalitionsProfiles = []
-        self.coalitionsAvgCharacteristics = []
-        self.coalitionsValues = []
+        self.coalitions_profiles = []
+        self.coalitions_avg_characteristics = []
+        self.coalitions_values = []
 
-        self.playerIds = []
+        self.player_pref_estimates = self.pers_est_alg.update_estimates()
 
-        self.playerPrefEstimates = {}
+    def compute_all_coalitions_values(self):
+        num_of_agents = len(self.player_ids)
+        num_of_coalitions = 1 << num_of_agents
 
-    def getCoalitionInByteFormatValue(self, coalitionInByteFormat):
-        coalitionInBitFormat = self.convertCoalitionFromByteToBitFormat(coalitionInByteFormat,
-                                                                        len(coalitionInByteFormat))
-        return self.f[coalitionInBitFormat]
-
-    def getCoalitionStructureInByteFormatValue(self, coalitionStructure):
-        valueOfCS = 0
-        for i in range(len(coalitionStructure)):
-            valueOfCS += self.getCoalitionInByteFormatValue(coalitionStructure[i])
-
-        return valueOfCS
-
-    def convertCoalitionFromByteToBitFormat(self, coalitionInByteFormat, coalitionSize):
-        coalitionInBitFormat = 0
-
-        for i in range(coalitionSize):
-            coalitionInBitFormat += 1 << (coalitionInByteFormat[i] - 1)
-
-        return coalitionInBitFormat
-
-    # convert group in bit format to group with the player ids
-    def getGroupFromBitFormat(self, coalition):
-        group = []
-        tempCoalition = coalition
-        playerNumber = 0
-        while tempCoalition != 0:
-            if tempCoalition & 1:
-                group.append(playerNumber + 1)
-
-            playerNumber += 1
-            tempCoalition >>= 1
-
-        return group
-
-    def convertFromByteToIds(self, coalition):
-        group = []
-
-        for agent in coalition:
-            group.append(self.playerIds[agent - 1])
-
-        return group
-
-    def getSizeOfCombinationInBitFormat(self, combinationInBitFormat):
-        return bin(combinationInBitFormat).count("1")
-
-    def convertSetOfCombinationsFromBitFormat(self, setOfCombinationsInBitFormat):
-        setOfCombinationsInByteFormat = numpy.empty(len(setOfCombinationsInBitFormat), dtype=list)
-        for i in range(len(setOfCombinationsInBitFormat)):
-            setOfCombinationsInByteFormat[i] = self.getGroupFromBitFormat(setOfCombinationsInBitFormat[i])
-
-        return setOfCombinationsInByteFormat
-
-    def computeAllCoalitionsValues(self):
-        numOfAgents = len(self.playerIds)
-        numOfCoalitions = 1 << (numOfAgents)
-
-        playersCurrState = {}
-        for player in self.playerIds:
-            playersCurrState[player] = self.player_model_bridge.get_player_curr_state(player)
+        players_curr_state = {}
+        for player in self.player_ids:
+            players_curr_state[player] = self.player_model_bridge.get_player_curr_state(player)
 
         # (the +- 1 accounts for non divisor cases that need one more/less member)
-        adjustedMinSize = self.min_num_players_per_group
-        adjustedMaxSize = self.max_num_players_per_group
-        if (adjustedMinSize == adjustedMaxSize and numOfAgents % adjustedMaxSize != 0):
-            adjustedMinSize = adjustedMinSize
-            adjustedMaxSize = adjustedMaxSize + (self.min_num_players_per_group - 1)
+        adjusted_min_size = self.min_num_players_per_group
+        adjusted_max_size = self.max_num_players_per_group
+        if adjusted_min_size == adjusted_max_size and num_of_agents % adjusted_max_size != 0:
+            adjusted_min_size = adjusted_min_size
+            adjusted_max_size = adjusted_max_size + (self.min_num_players_per_group - 1)
 
         # initialize all coalitions
-        for coalition in range(numOfCoalitions - 1, 0, -1):
-            group = self.getGroupFromBitFormat(coalition)
-            groupInIds = self.convertFromByteToIds(group)
+        for coalition in range(num_of_coalitions - 1, 0, -1):
+            group = self.get_group_from_bit_format(coalition)
+            group_in_ids = self.convert_from_byte_to_ids(group)
 
-            currQuality = 0.0
-            groupSize = len(group)
+            curr_quality = 0.0
+            group_size = len(group)
 
             # calculate the profile and characteristics only for groups in the range defined
-            if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
+            if group_size >= adjusted_min_size and group_size <= adjusted_max_size:
                 # generate profile as average of the preferences estimates
                 profile = self.interactions_profile_template.generate_copy().reset()
-
-                for currPlayer in groupInIds:
-                    preferences = self.playerPrefEstimates[currPlayer]
+                for currPlayer in group_in_ids:
+                    preferences = self.player_pref_estimates[currPlayer]
                     for dim in profile.dimensions:
-                        profile.dimensions[dim] += (preferences.dimensions[dim] / groupSize)
+                        profile.dimensions[dim] += (preferences.dimensions[dim] / group_size)
 
-                # calculate average state
-                currAvgCharacteristics = PlayerCharacteristics()
-                currAvgCharacteristics.reset()
-                for i in range(groupSize):
-                    currState = playersCurrState[groupInIds[i]]
-                    currState.profile = profile
+                # calculate quality and average state
+                curr_avg_characteristics = PlayerCharacteristics()
+                curr_avg_characteristics.reset()
+                for i in range(group_size):
+                    curr_state = players_curr_state[group_in_ids[i]]
+                    curr_state.profile = profile
 
-                    currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
-                    currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize
+                    curr_avg_characteristics.ability += curr_state.characteristics.ability / group_size
+                    curr_avg_characteristics.engagement += curr_state.characteristics.engagement / group_size
 
-                currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
+                curr_quality += self.quality_eval_alg.evaluate(profile, group_in_ids)
 
-                diversityValueAlg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
-                personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
-                currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
+                diversity_value_alg = DiversityQualityEvalAlg(self.player_model_bridge, 0)
+                personalities = diversity_value_alg.get_personalities_list_from_player_ids(group_in_ids)
+                curr_avg_characteristics.group_diversity = diversity_value_alg.get_team_personality_diveristy(
+                    personalities)
 
-                self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
-                self.coalitionsProfiles[coalition] = profile
+                self.coalitions_avg_characteristics[coalition] = curr_avg_characteristics
+                self.coalitions_profiles[coalition] = profile
 
-            self.coalitionsValues[coalition] = currQuality
-
-    def results(self, cSInByteFormat):
-        bestGroups = []
-        bestGroupsInBitFormat = []
-        bestConfigProfiles = []
-        avgCharacteristicsArray = []
-        for coalition in cSInByteFormat:
-            bestGroups.append(self.convertFromByteToIds(coalition))
-            bestGroupsInBitFormat.append(self.convertCoalitionFromByteToBitFormat(coalition, len(coalition)))
-
-        for group in bestGroupsInBitFormat:
-            bestConfigProfiles.append(self.coalitionsProfiles[group])
-            avgCharacteristicsArray.append(self.coalitionsAvgCharacteristics[group])
-
-        return {"groups": bestGroups, "profiles": bestConfigProfiles, "avgCharacteristics": avgCharacteristicsArray}
-
-    # function to compute best profile for group according to each players preferences about the task
-    def findBestProfileForGroup(self, groupInIds):
-        groupSize = len(groupInIds)
-        bestProfile = self.interactions_profile_template.generate_copy().reset()
-
-        tasks = self.task_model_bridge.getAllTasksIds()
-
-        for playerId in groupInIds:
-            bestQuality = -1
-            bestTaskId = -1
-
-            for taskId in tasks:
-                currQuality = self.qualityEvalAlg.predictTasks(taskId, playerId)
-
-                if currQuality > bestQuality:
-                    bestQuality = currQuality
-                    bestTaskId = taskId
-
-            taskProfile = self.task_model_bridge.get_task_interactions_profile(bestTaskId)
-            for dim in bestProfile.dimensions:
-                bestProfile += taskProfile.dimensions[dim] / groupSize
-
-        return bestProfile
+            self.coalitions_values[coalition] = curr_quality
 
     def organize(self):
-        self.playerIds = self.player_model_bridge.get_all_player_ids()
-        for i in range(len(self.playerIds)):
-            self.playerIds[i] = str(self.playerIds[i])
-        self.numPlayers = len(self.playerIds)
+        self.player_ids = self.player_model_bridge.get_all_player_ids()
+        for i in range(len(self.player_ids)):
+            self.player_ids[i] = str(self.player_ids[i])
+        num_players = len(self.player_ids)
 
-        self.coalitionsProfiles = numpy.empty(1 << self.numPlayers, dtype=InteractionsProfile)
-        self.coalitionsAvgCharacteristics = numpy.empty(1 << self.numPlayers, dtype=PlayerCharacteristics)
-        self.coalitionsValues = numpy.empty(1 << self.numPlayers)
+        self.coalitions_profiles = numpy.empty(1 << num_players, dtype=InteractionsProfile)
+        self.coalitions_avg_characteristics = numpy.empty(1 << num_players, dtype=PlayerCharacteristics)
+        self.coalitions_values = numpy.empty(1 << num_players)
 
-        # estimate preferences
-        self.playerPrefEstimates = self.persEstAlg.update_estimates()
+        # re-estimate preferences
+        self.player_pref_estimates = self.pers_est_alg.update_estimates()
 
-        # initialization(compute the value for every coalition between min and max number of players)
-        self.computeAllCoalitionsValues()
+        # compute the value for every valid coalition before execution
+        self.compute_all_coalitions_values()
 
-        bestCSFound_bitFormat = (
-            gs.clink(self.numPlayers, self.min_num_players_per_group, self.max_num_players_per_group,
-                     self.coalitionsValues.tolist()))
-        bestCSFound_byteFormat = self.convertSetOfCombinationsFromBitFormat(bestCSFound_bitFormat)
+        best_cs_in_bits = (
+            gs.clink(num_players, self.min_num_players_per_group, self.max_num_players_per_group,
+                     self.coalitions_values.tolist()))
+        best_cs_in_bytes = self.convert_set_of_combinations_from_bit_format(best_cs_in_bits)
 
-        del bestCSFound_bitFormat
-
+        del best_cs_in_bits
         gc.collect()
-
-        return self.results(bestCSFound_byteFormat)
+        return self.convert_cs_bytes_to_dict(best_cs_in_bytes)

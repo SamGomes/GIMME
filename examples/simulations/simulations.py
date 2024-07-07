@@ -166,8 +166,8 @@ adaptationGA.init(
 ODPIPconfigsAlg = ODPIPConfigsGenAlg(
 	player_model_bridge= playerBridge,
 	interactions_profile_template= intProfTemplate2D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg,
-	persEstAlg = ExplorationPreferencesEstAlg(
+	quality_eval_alg= qualityEvalAlg,
+	pers_est_alg= ExplorationPreferencesEstAlg(
 		player_model_bridge= playerBridge,
 		interactions_profile_template= intProfTemplate2D.generate_copy(),
 		quality_eval_alg= qualityEvalAlg,
@@ -185,8 +185,8 @@ adaptationODPIP.init(
 tabularODPIPconfigsAlg = ODPIPConfigsGenAlg(
 	player_model_bridge= playerBridge,
 	interactions_profile_template= intProfTemplate2D.generate_copy(),
-	qualityEvalAlg = tabularQualityEvalAlg,
-	persEstAlg = ExplorationPreferencesEstAlg(
+	quality_eval_alg= tabularQualityEvalAlg,
+	pers_est_alg= ExplorationPreferencesEstAlg(
 		player_model_bridge= playerBridge,
 		interactions_profile_template= intProfTemplate2D.generate_copy(),
 		quality_eval_alg= qualityEvalAlg,
@@ -207,8 +207,8 @@ adaptationTabularODPIP.init(
 CLinkconfigsAlg = CLinkConfigsGenAlg(
 	player_model_bridge= playerBridge,
 	interactions_profile_template= intProfTemplate2D.generate_copy(),
-	qualityEvalAlg = qualityEvalAlg,
-	persEstAlg = ExplorationPreferencesEstAlg(
+	quality_eval_alg= qualityEvalAlg,
+	pers_est_alg= ExplorationPreferencesEstAlg(
 		player_model_bridge= playerBridge,
 		interactions_profile_template= intProfTemplate2D.generate_copy(),
 		quality_eval_alg= qualityEvalAlg,
@@ -225,8 +225,8 @@ adaptationCLink.init(
 tabularCLinkconfigsAlg = CLinkConfigsGenAlg(
 	player_model_bridge= playerBridge,
 	interactions_profile_template= intProfTemplate2D.generate_copy(),
-	qualityEvalAlg = tabularQualityEvalAlg,
-	persEstAlg = ExplorationPreferencesEstAlg(
+	quality_eval_alg= tabularQualityEvalAlg,
+	pers_est_alg= ExplorationPreferencesEstAlg(
 		player_model_bridge= playerBridge,
 		interactions_profile_template= intProfTemplate2D.generate_copy(),
 		quality_eval_alg= qualityEvalAlg,

@@ -16,3 +16,5 @@ _pycache__/
 examples/simulationResults/latestResults/currResults.zip
 
 venv/
+
+.idea/
