@@ -278,7 +278,7 @@ class RandomConfigsGenAlg(ConfigsGenAlg):
 			separatedPlayerConstraints = separatedPlayerConstraints)
 
 	def organize(self):
-		playerIds = self.playerModelBridge.getAllPlayerIds() 
+		playerIds = self.playerModelBridge.get_all_player_ids()
 		minNumGroups = math.ceil(len(playerIds) / self.maxNumberOfPlayersPerGroup)
 		maxNumGroups = math.floor(len(playerIds) / self.minNumberOfPlayersPerGroup)
 		
@@ -291,18 +291,18 @@ class RandomConfigsGenAlg(ConfigsGenAlg):
 			group = newGroups[groupI]
 			groupSize = len(group)
 
-			profile = self.interactionsProfileTemplate.generateCopy().randomize()			
+			profile = self.interactionsProfileTemplate.generate_copy().randomize()
 			newConfigProfiles.append(profile)
 
 			currAvgCharacteristics = PlayerCharacteristics().reset()
 			for currPlayer in group:
-				currState = self.playerModelBridge.getPlayerCurrState(currPlayer)
+				currState = self.playerModelBridge.get_player_curr_state(currPlayer)
 				currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
 				currAvgCharacteristics.engagement += currState.characteristics.engagement / groupSize			
 			
 			diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-			personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
-			currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
+			personalities = diversityValueAlg.get_personalities_list_from_player_ids(group)
+			currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
 
 			newAvgCharacteristics.append(currAvgCharacteristics)
 
@@ -339,7 +339,7 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 		self.numberOfConfigChoices = 100 if numberOfConfigChoices == None else numberOfConfigChoices
 	
 	def organize(self):
-		playerIds = self.playerModelBridge.getAllPlayerIds() 
+		playerIds = self.playerModelBridge.get_all_player_ids()
 		minNumGroups = math.ceil(len(playerIds) / self.maxNumberOfPlayersPerGroup)
 		maxNumGroups = math.floor(len(playerIds) / self.minNumberOfPlayersPerGroup)
 
@@ -367,7 +367,7 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 				groupSize = len(group)
 
 				# generate profile as average of the preferences estimates
-				profile = self.interactionsProfileTemplate.generateCopy().reset()
+				profile = self.interactionsProfileTemplate.generate_copy().reset()
 				
 				for currPlayer in group:
 					preferences = self.playerPrefEstimates[currPlayer]
@@ -381,7 +381,7 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 				currAvgCharacteristics.reset()
 				for i in range(len(group)):
 
-					currState = self.playerModelBridge.getPlayerCurrState(group[i])
+					currState = self.playerModelBridge.get_player_curr_state(group[i])
 					currState.profile = profile
 
 					currAvgCharacteristics.ability += currState.characteristics.ability / groupSize
@@ -390,8 +390,8 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
 				currQuality += self.qualityEvalAlg.evaluate(profile, group)
 			
 				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
-				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
+				personalities = diversityValueAlg.get_personalities_list_from_player_ids(group)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
 
 				newAvgCharacteristics.append(currAvgCharacteristics)
 			
@@ -467,7 +467,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 		if(qualityEvalAlg==None):
 			qualityEvalAlg = KNNRegression(playerModelBridge, 5)
 
-		self.playerIds = self.playerModelBridge.getAllPlayerIds() 
+		self.playerIds = self.playerModelBridge.get_all_player_ids()
 		self.minNumGroups = math.ceil(len(self.playerIds) / self.maxNumberOfPlayersPerGroup)
 		self.maxNumGroups = math.floor(len(self.playerIds) / self.minNumberOfPlayersPerGroup)
 
@@ -759,7 +759,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 			profile = profiles[groupI]
 			
 			for playerI in range(len(group)):
-				totalFitness += profile.sqrDistanceBetween(InteractionsProfile(dimensions = {'dim_0': 0.98, 'dim_1': 0.005}))
+				totalFitness += profile.sqr_distance_between(InteractionsProfile(dimensions = {'dim_0': 0.98, 'dim_1': 0.005}))
 				totalFitness += abs(config[groupI][playerI] - targetConfig[groupI][playerI])
 		
 		#print(totalFitness)
@@ -857,13 +857,13 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 			groupSize = len(group)
 			avgCharacteristics = PlayerCharacteristics()
 			for currPlayer in group:
-				currState = self.playerModelBridge.getPlayerCurrState(currPlayer)
+				currState = self.playerModelBridge.get_player_curr_state(currPlayer)
 				avgCharacteristics.ability += currState.characteristics.ability / groupSize
 				avgCharacteristics.engagement += currState.characteristics.engagement / groupSize
 						
 				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(group)
-				avgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
+				personalities = diversityValueAlg.get_personalities_list_from_player_ids(group)
+				avgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
 
 			avgCharacteristicsArray.append(avgCharacteristics)
 
@@ -975,7 +975,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 
 		playersCurrState = {}
 		for player in self.playerIds:
-			playersCurrState[player] = self.playerModelBridge.getPlayerCurrState(player)
+			playersCurrState[player] = self.playerModelBridge.get_player_curr_state(player)
 
 
 		# (the +- 1 accounts for non divisor cases that need one more/less member)
@@ -996,7 +996,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 			# calculate the profile and characteristics only for groups in the range defined 
 			if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
 				# generate profile as average of the preferences estimates
-				profile = self.interactionsProfileTemplate.generateCopy().reset()
+				profile = self.interactionsProfileTemplate.generate_copy().reset()
 
 				# if (self.qualityEvalAlg.isTabular()):
 				# 	profile = self.findBestProfileForGroup(groupInIds)
@@ -1021,8 +1021,8 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 				currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
 				
 				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
-				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
+				personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
 
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
@@ -1063,7 +1063,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 	# function to compute best profile for group according to each players preferences about the task
 	def findBestProfileForGroup(self, groupInIds):
 		groupSize = len(groupInIds)
-		bestProfile = self.interactionsProfileTemplate.generateCopy().reset()
+		bestProfile = self.interactionsProfileTemplate.generate_copy().reset()
 
 		tasks = self.taskModelBridge.getAllTasksIds()
 		
@@ -1078,14 +1078,14 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 					bestQuality = currQuality
 					bestTaskId = taskId
 
-			taskProfile = self.taskModelBridge.getTaskInteractionsProfile(bestTaskId)
+			taskProfile = self.taskModelBridge.get_task_interactions_profile(bestTaskId)
 			for dim in bestProfile.dimensions:
 				bestProfile += taskProfile.dimensions[dim] / groupSize
 
 		return bestProfile
 
 	def organize(self):
-		self.playerIds = self.playerModelBridge.getAllPlayerIds()
+		self.playerIds = self.playerModelBridge.get_all_player_ids()
 		for i in range(len(self.playerIds)):
 			self.playerIds[i] = str(self.playerIds[i])
 		self.numPlayers = len(self.playerIds)
@@ -1204,7 +1204,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 
 		playersCurrState = {}
 		for player in self.playerIds:
-			playersCurrState[player] = self.playerModelBridge.getPlayerCurrState(player)
+			playersCurrState[player] = self.playerModelBridge.get_player_curr_state(player)
 
 		# (the +- 1 accounts for non divisor cases that need one more/less member)
 		adjustedMinSize = self.minNumberOfPlayersPerGroup
@@ -1224,7 +1224,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 			# calculate the profile and characteristics only for groups in the range defined
 			if groupSize >= adjustedMinSize and groupSize <= adjustedMaxSize:
 				# generate profile as average of the preferences estimates
-				profile = self.interactionsProfileTemplate.generateCopy().reset()
+				profile = self.interactionsProfileTemplate.generate_copy().reset()
 
 				for currPlayer in groupInIds:
 					preferences = self.playerPrefEstimates[currPlayer]
@@ -1245,8 +1245,8 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 				currQuality += self.qualityEvalAlg.evaluate(profile, groupInIds)
 				
 				diversityValueAlg = DiversityQualityEvalAlg(self.playerModelBridge, 0)
-				personalities = diversityValueAlg.getPersonalitiesListFromPlayerIds(groupInIds)
-				currAvgCharacteristics.group_diversity = diversityValueAlg.getTeamPersonalityDiveristy(personalities)
+				personalities = diversityValueAlg.get_personalities_list_from_player_ids(groupInIds)
+				currAvgCharacteristics.group_diversity = diversityValueAlg.get_team_personality_diveristy(personalities)
 						
 				self.coalitionsAvgCharacteristics[coalition] = currAvgCharacteristics
 				self.coalitionsProfiles[coalition] = profile
@@ -1272,7 +1272,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 	# function to compute best profile for group according to each players preferences about the task
 	def findBestProfileForGroup(self, groupInIds):
 		groupSize = len(groupInIds)
-		bestProfile = self.interactionsProfileTemplate.generateCopy().reset()
+		bestProfile = self.interactionsProfileTemplate.generate_copy().reset()
 
 		tasks = self.taskModelBridge.getAllTasksIds()
 		
@@ -1287,14 +1287,14 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
 					bestQuality = currQuality
 					bestTaskId = taskId
 
-			taskProfile = self.taskModelBridge.getTaskInteractionsProfile(bestTaskId)
+			taskProfile = self.taskModelBridge.get_task_interactions_profile(bestTaskId)
 			for dim in bestProfile.dimensions:
 				bestProfile += taskProfile.dimensions[dim] / groupSize
 
 		return bestProfile
 
 	def organize(self):
-		self.playerIds = self.playerModelBridge.getAllPlayerIds()
+		self.playerIds = self.playerModelBridge.get_all_player_ids()
 		for i in range(len(self.playerIds)):
 			self.playerIds[i] = str(self.playerIds[i])
 		self.numPlayers = len(self.playerIds)

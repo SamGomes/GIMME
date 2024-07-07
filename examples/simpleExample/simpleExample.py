@@ -51,27 +51,27 @@ for x in range(numPlayers):
 	playerBridge.registerNewPlayer(
 		playerId = int(x), 
 		name = "Player "+str(x+1), 
-		currState = PlayerState(profile = profileTemplate.generateCopy().reset()), 
+		currState = PlayerState(profile = profileTemplate.generate_copy().reset()),
 		pastModelIncreasesDataFrame = PlayerStatesDataFrame(
-			interactionsProfileTemplate = profileTemplate.generateCopy().reset(), 
-			trimAlg = gridTrimAlg), 
+			interactions_profile_template= profileTemplate.generate_copy().reset(),
+			trim_alg= gridTrimAlg),
 		currModelIncreases = PlayerCharacteristics(), 
-		preferencesEst = profileTemplate.generateCopy().reset(), 
-		realPreferences = profileTemplate.generateCopy().reset())
+		preferencesEst = profileTemplate.generate_copy().reset(),
+		realPreferences = profileTemplate.generate_copy().reset())
 	playerBridge.resetState(x)
-	playerBridge.getPlayerStatesDataFrame(x).trimAlg.considerStateResidue(True)
+	playerBridge.get_player_states_data_frame(x).trim_alg.considerStateResidue(True)
 
 	# init players including predicted preferences
-	playerBridge.resetPlayer(x)
+	playerBridge.reset_player(x)
 
-	playerBridge.setPlayerPreferencesEst(x, profileTemplate.generateCopy().init())
+	playerBridge.set_player_preferences_est(x, profileTemplate.generate_copy().init())
 	# realPreferences = realPersonalities[x]
 	# playerBridge.setPlayerRealPreferences(x, realPreferences)
 
 	playerBridge.setPlayerRealPreferences(x, profileTemplate.randomized())
 	playerBridge.setBaseLearningRate(x, 0.5)
 
-	playerBridge.getPlayerStatesDataFrame(x).trimAlg.considerStateResidue(False)
+	playerBridge.get_player_states_data_frame(x).trim_alg.considerStateResidue(False)
 
 print("Players created.")
 print(json.dumps(playerBridge.players, default=lambda o: o.__dict__, sort_keys=True, indent=2))
@@ -95,17 +95,17 @@ print(json.dumps(taskBridge.tasks, default=lambda o: o.__dict__, sort_keys=True,
 
 print("\nSetting up the adaptation algorithms...")
 def simulateReaction(isBootstrap, playerBridge, playerId):
-	currState = playerBridge.getPlayerCurrState(playerId)
+	currState = playerBridge.get_player_curr_state(playerId)
 	newState = calcReaction(
 		isBootstrap = isBootstrap, 
 		playerBridge = playerBridge, 
 		state = currState, 
 		playerId = playerId)
 
-	increases = PlayerState(stateType = newState.stateType)
+	increases = PlayerState(state_type= newState.stateType)
 	increases.profile = currState.profile
 	increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-	playerBridge.setAndSavePlayerStateToDataFrame(playerId, increases, newState)	
+	playerBridge.set_and_save_player_state_to_data_frame(playerId, increases, newState)
 	return increases
 
 def calcReaction(isBootstrap, playerBridge, state, playerId):
@@ -113,13 +113,13 @@ def calcReaction(isBootstrap, playerBridge, state, playerId):
 	numDims = len(preferences.dimensions)
 	newStateType = 0 if isBootstrap else 1
 	newState = PlayerState(
-		stateType = newStateType, 
+		state_type= newStateType,
 		characteristics = PlayerCharacteristics(
 			ability=state.characteristics.ability, 
 			engagement=state.characteristics.engagement
 			), 
 		profile=state.profile)
-	newState.characteristics.engagement = 1 - (preferences.distanceBetween(state.profile) / math.sqrt(numDims))  #between 0 and 1
+	newState.characteristics.engagement = 1 - (preferences.distance_between(state.profile) / math.sqrt(numDims))  #between 0 and 1
 	if newState.characteristics.engagement>1:
 		breakpoint()
 	abilityIncreaseSim = (newState.characteristics.engagement*playerBridge.getBaseLearningRate(playerId))
@@ -134,11 +134,11 @@ regAlg = KNNRegression(playerBridge, 5)
 
 ODPIPConfigsGenAlg = ODPIPConfigsGenAlg(
 	playerModelBridge = playerBridge,
-	interactionsProfileTemplate = profileTemplate.generateCopy(),
+	interactionsProfileTemplate = profileTemplate.generate_copy(),
 	regAlg = regAlg,
 	persEstAlg = ExplorationPreferencesEstAlg(
 		playerModelBridge = playerBridge, 
-		interactionsProfileTemplate = profileTemplate.generateCopy(), 
+		interactionsProfileTemplate = profileTemplate.generate_copy(),
 		regAlg = regAlg,
 		numTestedPlayerProfiles = numTestedPlayerProfilesInEst),
 	preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
@@ -146,9 +146,9 @@ ODPIPConfigsGenAlg = ODPIPConfigsGenAlg(
 	#maxNumberOfPlayersPerGroup = maxNumberPlayersPerGroup
 )
 adaptationGIMME.init(
-	playerModelBridge = playerBridge, 
-	taskModelBridge = taskBridge,
-	configsGenAlg = ODPIPConfigsGenAlg, 
+	player_model_bridge= playerBridge,
+	task_model_bridge= taskBridge,
+	configs_gen_alg= ODPIPConfigsGenAlg,
 	name="Test Adaptation"
 )
 print("Adaptation initialized and ready!")
@@ -205,7 +205,7 @@ while(True):
 	print("Player States:\n\n\n")
 	for x in range(numPlayers):
 		increases = simulateReaction(False, playerBridge, x)
-		print(json.dumps(playerBridge.getPlayerCurrState(x), default=lambda o: o.__dict__, sort_keys=True))
+		print(json.dumps(playerBridge.get_player_curr_state(x), default=lambda o: o.__dict__, sort_keys=True))
 
 
 	print("~~~~~~~~~~~~~~~~~~~~~\n\n\n")

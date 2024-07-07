@@ -98,7 +98,7 @@ class ProximitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
 		pastModelIncsSortedAge = sorted(pastModelIncs, key=self.creationTimeSort)
 		lastDataPoint = pastModelIncsSortedAge[-1]
 		for modelInc in pastModelIncs:
-			modelInc.quality = lastDataPoint.profile.sqrDistanceBetween(modelInc.profile)
+			modelInc.quality = lastDataPoint.profile.sqr_distance_between(modelInc.profile)
 			if(self.accStateResidue):
 				modelInc.quality += modelInc.stateType
 

@@ -1,62 +1,60 @@
 from abc import ABC, abstractmethod
 from ..PlayerStructs import *
 
+
 class PlayerModelBridge(ABC):
-	@abstractmethod
-	def resetPlayer(self, playerId):
-		pass
+    @abstractmethod
+    def reset_player(self, player_id):
+        pass
 
-	@abstractmethod
-	def getAllPlayerIds(self):
-		pass
+    @abstractmethod
+    def get_all_player_ids(self):
+        pass
 
-	@abstractmethod
-	def getPlayerName(self, playerId):
-		pass
+    @abstractmethod
+    def get_player_name(self, player_id):
+        pass
 
+    @abstractmethod
+    def get_player_curr_state(self, player_id):
+        pass
 
-	@abstractmethod
-	def getPlayerCurrState(self,  playerId):
-		pass
+    @abstractmethod
+    def get_player_personality(self, player_id):
+        pass
 
-	@abstractmethod
-	def getPlayerPersonality(self,  playerId):
-		pass
+    @abstractmethod
+    def get_player_curr_characteristics(self, player_id):
+        pass
 
-	@abstractmethod
-	def getPlayerCurrCharacteristics(self, playerId):
-		pass
+    @abstractmethod
+    def get_player_states_data_frame(self, player_id):
+        pass
 
+    @abstractmethod
+    def get_player_preferences_est(self, player_id):
+        pass
 
-	@abstractmethod
-	def getPlayerStatesDataFrame(self, playerId):
-		pass
+    @abstractmethod
+    def set_player_preferences_est(self, player_id, preferences):
+        pass
 
-	@abstractmethod
-	def getPlayerPreferencesEst(self, playerId):
-		pass
+    @abstractmethod
+    def set_and_save_player_state_to_data_frame(self, player_id, increases, new_state):
+        pass
 
-	@abstractmethod
-	def setPlayerPreferencesEst(self, playerId, preferences):
-		pass
+    @abstractmethod
+    def set_player_characteristics(self, player_id, characteristics):
+        pass
 
-	@abstractmethod
-	def setAndSavePlayerStateToDataFrame(self, playerId, increases, newState):
-		pass
+    @abstractmethod
+    def set_player_group(self, player_id, group):
+        pass
 
-	
-	@abstractmethod
-	def setPlayerCharacteristics(self, playerId, characteristics):
-		pass
+    @abstractmethod
+    def set_player_tasks(self, player_id, tasks):
+        pass
 
-	@abstractmethod		
-	def setPlayerGroup(self, playerId, group):
-		pass
-
-	@abstractmethod		
-	def setPlayerTasks(self, playerId, tasks):
-		pass
-
-	@abstractmethod		
-	def setPlayerProfile(self, playerId, profile):
-		pass
+    @abstractmethod
+    def set_player_profile(self, player_id, profile):
+        pass

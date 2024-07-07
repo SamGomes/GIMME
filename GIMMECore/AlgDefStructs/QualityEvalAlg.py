@@ -1,183 +1,184 @@
 import copy
-import json
+import math
 import numpy
 import pandas as pd
 
 from abc import ABC, abstractmethod
 from ..PlayerStructs import *
 
-class QualityEvalAlg(ABC):
-	
-	def __init__(self, playerModelBridge):
-		self.playerModelBridge = playerModelBridge
 
-	@abstractmethod
-	def evaluate(self, profile, groupPlayerIds):
-		pass
-	
+class QualityEvalAlg(ABC):
+
+    def __init__(self, player_model_bridge):
+        self.player_model_bridge = player_model_bridge
+        self.comp_percentage = 0.0
+
+    @abstractmethod
+    def evaluate(self, profile, group_player_ids):
+        pass
+
+    def get_comp_percentage(self, profile, group_player_ids):
+        return self.comp_percentage
 
 
 # ---------------------- Group-Based Quality Evaluation ---------------------------
-class GroupQualityEvalAlg(QualityEvalAlg):
-	
-	def __init__(self, playerModelBridge):
-		super().__init__(playerModelBridge)
+class GroupQualityEvalAlg(QualityEvalAlg, ABC):
+
+    def __init__(self, player_model_bridge):
+        super().__init__(player_model_bridge)
+
 
 # Personality Diversity
 class DiversityQualityEvalAlg(GroupQualityEvalAlg):
-	#  Consider the task preferences of students in addition to team diversity. People with the same personality can still have different preferences
-	#  Diversity weight is the value determined by the teacher (0 = aligned, 1 = diverse)
-	def __init__(self, playerModelBridge, diversityWeight):
-		super().__init__(playerModelBridge)
-		self.diversityWeight = diversityWeight
+    #  Consider the task preferences of students in addition to team diversity.
+    #  People with the same personality can still have different preferences
+    #  Diversity weight is the value determined by the teacher (0 = aligned, 1 = diverse)
+    def __init__(self, player_model_bridge, diversity_weight):
+        super().__init__(player_model_bridge)
+        self.diversityWeight = diversity_weight
 
-	def getPersonalitiesListFromPlayerIds(self, groupIds):
-		personalities = []  # list of PlayerPersonality objects
+    def get_personalities_list_from_player_ids(self, group_player_ids):
+        personalities = []  # list of PlayerPersonality objects
 
-		for playerId in groupIds:
-			personality = self.playerModelBridge.getPlayerPersonality(playerId)
-			if personality:
-				personalities.append(personality)
+        for player_id in group_player_ids:
+            personality = self.player_model_bridge.get_player_personality(player_id)
+            if personality:
+                personalities.append(personality)
 
-		return personalities
-	
-	def getTeamPersonalityDiveristy(self, personalities):
-		if len(personalities) <= 0:
-			return -1
-		
-		diversity = -1
+        return personalities
 
-		if isinstance(personalities[0], PersonalityMBTI):
-			diversity = PersonalityMBTI.getTeamPersonalityDiversity(personalities)
+    def get_team_personality_diveristy(self, personalities):
+        if len(personalities) <= 0:
+            return -1
 
-		return diversity
+        diversity = -1
 
+        if isinstance(personalities[0], PersonalityMBTI):
+            diversity = PersonalityMBTI.get_team_personality_diversity(personalities)
 
-	def evaluate(self, _, groupPlayerIds):
-		personalities = self.getPersonalitiesListFromPlayerIds(groupPlayerIds)  # list of PlayerPersonality objects
-		diversity = self.getTeamPersonalityDiveristy(personalities)
+        return diversity
 
-		# inverse of distance squared
-		# lower distance = higher quality
-		distance = abs(diversity - self.diversityWeight)
-		
-		if distance == 0.0:
-			return 1.0
-		
-		return 1.0 / (distance * distance)
+    def evaluate(self, _, group_player_ids):
+        # list of PlayerPersonality objects
+        personalities = self.get_personalities_list_from_player_ids(group_player_ids)
+        diversity = self.get_team_personality_diveristy(personalities)
 
+        # inverse of distance squared
+        # lower distance = higher quality
+        distance = abs(diversity - self.diversityWeight)
+
+        if distance == 0.0:
+            return 1.0
+
+        # not iterative, so it can jump to comp_percentage = 1
+        self.comp_percentage = 1.0
+        return 1.0 / (distance * distance)
 
 
 # ---------------------- Regression-Based Characteristic Functions ---------------------------
-class RegQualityEvalAlg(QualityEvalAlg):
-	
-	def __init__(self, playerModelBridge, qualityWeights):
-		super().__init__(playerModelBridge)
-		self.qualityWeights = PlayerCharacteristics(ability = 0.5, engagement = 0.5) if qualityWeights == None else qualityWeights
+class RegQualityEvalAlg(QualityEvalAlg, ABC):
+
+    def __init__(self, player_model_bridge, quality_weights=None):
+        super().__init__(player_model_bridge)
+        self.quality_weights = PlayerCharacteristics(ability=0.5,
+                                                     engagement=0.5) if quality_weights is None else quality_weights
+
 
 class KNNRegQualityEvalAlg(RegQualityEvalAlg):
 
-	def __init__(self, playerModelBridge, numberOfNNs, qualityWeights = None):
-		super().__init__(playerModelBridge, qualityWeights)
-		self.numberOfNNs = numberOfNNs
+    def __init__(self, player_model_bridge, k, quality_weights=None):
+        super().__init__(player_model_bridge, quality_weights)
+        self.k = k
 
+    def calc_quality(self, state):
+        return self.quality_weights.ability * state.characteristics.ability + self.quality_weights.engagement * state.characteristics.engagement
 
-	def calcQuality(self, state):
-		return self.qualityWeights.ability*state.characteristics.ability + self.qualityWeights.engagement*state.characteristics.engagement
+    def dist_sort(self, elem):
+        return elem.dist
 
-	def distSort(self, elem):
-		return elem.dist
+    def evaluate(self, profile, group_player_ids):
+        total_quality = 0
+        group_size = len(group_player_ids)
+        for player_id in group_player_ids:
+            past_model_incs = self.player_model_bridge.get_player_states_data_frame(player_id).get_all_states().copy()
+            predicted_state = PlayerState(profile=profile, characteristics=PlayerCharacteristics())
 
-	def evaluate(self, profile, groupPlayerIds):
-		totalQuality = 0
-		groupSize = len(groupPlayerIds)
-		for playerId in groupPlayerIds:
-			pastModelIncs = self.playerModelBridge.getPlayerStatesDataFrame(playerId).getAllStates().copy()
-			pastModelIncsSize = len(pastModelIncs)
+            for modelInc in past_model_incs:
+                modelInc.dist = profile.sqr_distance_between(modelInc.profile)
 
-			predictedState = PlayerState(profile = profile, characteristics = PlayerCharacteristics())
+            past_model_incs = sorted(past_model_incs, key=self.dist_sort)
 
-			for modelInc in pastModelIncs:
-				modelInc.dist = profile.sqrDistanceBetween(modelInc.profile)
+            number_of_iterations = min(self.k, len(past_model_incs))
+            past_model_incs = past_model_incs[:number_of_iterations]
 
-			pastModelIncs = sorted(pastModelIncs, key=self.distSort)
+            triangular_number_of_it = sum(range(number_of_iterations + 1))
+            for i in range(number_of_iterations):
+                self.comp_percentage = i / number_of_iterations
 
-			numberOfIterations = min(self.numberOfNNs, len(pastModelIncs))
-			pastModelIncs = pastModelIncs[:numberOfIterations]
+                curr_state = past_model_incs[i]
+                past_characteristics = curr_state.characteristics
+                ratio = (number_of_iterations - i) / triangular_number_of_it
 
-			triangularNumberOfIt = sum(range(numberOfIterations + 1))
-			for i in range(numberOfIterations):
+                predicted_state.characteristics.ability += past_characteristics.ability * ratio
+                predicted_state.characteristics.engagement += past_characteristics.engagement * ratio
 
-				self.completionPerc = i/ numberOfIterations
+            total_quality += self.calc_quality(predicted_state) / group_size
 
-				currState = pastModelIncs[i]
-				pastCharacteristics = currState.characteristics
-				ratio = (numberOfIterations - i)/triangularNumberOfIt
-
-				predictedState.characteristics.ability += pastCharacteristics.ability * ratio
-				predictedState.characteristics.engagement += pastCharacteristics.engagement * ratio
-
-			self.state = predictedState
-			totalQuality += self.calcQuality(predictedState) / groupSize
-
-		return totalQuality
-
-
+        return total_quality
 
 
 # ---------------------- Tabular Characteristic Functions -------------------------------------
 class TabQualityEvalAlg(QualityEvalAlg):
-	
-	def __init__(self, playerModelBridge):
-		super().__init__(playerModelBridge)
-		self.playerPrefEstimates = {}
 
-	def getPlayerPreferencesEstimations(self):
-	 	for player in self.playerIds:
-	 		self.playerPrefEstimates[player] = self.playerModelBridge.getPlayerPreferencesEst(player)
+    def __init__(self, player_model_bridge):
+        super().__init__(player_model_bridge)
+        self.player_pref_estimates = {}
+        self.player_ids = player_model_bridge.get_player_ids()
+
+    def get_player_preferences_estimations(self):
+        for player in self.player_ids:
+            self.player_pref_estimates[player] = self.player_model_bridge.get_player_preferences_est(player)
 
 
 class SynergiesTabQualityEvalAlg(TabQualityEvalAlg):
-	
-	def __init__(self, playerModelBridge, taskModelBridge, syntergyTablePath):
-		super().__init__(playerModelBridge)
 
-		self.taskModelBridge = taskModelBridge
-		tempTable = pd.read_csv(syntergyTablePath, sep=",", dtype={'agent_1': object, 'agent_2': object})
-		synergyTable = tempTable.pivot_table(values='synergy', index='agent_1', columns='agent_2')
+    def __init__(self, player_model_bridge, synergy_table_path):
+        super().__init__(player_model_bridge)
 
-		self.synergyMatrix = synergyTable.to_numpy()
-		self.synergyMatrix[numpy.isnan(self.synergyMatrix)] = 0
-		self.synergyMatrix = self.symmetrize(self.synergyMatrix)
+        temp_table = pd.read_csv(synergy_table_path, sep=",", dtype={'agent_1': object, 'agent_2': object})
+        synergy_table = temp_table.pivot_table(values='synergy', index='agent_1', columns='agent_2')
 
-		self.playerIds = self.playerModelBridge.getAllPlayerIds()
+        self.synergy_matrix = synergy_table.to_numpy()
+        self.synergy_matrix[numpy.isnan(self.synergy_matrix)] = 0
+        self.synergy_matrix = self.symmetrize(self.synergy_matrix)
 
-	def symmetrize(self, table):
-		return table + table.T - numpy.diag(table.diagonal())
+        self.player_ids = self.player_model_bridge.get_all_player_ids()
 
-	def evaluate(self, _, groupPlayerIds):
-		
-		totalQuality = 0
-		groupSize = len(groupPlayerIds)
-		numElemCombs = math.comb(groupSize, 2)
-		for i in range(groupSize-1):
-			firstPlayerId = groupPlayerIds[i]
-			firstPlayerPreferences = self.playerModelBridge.getPlayerPreferencesEst(firstPlayerId)
-			firstPlayerPreferencesInBinary = ''
-			for dim in firstPlayerPreferences.dimensions:
-				firstPlayerPreferencesInBinary += str(round(firstPlayerPreferences.dimensions[dim]))
+    def symmetrize(self, table):
+        return table + table.T - numpy.diag(table.diagonal())
 
-			# assumes synergy matrix symetry
-			for j in range(i+1, len(groupPlayerIds)):
-				secondPlayerId = groupPlayerIds[j]
-				secondPlayerPreferences = self.playerModelBridge.getPlayerPreferencesEst(secondPlayerId)
-				secondPlayerPreferenceInBinary = ''
-				for dim in secondPlayerPreferences.dimensions:
-					secondPlayerPreferenceInBinary += str(round(secondPlayerPreferences.dimensions[dim]))
+    def evaluate(self, _, group_player_ids):
+        total_quality = 0
+        group_size = len(group_player_ids)
+        num_elem_combs = math.comb(group_size, 2)
+        for i in range(group_size - 1):
+            first_player_id = group_player_ids[i]
+            first_player_preferences = self.player_model_bridge.get_player_preferences_est(first_player_id)
+            first_player_preferences_in_binary = ''
+            for dim in first_player_preferences.dimensions:
+                first_player_preferences_in_binary += str(round(first_player_preferences.dimensions[dim]))
+            first_player_preferences_index = int(first_player_preferences_in_binary, 2)
 
-			firstPlayerPreferencesIndex = int(firstPlayerPreferencesInBinary, 2)
-			secondPlayerPreferencesIndex = int(secondPlayerPreferenceInBinary, 2)
+            # assumes synergy matrix symmetry
+            for j in range(i + 1, len(group_player_ids)):
+                second_player_id = group_player_ids[j]
+                second_player_preferences = self.player_model_bridge.get_player_preferences_est(second_player_id)
+                second_player_preference_in_binary = ''
+                for dim in second_player_preferences.dimensions:
+                    second_player_preference_in_binary += str(round(second_player_preferences.dimensions[dim]))
 
-			totalQuality += self.synergyMatrix[firstPlayerPreferencesIndex][secondPlayerPreferencesIndex] / numElemCombs
-		return totalQuality
+                second_player_preferences_index = int(second_player_preference_in_binary, 2)
+                total_quality += (self.synergy_matrix[first_player_preferences_index][second_player_preferences_index]
+                                  / num_elem_combs)
 
+        return total_quality

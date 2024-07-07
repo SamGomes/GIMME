@@ -34,15 +34,15 @@ class ExploitationPreferencesEstAlg(PreferencesEstAlg):
 	
 	
 	def updateEstimates(self):
-		playerIds = self.playerModelBridge.getAllPlayerIds()
+		playerIds = self.playerModelBridge.get_all_player_ids()
 		for playerId in playerIds:
-			currPreferencesEst = self.playerModelBridge.getPlayerPreferencesEst(playerId)
+			currPreferencesEst = self.playerModelBridge.get_player_preferences_est(playerId)
 			currPreferencesQuality = self.bestQualities.get(playerId, 0.0)
-			lastDataPoint = self.playerModelBridge.getPlayerCurrState(playerId)
+			lastDataPoint = self.playerModelBridge.get_player_curr_state(playerId)
 			quality = self.calcQuality(lastDataPoint)
 			if quality > currPreferencesQuality:
 				self.bestQualities[playerId] = currPreferencesQuality
-				self.playerModelBridge.setPlayerPreferencesEst(playerId, lastDataPoint.profile)
+				self.playerModelBridge.set_player_preferences_est(playerId, lastDataPoint.profile)
 
 
 
@@ -65,11 +65,11 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 
 
 	def updateEstimates(self):
-		playerIds = self.playerModelBridge.getAllPlayerIds()
+		playerIds = self.playerModelBridge.get_all_player_ids()
 		updatedEstimates = {}
 		for playerId in playerIds:
 			
-			currPreferencesEst = self.playerModelBridge.getPlayerPreferencesEst(playerId)
+			currPreferencesEst = self.playerModelBridge.get_player_preferences_est(playerId)
 			newPreferencesEst = currPreferencesEst
 			if(currPreferencesEst != None):
 				bestQuality = self.qualityEvalAlg.evaluate(currPreferencesEst, [playerId])
@@ -77,13 +77,13 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 				bestQuality = -1
 			
 			for i in range(self.numTestedPlayerProfiles):
-				profile = self.interactionsProfileTemplate.generateCopy().randomize()
+				profile = self.interactionsProfileTemplate.generate_copy().randomize()
 				currQuality = self.qualityEvalAlg.evaluate(profile, [playerId])
 				if currQuality >= bestQuality:
 					bestQuality = currQuality
 					newPreferencesEst = profile
 
-			self.playerModelBridge.setPlayerPreferencesEst(playerId, newPreferencesEst)
+			self.playerModelBridge.set_player_preferences_est(playerId, newPreferencesEst)
 			updatedEstimates[str(playerId)] = newPreferencesEst
 
 
