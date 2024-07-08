@@ -1,111 +1,137 @@
 from GIMMECore import TaskModelBridge
 from GIMMECore import PlayerModelBridge
 
-class PlayerModelMock(object):
-	def __init__(self, id, name, currState, pastModelIncreasesDataFrame, currModelIncreases, preferencesEst, realPreferences):
-		self.currState = currState
-		self.id = id
-		self.name = name
-		self.pastModelIncreasesDataFrame = pastModelIncreasesDataFrame
 
-		# self.preferencesEst = preferencesEst.normalized()
-		# self.realPreferences = realPreferences.normalized()
-		self.baseLearningRate = None
+class PlayerModelMock(object):
+    def __init__(self, id, name, curr_state, past_model_increases_data_frame, curr_model_increases, preferences_est,
+                 real_preferences):
+        self.curr_state = curr_state
+        self.id = id
+        self.name = name
+        self.past_model_increases_data_frame = past_model_increases_data_frame
+
+        self.preferencesEst = {}
+        self.real_preferences = {}
+        self.base_learning_rate = None
+
 
 class TaskModelMock(object):
-	def __init__(self, id, description, minRequiredAbility, profile, minDuration, difficultyWeight, profileWeight):
-		self.id = id
-		self.description = description
-		self.minRequiredAbility = minRequiredAbility
-		self.profile = profile
-		self.difficultyWeight = difficultyWeight
-		self.profileWeight = profileWeight
-		self.minDuration = minDuration
+    def __init__(self, id, description, min_required_ability, profile, min_duration, difficulty_weight, profile_weight):
+        self.id = id
+        self.description = description
+        self.min_required_ability = min_required_ability
+        self.profile = profile
+        self.difficulty_weight = difficulty_weight
+        self.profile_weight = profile_weight
+        self.min_duration = min_duration
+
 
 class CustomTaskModelBridge(TaskModelBridge):
-	def __init__(self, tasks):
-		self.tasks = tasks
-		self.numTasks = len(tasks)
+    def __init__(self, tasks):
+        self.tasks = tasks
+        self.num_tasks = len(tasks)
 
-	def registerNewTask(self, taskId, description, minRequiredAbility, profile, minDuration, difficultyWeight, profileWeight):
-		self.tasks[taskId] = TaskModelMock(taskId, description, minRequiredAbility, profile, minDuration, difficultyWeight, profileWeight)
-	def get_all_task_ids(self):
-		return [int(i) for i in range(self.numTasks)]
-	def get_task_interactions_profile(self, task_id):
-		return self.tasks[task_id].profile
-	def get_min_task_required_ability(self, task_id):
-		return self.tasks[task_id].minRequiredAbility
-	def get_min_task_duration(self, task_id):
-		return self.tasks[task_id].minDuration
-	def get_task_difficulty_weight(self, task_id):
-		return self.tasks[task_id].difficultyWeight
-	def get_task_profile_weight(self, task_id):
-		return self.tasks[task_id].profileWeight
-	def get_task_init_date(self, task_id):
-		return self.tasks[task_id].initDate
-	def get_task_final_date(self, task_id):
-		return self.tasks[task_id].finalDate
-		
-	def get_task_diversity_weight(self, task_id):
-		return 0.5
+    def register_new_task(self, task_id, description, min_required_ability, profile, min_duration, difficulty_weight,
+                          profile_weight):
+        self.tasks[task_id] = TaskModelMock(task_id, description, min_required_ability, profile, min_duration,
+                                            difficulty_weight, profile_weight)
+
+    def get_all_task_ids(self):
+        return [int(i) for i in range(self.num_tasks)]
+
+    def get_task_interactions_profile(self, task_id):
+        return self.tasks[task_id].profile
+
+    def get_min_task_required_ability(self, task_id):
+        return self.tasks[task_id].min_required_ability
+
+    def get_min_task_duration(self, task_id):
+        return self.tasks[task_id].min_duration
+
+    def get_task_difficulty_weight(self, task_id):
+        return self.tasks[task_id].difficulty_weight
+
+    def get_task_profile_weight(self, task_id):
+        return self.tasks[task_id].profile_weight
+
+    def get_task_init_date(self, task_id):
+        return self.tasks[task_id].initDate
+
+    def get_task_final_date(self, task_id):
+        return self.tasks[task_id].finalDate
+
+    def get_task_diversity_weight(self, task_id):
+        return 0.5
 
 
 class CustomPlayerModelBridge(PlayerModelBridge):
-	def __init__(self, players):
-		self.players = players
-		self.numPlayers = len(players)
+    def __init__(self, players):
+        self.players = players
+        self.numPlayers = len(players)
 
+    def register_new_player(self, player_id, name, curr_state, past_model_increases_data_frame, curr_model_increases,
+                            preferences_est, real_preferences):
+        self.players[int(player_id)] = PlayerModelMock(player_id, name, curr_state, past_model_increases_data_frame,
+                                                       curr_model_increases, preferences_est, real_preferences)
 
-	def registerNewPlayer(self, playerId, name, currState, pastModelIncreasesDataFrame, currModelIncreases, preferencesEst, realPreferences):
-		self.players[int(playerId)] = PlayerModelMock(playerId, name, currState, pastModelIncreasesDataFrame, currModelIncreases,  preferencesEst, realPreferences)	
-	def reset_player(self, player_id):
-		self.players[int(player_id)].currState.reset()
-		self.players[int(player_id)].pastModelIncreasesDataFrame.reset()
-	def resetState(self, playerId):
-		self.players[int(playerId)].currState.reset()
-	def set_and_save_player_state_to_data_frame(self, player_id, increases, new_state):
-		self.players[int(player_id)].currState = new_state
-		self.players[int(player_id)].pastModelIncreasesDataFrame.push_to_data_frame(increases)
+    def reset_player(self, player_id):
+        self.players[int(player_id)].curr_state.reset()
+        self.players[int(player_id)].past_model_increases_data_frame.reset()
 
-	def setBaseLearningRate(self, playerId, blr):
-		self.players[int(playerId)].baseLearningRate = blr
-	def getBaseLearningRate(self, playerId):
-		return self.players[int(playerId)].baseLearningRate
+    def reset_state(self, playerId):
+        self.players[int(playerId)].curr_state.reset()
 
-	def get_all_player_ids(self):
-		return [str(i) for i in range(self.numPlayers)]
+    def set_and_save_player_state_to_data_frame(self, player_id, increases, new_state):
+        self.players[int(player_id)].curr_state = new_state
+        self.players[int(player_id)].past_model_increases_data_frame.push_to_data_frame(increases)
 
-	def get_player_name(self, player_id):
-		return self.players[int(player_id)].name
-	def get_player_curr_state(self, player_id):
-		return self.players[int(player_id)].currState
-	def getPlayerCurrProfile(self,  playerId):
-		return self.players[int(playerId)].currState.profile
-	def get_player_states_data_frame(self, player_id):
-		return self.players[int(player_id)].pastModelIncreasesDataFrame
-	def get_player_curr_characteristics(self, player_id):
-		return self.players[int(player_id)].currState.characteristics
-	def get_player_preferences_est(self, player_id):
-		return self.players[int(player_id)].preferencesEst
-		
-	def get_player_personality(self, player_id):
-		return "<MOCKED PERSONALITY>"
+    def setBaseLearningRate(self, playerId, blr):
+        self.players[int(playerId)].base_learning_rate = blr
 
-	def set_player_preferences_est(self, player_id, preferencesEst):
-		self.players[int(player_id)].preferencesEst = preferencesEst
+    def getBaseLearningRate(self, playerId):
+        return self.players[int(playerId)].base_learning_rate
 
-	def set_player_characteristics(self, player_id, characteristics):
-		self.players[int(player_id)].currState.characteristics = characteristics
-	def set_player_profile(self, player_id, profile):
-		self.players[int(player_id)].currState.profile = profile
+    def get_all_player_ids(self):
+        return [str(i) for i in range(self.numPlayers)]
 
-	def set_player_group(self, player_id, group):
-		self.players[int(player_id)].currState.group = group
+    def get_player_name(self, player_id):
+        return self.players[int(player_id)].name
 
-	def set_player_tasks(self, player_id, tasks):
-		self.players[int(player_id)].currState.tasks = tasks
+    def get_player_curr_state(self, player_id):
+        return self.players[int(player_id)].curr_state
 
-	def setPlayerRealPreferences(self, playerId, realPreferences):
-		self.players[int(playerId)].realPreferences = realPreferences
-	def getPlayerRealPreferences(self, playerId):
-		return self.players[int(playerId)].realPreferences
+    def get_player_curr_profile(self, player_id):
+        return self.players[int(player_id)].curr_state.profile
+
+    def get_player_states_data_frame(self, player_id):
+        return self.players[int(player_id)].past_model_increases_data_frame
+
+    def get_player_curr_characteristics(self, player_id):
+        return self.players[int(player_id)].curr_state.characteristics
+
+    def get_player_preferences_est(self, player_id):
+        return self.players[int(player_id)].preferencesEst
+
+    def get_player_personality(self, player_id):
+        return "<MOCKED PERSONALITY>"
+
+    def set_player_preferences_est(self, player_id, preferences_est):
+        self.players[int(player_id)].preferences_est = preferences_est
+
+    def set_player_characteristics(self, player_id, characteristics):
+        self.players[int(player_id)].curr_state.characteristics = characteristics
+
+    def set_player_profile(self, player_id, profile):
+        self.players[int(player_id)].curr_state.profile = profile
+
+    def set_player_group(self, player_id, group):
+        self.players[int(player_id)].curr_state.group = group
+
+    def set_player_tasks(self, player_id, tasks):
+        self.players[int(player_id)].curr_state.tasks = tasks
+
+    def set_player_real_preferences(self, player_id, real_preferences):
+        self.players[int(player_id)].real_preferences = real_preferences
+
+    def get_player_real_preferences(self, player_id):
+        return self.players[int(player_id)].real_preferences

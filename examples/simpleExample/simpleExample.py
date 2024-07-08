@@ -48,17 +48,17 @@ print("Setting up the players...")
 
 for x in range(numPlayers):
 	gridTrimAlg = QualitySortPlayerDataTrimAlg(max_num_model_elements= 30, quality_weights= PlayerCharacteristics(ability=0.5, engagement=0.5))
-	playerBridge.registerNewPlayer(
-		playerId = int(x), 
+	playerBridge.register_new_player(
+		player_id= int(x),
 		name = "Player "+str(x+1), 
-		currState = PlayerState(profile = profileTemplate.generate_copy().reset()),
-		pastModelIncreasesDataFrame = PlayerStatesDataFrame(
+		curr_state= PlayerState(profile = profileTemplate.generate_copy().reset()),
+		past_model_increases_data_frame= PlayerStatesDataFrame(
 			interactions_profile_template= profileTemplate.generate_copy().reset(),
 			trim_alg= gridTrimAlg),
-		currModelIncreases = PlayerCharacteristics(), 
-		preferencesEst = profileTemplate.generate_copy().reset(),
-		realPreferences = profileTemplate.generate_copy().reset())
-	playerBridge.resetState(x)
+		curr_model_increases= PlayerCharacteristics(),
+		preferences_est= profileTemplate.generate_copy().reset(),
+		real_preferences= profileTemplate.generate_copy().reset())
+	playerBridge.reset_state(x)
 	playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(True)
 
 	# init players including predicted preferences
@@ -68,7 +68,7 @@ for x in range(numPlayers):
 	# realPreferences = realPersonalities[x]
 	# playerBridge.setPlayerRealPreferences(x, realPreferences)
 
-	playerBridge.setPlayerRealPreferences(x, profileTemplate.randomized())
+	playerBridge.set_player_real_preferences(x, profileTemplate.randomized())
 	playerBridge.setBaseLearningRate(x, 0.5)
 
 	playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
@@ -109,7 +109,7 @@ def simulateReaction(isBootstrap, playerBridge, playerId):
 	return increases
 
 def calcReaction(isBootstrap, playerBridge, state, playerId):
-	preferences = playerBridge.getPlayerRealPreferences(playerId)
+	preferences = playerBridge.get_player_real_preferences(playerId)
 	numDims = len(preferences.dimensions)
 	newStateType = 0 if isBootstrap else 1
 	newState = PlayerState(

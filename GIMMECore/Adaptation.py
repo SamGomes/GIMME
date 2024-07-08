@@ -108,7 +108,7 @@ class Adaptation(object):
         return increases
 
     def calc_reaction(self, state, player_id):
-        preferences = self.player_model_bridge.getPlayerRealPreferences(player_id)
+        preferences = self.player_model_bridge.get_player_real_preferences(player_id)
         num_dims = len(preferences.dimensions)
         new_state = PlayerState(
             state_type=0,
