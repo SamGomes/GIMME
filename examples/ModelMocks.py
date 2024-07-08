@@ -43,25 +43,25 @@ class CustomTaskModelBridge(TaskModelBridge):
         return [str(task.id) for task in self.tasks]
 
     def get_task_interactions_profile(self, task_id):
-        return self.tasks[task_id].profile
+        return self.tasks[int(task_id)].profile
 
     def get_min_task_required_ability(self, task_id):
-        return self.tasks[task_id].min_required_ability
+        return self.tasks[int(task_id)].min_required_ability
 
     def get_min_task_duration(self, task_id):
-        return self.tasks[task_id].min_duration
+        return self.tasks[int(task_id)].min_duration
 
     def get_task_difficulty_weight(self, task_id):
-        return self.tasks[task_id].difficulty_weight
+        return self.tasks[int(task_id)].difficulty_weight
 
     def get_task_profile_weight(self, task_id):
-        return self.tasks[task_id].profile_weight
+        return self.tasks[int(task_id)].profile_weight
 
     def get_task_init_date(self, task_id):
-        return self.tasks[task_id].initDate
+        return self.tasks[int(task_id)].initDate
 
     def get_task_final_date(self, task_id):
-        return self.tasks[task_id].finalDate
+        return self.tasks[int(task_id)].finalDate
 
     def get_task_diversity_weight(self, task_id):
         return 0.5

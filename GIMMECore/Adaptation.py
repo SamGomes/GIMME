@@ -9,15 +9,15 @@ from .ModelBridge.TaskModelBridge import TaskModelBridge
 
 class Adaptation(object):
 
-    # def __init__(self):
-    #     self.initialized = False
-    #     self.player_ids = []
-    #     self.task_ids = []
-    #     self.name = "<adaptation with no name>"
-    #
-    #     self.configs_gen_alg = None
-    #     self.player_model_bridge = None
-    #     self.task_model_bridge = None
+    def __init__(self):
+        self.initialized = False
+        self.player_ids = []
+        self.task_ids = []
+        self.name = "<adaptation with no name>"
+
+        self.configs_gen_alg = None
+        self.player_model_bridge = None
+        self.task_model_bridge = None
 
     def init(self,
              player_model_bridge,

@@ -53,26 +53,33 @@ player_bridge = CustomPlayerModelBridge()
 task_bridge = CustomTaskModelBridge()
 
 
+int_prof_init = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 # create players and tasks
 for x in range(num_players):
     player_bridge.register_new_player(
         player_id=str(x),
-        name=None,
-        curr_state=None,
-        curr_model_increases=None,
-        preferences_est=None,
-        real_preferences=None,
-        past_model_increases_data_frame=None)
+        name="name",
+        curr_state=PlayerState(profile=int_prof_init.generate_copy().reset()),
+        past_model_increases_data_frame=PlayerStatesDataFrame(
+            interactions_profile_template=int_prof_init.generate_copy().reset(),
+            trim_alg=ProximitySortPlayerDataTrimAlg(
+                max_num_model_elements=player_window,
+                epsilon=0.005
+            )
+        ),
+        curr_model_increases=PlayerCharacteristics(),
+        preferences_est=int_prof_init.generate_copy().reset(),
+        real_preferences=int_prof_init.generate_copy().reset())
 
-for x in range(num_players):
+for x in range(num_tasks):
     task_bridge.register_new_task(
         task_id=int(x),
-        description=None,
-        min_required_ability=None,
-        profile=None,
-        min_duration=None,
-        difficulty_weight=None,
-        profile_weight=None)
+        description="description",
+        min_required_ability=random.uniform(0, 1),
+        profile=int_prof_init.generate_copy(),
+        min_duration=datetime.timedelta(minutes=1),
+        difficulty_weight=0.5,
+        profile_weight=0.5)
 
 # ----------------------- [Init Adaptations] --------------------------------
 adaptation_prs = Adaptation()

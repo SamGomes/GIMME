@@ -568,7 +568,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         else:
             self.toolbox.register("mate", self.cx_gimme_simple)
 
-        self.toolbox.register("mutate", self.mut_gimme, pGIPs=self.prob_mut_profiles, pConfig=self.prob_mut_config)
+        self.toolbox.register("mutate", self.mut_gimme, p_profiles=self.prob_mut_profiles, p_configs=self.prob_mut_config)
 
         # self.toolbox.register("select", tools.selRoulette)
         # self.toolbox.register("select", tools.selBest, k=self.numFitSurvivors)
