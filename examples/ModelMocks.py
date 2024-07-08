@@ -10,7 +10,7 @@ class PlayerModelMock(object):
         self.name = name
         self.past_model_increases_data_frame = past_model_increases_data_frame
 
-        self.preferencesEst = {}
+        self.preferences_est = {}
         self.real_preferences = {}
         self.base_learning_rate = None
 
@@ -27,17 +27,20 @@ class TaskModelMock(object):
 
 
 class CustomTaskModelBridge(TaskModelBridge):
-    def __init__(self, tasks):
-        self.tasks = tasks
-        self.num_tasks = len(tasks)
+    def __init__(self):
+        self.tasks = []
 
     def register_new_task(self, task_id, description, min_required_ability, profile, min_duration, difficulty_weight,
                           profile_weight):
-        self.tasks[task_id] = TaskModelMock(task_id, description, min_required_ability, profile, min_duration,
-                                            difficulty_weight, profile_weight)
+        new_task = TaskModelMock(task_id, description, min_required_ability, profile, min_duration,
+                                 difficulty_weight, profile_weight)
+        if int(task_id) < len(self.tasks):
+            self.tasks[task_id] = new_task
+        else:
+            self.tasks.append(new_task)
 
     def get_all_task_ids(self):
-        return [int(i) for i in range(self.num_tasks)]
+        return [str(task.id) for task in self.tasks]
 
     def get_task_interactions_profile(self, task_id):
         return self.tasks[task_id].profile
@@ -65,14 +68,17 @@ class CustomTaskModelBridge(TaskModelBridge):
 
 
 class CustomPlayerModelBridge(PlayerModelBridge):
-    def __init__(self, players):
-        self.players = players
-        self.numPlayers = len(players)
+    def __init__(self):
+        self.players = []
 
     def register_new_player(self, player_id, name, curr_state, past_model_increases_data_frame, curr_model_increases,
                             preferences_est, real_preferences):
-        self.players[int(player_id)] = PlayerModelMock(player_id, name, curr_state, past_model_increases_data_frame,
-                                                       curr_model_increases, preferences_est, real_preferences)
+        new_player = PlayerModelMock(player_id, name, curr_state, past_model_increases_data_frame,
+                                     curr_model_increases, preferences_est, real_preferences)
+        if int(player_id) < len(self.players):
+            self.players[int(player_id)] = new_player
+        else:
+            self.players.append(new_player)
 
     def reset_player(self, player_id):
         self.players[int(player_id)].curr_state.reset()
@@ -92,7 +98,7 @@ class CustomPlayerModelBridge(PlayerModelBridge):
         return self.players[int(player_id)].base_learning_rate
 
     def get_all_player_ids(self):
-        return [str(i) for i in range(self.numPlayers)]
+        return [str(player.id) for player in self.players]
 
     def get_player_name(self, player_id):
         return self.players[int(player_id)].name
@@ -110,7 +116,7 @@ class CustomPlayerModelBridge(PlayerModelBridge):
         return self.players[int(player_id)].curr_state.characteristics
 
     def get_player_preferences_est(self, player_id):
-        return self.players[int(player_id)].preferencesEst
+        return self.players[int(player_id)].preferences_est
 
     def get_player_personality(self, player_id):
         return "<MOCKED PERSONALITY>"

@@ -4,12 +4,11 @@ import datetime
 sys.path.insert(1, sys.path[0].rsplit('/', 2)[0])
 
 # hack for fetching the ModelMocks package on the previous directory
-# from pathlib import Path
-#
-# sys.path.insert(1, str(Path(sys.path[0]).parent))
+from pathlib import Path
+sys.path.insert(1, str(Path(sys.path[0]).parent))
 
 from GIMMECore import *
-from ..ModelMocks import *
+from ModelMocks import *
 from LogManager import *
 
 num_runs = 5
@@ -46,21 +45,34 @@ new_path = sys.path[0] + "/analyzer/results/"
 if not os.path.exists(new_path):
     os.makedirs(new_path)
 
-# ----------------------- [Init Models] --------------------------------
-print("Initializing mocked models...")
-
-list_players = []
-for num_players_to_test in range(4, 25, 4):
-    list_players.append([0 for x in range(num_players_to_test)])
-
-players = [0 for x in range(num_players)]
-tasks = [0 for x in range(num_tasks)]
 
 # ----------------------- [Init Model Bridges] --------------------------------
 print("Initializing model bridges...")
 
-player_bridge = CustomPlayerModelBridge(players)
-task_bridge = CustomTaskModelBridge(tasks)
+player_bridge = CustomPlayerModelBridge()
+task_bridge = CustomTaskModelBridge()
+
+
+# create players and tasks
+for x in range(num_players):
+    player_bridge.register_new_player(
+        player_id=str(x),
+        name=None,
+        curr_state=None,
+        curr_model_increases=None,
+        preferences_est=None,
+        real_preferences=None,
+        past_model_increases_data_frame=None)
+
+for x in range(num_players):
+    task_bridge.register_new_task(
+        task_id=int(x),
+        description=None,
+        min_required_ability=None,
+        profile=None,
+        min_duration=None,
+        difficulty_weight=None,
+        profile_weight=None)
 
 # ----------------------- [Init Adaptations] --------------------------------
 adaptation_prs = Adaptation()
@@ -434,25 +446,25 @@ def execution_phase(num_runs, player_bridge, max_num_iterations, starting_i, cur
             increases = simulate_reaction(player_bridge, x)
             log_manager.writeToLog("", "results",
                                    {
-                                      "simsID": str(sims_id),
-                                      "algorithm": adaptation.name,
-                                      "run": str(curr_run),
-                                      "iteration": str(i),
-                                      "playerID": str(x),
-                                      "abilityInc": str(increases.characteristics.ability),
-                                      "engagementInc": str(increases.characteristics.engagement),
-                                      "profDiff": str(player_bridge.get_player_real_preferences(x).distance_between(
-                                          player_bridge.get_player_curr_profile(x))),
-                                      "iterationElapsedTime": str(deltaTime)
-                                  })
+                                       "simsID": str(sims_id),
+                                       "algorithm": adaptation.name,
+                                       "run": str(curr_run),
+                                       "iteration": str(i),
+                                       "playerID": str(x),
+                                       "abilityInc": str(increases.characteristics.ability),
+                                       "engagementInc": str(increases.characteristics.engagement),
+                                       "profDiff": str(player_bridge.get_player_real_preferences(x).distance_between(
+                                           player_bridge.get_player_curr_profile(x))),
+                                       "iterationElapsedTime": str(deltaTime)
+                                   })
         i += 1
 
 
-def execute_simulations(num_runs, prof_template, max_num_training_iterations, first_training_i, num_real_iterations,
+def execute_simulations(num_runs, prof_template, max_num_training_iterations, num_real_iterations,
                         first_real_i,
-                        player_bridge, task_bridge, adaptation, estimators_accuracy=None,
+                        player_bridge, task_bridge, adaptation, est_error=None,
                         tests_extreme_values=None):
-    estimators_accuracy = 0.1 if estimators_accuracy is None else estimators_accuracy
+    est_error = 0.1 if est_error is None else est_error
     tests_extreme_values = False if tests_extreme_values is None else tests_extreme_values
 
     # adaptationName = adaptation.name
@@ -514,7 +526,7 @@ def execute_simulations(num_runs, prof_template, max_num_training_iterations, fi
             curr_real_preferences = all_real_prefs[x]
             for d in range(num_int_dims):
                 profile.dimensions["dim_" + str(d)] = numpy.clip(
-                    random.gauss(curr_real_preferences.dimensions["dim_" + str(d)], estimators_accuracy), 0, 1)
+                    random.gauss(curr_real_preferences.dimensions["dim_" + str(d)], est_error), 0, 1)
             all_questionnaire_prefs.append(profile)
 
             # init players including predicted preferences
@@ -572,128 +584,148 @@ if __name__ == '__main__':
     # if (inputtedText== "Q"):
     # exit()
 
-    # Explore Base GIMME
+    # - - - - - - - - - - - - - - Explore Base GIMME - - - - - - - - - - - - - -
     adaptation_prs.name = "Random"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_random)
 
     adaptation_prs.name = "GIMME_PRS"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_prs)
 
     adaptation_evl.name = "GIMME_GA"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_evl)
 
     adaptation_odpip.name = "GIMME_ODPIP"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_odpip)
 
     adaptation_tab_odpip.name = "GIMME_ODPIP_Tabular"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_tab_odpip)
 
-    # 	adaptationCLink.name = "GIMME_CLink"
-    # 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-    # 	   	playerBridge, taskBridge, adaptationCLink)
-    #
-    # 	adaptationTabularCLink.name = "GIMME_CLink_Tabular"
-    # 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-    # 		playerBridge, taskBridge, adaptationTabularCLink)
-
-    # Explore GIMME-Bootstrap
-    adaptation_odpip.name = "GIMME_ODPIP_Bootstrap"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    adaptation_clink.name = "GIMME_CLink"
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, estimators_accuracy=0.1)
+                        player_bridge, task_bridge, adaptation_clink)
+
+    adaptation_tab_clink.name = "GIMME_CLink_Tabular"
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_tab_clink)
+
+    # - - - - - - - - - - - - - - Explore GIMME-Bootstrap - - - - - - - - - - - - - -
+    adaptation_odpip.name = "GIMME_ODPIP_Bootstrap"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, est_error=0.1)
 
     adaptation_odpip.name = "GIMME_ODPIP_Bootstrap_HighAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, estimators_accuracy=0.05)
+                        player_bridge, task_bridge, adaptation_odpip, est_error=0.05)
 
     adaptation_odpip.name = "GIMME_ODPIP_Bootstrap_LowAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, estimators_accuracy=0.2)
+                        player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
 
-    # adaptationCLink.name = "GIMME_CLink_Bootstrap"
-    # executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-    # 				playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.1)
-    #
-    # adaptationCLink.name = "GIMME_CLink_Bootstrap_HighAcc"
-    # executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-    # 				playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.05)
-    #
-    # adaptationCLink.name = "GIMME_CLink_Bootstrap_LowAcc"
-    # executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
-    # 				playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.2)
+    adaptation_clink.name = "GIMME_CLink_Bootstrap"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, est_error=0.1)
+
+    adaptation_clink.name = "GIMME_CLink_Bootstrap_HighAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, est_error=0.05)
+
+    adaptation_clink.name = "GIMME_CLink_Bootstrap_LowAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
 
     adaptation_evl.name = "GIMME_GA_Bootstrap"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_evl, estimators_accuracy=0.1)
+                        player_bridge, task_bridge, adaptation_evl, est_error=0.1)
 
     adaptation_evl.name = "GIMME_GA_Bootstrap_HighAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_evl, estimators_accuracy=0.05)
+                        player_bridge, task_bridge, adaptation_evl, est_error=0.05)
 
     adaptation_evl.name = "GIMME_GA_Bootstrap_LowAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_evl, estimators_accuracy=0.2)
+                        player_bridge, task_bridge, adaptation_evl, est_error=0.2)
 
     adaptation_prs.name = "GIMME_PRS_Bootstrap"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_prs, estimators_accuracy=0.1)
+                        player_bridge, task_bridge, adaptation_prs, est_error=0.1)
 
     adaptation_prs.name = "GIMME_PRS_Bootstrap_HighAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_prs, estimators_accuracy=0.05)
+                        player_bridge, task_bridge, adaptation_prs, est_error=0.05)
 
     adaptation_prs.name = "GIMME_PRS_Bootstrap_LowAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
                         max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_prs, estimators_accuracy=0.2)
+                        player_bridge, task_bridge, adaptation_prs, est_error=0.2)
 
-    # Explore GIP number of dimensions
-    execute_simulations(num_runs, int_prof_1d, 0, 0, num_real_iterations, max_num_training_iterations,
+    # - - - - - - - - - - - - - - Explore GIP number of dimensions - - - - - - - - - - - - - -
+    execute_simulations(num_runs, int_prof_1d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_evl_1d)
 
-    execute_simulations(num_runs, int_prof_3d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_3d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_evl_3d)
 
-    execute_simulations(num_runs, int_prof_4d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_4d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_evl_4d)
 
-    execute_simulations(num_runs, int_prof_5d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_5d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_evl_5d)
 
-    execute_simulations(num_runs, int_prof_6d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_6d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_evl_6d)
 
-    # Explore GIMME with extreme profiles
-    # adaptationCLink.name = "GIMME_CLink_EP"
-    # executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-    # 	playerBridge, taskBridge, adaptationCLink, considerExtremePreferencesValues = True)
+    # - - - - - - - - - - - - - - Explore GIMME with extreme profiles - - - - - - - - - - - - - -
+    adaptation_clink.name = "GIMME_CLink_EP"
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_clink, tests_extreme_values=True)
 
     adaptation_odpip.name = "GIMME_ODPIP_EP"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_odpip, tests_extreme_values=True)
 
     adaptation_tab_odpip.name = "GIMME_Tabular_ODPIP_EP"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_tab_odpip, tests_extreme_values=True)
 
     adaptation_evl.name = "GIMME_GA_EP"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_evl, tests_extreme_values=True)
 
     adaptation_prs.name = "GIMME_PRS_EP"
-    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_prs, tests_extreme_values=True)
 
     print("Done!                        ")

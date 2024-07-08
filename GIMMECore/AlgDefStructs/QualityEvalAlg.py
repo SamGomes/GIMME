@@ -133,7 +133,7 @@ class TabQualityEvalAlg(QualityEvalAlg):
     def __init__(self, player_model_bridge):
         super().__init__(player_model_bridge)
         self.player_pref_estimates = {}
-        self.player_ids = player_model_bridge.get_player_ids()
+        self.player_ids = player_model_bridge.get_all_player_ids()
 
     def get_player_preferences_estimations(self):
         for player in self.player_ids:
