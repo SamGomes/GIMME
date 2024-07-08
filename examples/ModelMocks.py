@@ -85,11 +85,11 @@ class CustomPlayerModelBridge(PlayerModelBridge):
         self.players[int(player_id)].curr_state = new_state
         self.players[int(player_id)].past_model_increases_data_frame.push_to_data_frame(increases)
 
-    def setBaseLearningRate(self, playerId, blr):
-        self.players[int(playerId)].base_learning_rate = blr
+    def set_base_learning_rate(self, player_id, blr):
+        self.players[int(player_id)].base_learning_rate = blr
 
-    def getBaseLearningRate(self, playerId):
-        return self.players[int(playerId)].base_learning_rate
+    def get_base_learning_rate(self, player_id):
+        return self.players[int(player_id)].base_learning_rate
 
     def get_all_player_ids(self):
         return [str(i) for i in range(self.numPlayers)]

@@ -122,7 +122,7 @@ class Adaptation(object):
         if new_state.characteristics.engagement > 1:
             raise ValueError('Something went wrong. Engagement is > 1.')
         ability_increase_sim = (
-                new_state.characteristics.engagement * self.player_model_bridge.getBaseLearningRate(player_id))
+                new_state.characteristics.engagement * self.player_model_bridge.get_base_learning_rate(player_id))
         new_state.characteristics.ability = new_state.characteristics.ability + ability_increase_sim
         return new_state
 

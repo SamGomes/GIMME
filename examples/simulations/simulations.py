@@ -1,386 +1,372 @@
-import random
-import json
-import time
-import matplotlib.pyplot as plt
-import math
-import os
 import sys
 import datetime
-import numpy
-
-import matplotlib.pyplot as plt
-from numpy import array
-import matplotlib.collections as collections
 
 sys.path.insert(1, sys.path[0].rsplit('/', 2)[0])
 
-#hack for fetching the ModelMocks package on the previous directory
-from pathlib import Path
-
-sys.path.insert(1, str(Path(sys.path[0]).parent))
+# hack for fetching the ModelMocks package on the previous directory
+# from pathlib import Path
+#
+# sys.path.insert(1, str(Path(sys.path[0]).parent))
 
 from GIMMECore import *
-from ModelMocks import *
+from ..ModelMocks import *
 from LogManager import *
 
-numRuns = 5
-maxNumTrainingIterations = 10
-numRealIterations = 10
-preferredNumberOfPlayersPerGroup = 3
+num_runs = 5
+max_num_training_iterations = 10
+num_real_iterations = 10
+preferred_num_players_per_group = 3
 
-playerWindow = 10
-numPlayers = 15
-numTasks = 1
+player_window = 10
+num_players = 15
+num_tasks = 1
 
 # ----------------------- [Init PRS] --------------------------------
-numberOfConfigChoices = 100
-numTestedPlayerProfilesInEst = 500
+num_config_choices = 100
+num_tested_profiles_in_est = 500
 
 # ----------------------- [Init GA] --------------------------------
-initialPopulationSize = 100
-numberOfEvolutionsPerIteration = 50
+initial_population_size = 100
+num_evolutions_per_iteration = 50
 
-probOfCross = 0.65
-probOfMutation = 0.15
-# probReproduction = 1 - (probOfCross + probOfMutation) = 0.15
+prob_cross = 0.65
+prob_mut = 0.15
+# prob_reproduction = 1 - (prob_cross + prob_mut) = 0.15
 
-probOfMutationConfig = 0.8
-probOfMutationGIPs = 0.4
+prob_mut_config = 0.8
+prob_mut_profiles = 0.4
 
-numSurvivors = 10
-numChildrenPerIteration = 100
+num_survivors = 10
+num_children_per_iteration = 100
 
-simsID = str(os.getpid())
+sims_id = str(os.getpid())
 
-startTime = str(datetime.datetime.now())
-newpath = sys.path[0] + "/analyzer/results/"
-if not os.path.exists(newpath):
-    os.makedirs(newpath)
+start_time = str(datetime.datetime.now())
+new_path = sys.path[0] + "/analyzer/results/"
+if not os.path.exists(new_path):
+    os.makedirs(new_path)
 
 # ----------------------- [Init Models] --------------------------------
-print("Initing mocked models...")
+print("Initializing mocked models...")
 
-listPlayers = []
-for numPlayersToTest in range(4, 25, 4):
-    listPlayers.append([0 for x in range(numPlayersToTest)])
+list_players = []
+for num_players_to_test in range(4, 25, 4):
+    list_players.append([0 for x in range(num_players_to_test)])
 
-players = [0 for x in range(numPlayers)]
-tasks = [0 for x in range(numTasks)]
+players = [0 for x in range(num_players)]
+tasks = [0 for x in range(num_tasks)]
 
 # ----------------------- [Init Model Bridges] --------------------------------
-print("Initing model bridges...")
+print("Initializing model bridges...")
 
-playerBridge = CustomPlayerModelBridge(players)
-taskBridge = CustomTaskModelBridge(tasks)
+player_bridge = CustomPlayerModelBridge(players)
+task_bridge = CustomTaskModelBridge(tasks)
 
 # ----------------------- [Init Adaptations] --------------------------------
-adaptationPRS = Adaptation()
-listAdaptationPRS = []
-adaptationGA_scx = Adaptation()
-adaptationGA = Adaptation()
-listAdaptationGA = []
-adaptationODPIP = Adaptation()
-listAdaptationODPIP = []
-adaptationTabularODPIP = Adaptation()
-listAdaptationTabularODPIP = []
-adaptationCLink = Adaptation()
-listAdaptationCLink = []
-adaptationTabularCLink = Adaptation()
-listAdaptationTabularCLink = []
+adaptation_prs = Adaptation()
+list_adaptation_prs = []
+adaptation_evl_scx = Adaptation()
+adaptation_evl = Adaptation()
+list_adaptation_ga = []
+adaptation_odpip = Adaptation()
+list_adaptation_odpip = []
+adaptation_tab_odpip = Adaptation()
+list_adaptation_tabular_odpip = []
+adaptation_clink = Adaptation()
+list_adaptation_clink = []
+adaptation_tab_clink = Adaptation()
+list_adaptation_tabular_clink = []
 
-adaptationEvl1D = Adaptation()
-adaptationEvl3D = Adaptation()
-adaptationEvl4D = Adaptation()
-adaptationEvl5D = Adaptation()
-adaptationEvl6D = Adaptation()
+adaptation_evl_1d = Adaptation()
+adaptation_evl_3d = Adaptation()
+adaptation_evl_4d = Adaptation()
+adaptation_evl_5d = Adaptation()
+adaptation_evl_6d = Adaptation()
 
-adaptationRandom = Adaptation()
-listAdaptationRandom = []
-adaptationAccurate = Adaptation()
+adaptation_random = Adaptation()
+list_adaptation_random = []
 
-allRealPreferences = []
-allQuestionnairePreferences = []
+all_real_preferences = []
+all_questionnaire_preferences = []
 
 # ----------------------- [Init Log Manager] --------------------------------
 print("Initing .csv log manager...")
-logManager = CSVLogManager(newpath, simsID)
-# logManager = SilentLogManager()
+log_manager = CSVLogManager(new_path, sims_id)
+# log_manager = SilentLogManager()
 
 
 # ----------------------- [Init Algorithms] --------------------------------
 print("Initing algorithms...")
 
-syntergyTablePath = sys.path[0] + "/synergyTable.txt"
+synergy_table_path = sys.path[0] + "/synergyTable.txt"
 
-qualityEvalAlg = KNNRegQualityEvalAlg(player_model_bridge=playerBridge, k=5)
-tabularQualityEvalAlg = SynergiesTabQualityEvalAlg(player_model_bridge=playerBridge,
-                                                   task_model_bridge=taskBridge,
-                                                   syntergy_table_path=syntergyTablePath)
+quality_eval_alg = KNNRegQualityEvalAlg(player_model_bridge=player_bridge, k=5)
+tab_quality_eval_alg = SynergiesTabQualityEvalAlg(player_model_bridge=player_bridge,
+                                                  synergy_table_path=synergy_table_path)
 
 # - - - - - 
-intProfTemplate2D = InteractionsProfile({"dim_0": 0, "dim_1": 0})
+int_prof_2d = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 
-evolutionaryConfigsAlg = EvolutionaryConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate2D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
-    initial_population_size=initialPopulationSize,
-    num_evolutions_per_iteration=numberOfEvolutionsPerIteration,
+evl_configs_alg = EvolutionaryConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    initial_population_size=initial_population_size,
+    num_evolutions_per_iteration=num_evolutions_per_iteration,
 
-    prob_cross=probOfCross,
-    prob_mut=probOfMutation,
+    prob_cross=prob_cross,
+    prob_mut=prob_mut,
 
-    prob_mut_config=probOfMutationConfig,
-    prob_mut_profiles=probOfMutationGIPs,
+    prob_mut_config=prob_mut_config,
+    prob_mut_profiles=prob_mut_profiles,
 
-    num_children_per_iteration=numChildrenPerIteration,
-    num_survivors=numSurvivors,
+    num_children_per_iteration=num_children_per_iteration,
+    num_survivors=num_survivors,
 
     cx_op="order",
     # jointPlayerConstraints="[15,1];[3,4]",
     # separatedPlayerConstraints="[0,1]"
 )
-adaptationGA.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
-    configs_gen_alg=evolutionaryConfigsAlg,
+adaptation_evl.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=evl_configs_alg,
     name="GIMME_GA"
 )
 
-ODPIPconfigsAlg = ODPIPConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate2D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
+odpip_configs_alg = ODPIPConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
     pers_est_alg=ExplorationPreferencesEstAlg(
-        player_model_bridge=playerBridge,
-        interactions_profile_template=intProfTemplate2D.generate_copy(),
-        quality_eval_alg=qualityEvalAlg,
-        num_tested_player_profiles=numTestedPlayerProfilesInEst),
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup
+        player_model_bridge=player_bridge,
+        interactions_profile_template=int_prof_2d.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        num_tested_player_profiles=num_tested_profiles_in_est),
+    preferred_number_of_players_per_group=preferred_num_players_per_group
 )
-adaptationODPIP.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
-    configs_gen_alg=ODPIPconfigsAlg,
+adaptation_odpip.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=odpip_configs_alg,
     name="GIMME_ODPIP"
 )
 
-tabularODPIPconfigsAlg = ODPIPConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate2D.generate_copy(),
-    quality_eval_alg=tabularQualityEvalAlg,
+tab_odpip_configs_alg = ODPIPConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    quality_eval_alg=tab_quality_eval_alg,
     pers_est_alg=ExplorationPreferencesEstAlg(
-        player_model_bridge=playerBridge,
-        interactions_profile_template=intProfTemplate2D.generate_copy(),
-        quality_eval_alg=qualityEvalAlg,
-        num_tested_player_profiles=numTestedPlayerProfilesInEst),
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup
-    # preferredNumberOfPlayersPerGroup = preferredNumberOfPlayersPerGroup,
+        player_model_bridge=player_bridge,
+        interactions_profile_template=int_prof_2d.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        num_tested_player_profiles=num_tested_profiles_in_est),
+    preferred_number_of_players_per_group=preferred_num_players_per_group
     #jointPlayerConstraints="[15,1];[2,7];[3,4];[12,13];[14,15];[0,12];[9,15]",
     # separatedPlayerConstraints="[0,1]"
 )
-adaptationTabularODPIP.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
-    configs_gen_alg=tabularODPIPconfigsAlg,
+adaptation_tab_odpip.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=tab_odpip_configs_alg,
     name="GIMME_ODPIP"
 )
 
-CLinkconfigsAlg = CLinkConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate2D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
+clink_configs_alg = CLinkConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
     pers_est_alg=ExplorationPreferencesEstAlg(
-        player_model_bridge=playerBridge,
-        interactions_profile_template=intProfTemplate2D.generate_copy(),
-        quality_eval_alg=qualityEvalAlg,
-        num_tested_player_profiles=numTestedPlayerProfilesInEst),
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup
+        player_model_bridge=player_bridge,
+        interactions_profile_template=int_prof_2d.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        num_tested_player_profiles=num_tested_profiles_in_est),
+    preferred_number_of_players_per_group=preferred_num_players_per_group
 )
-adaptationCLink.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
-    configs_gen_alg=CLinkconfigsAlg,
+adaptation_clink.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=clink_configs_alg,
     name="GIMME_CLink"
 )
 
-tabularCLinkconfigsAlg = CLinkConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate2D.generate_copy(),
-    quality_eval_alg=tabularQualityEvalAlg,
+tab_clink_configs_alg = CLinkConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    quality_eval_alg=tab_quality_eval_alg,
     pers_est_alg=ExplorationPreferencesEstAlg(
-        player_model_bridge=playerBridge,
-        interactions_profile_template=intProfTemplate2D.generate_copy(),
-        quality_eval_alg=qualityEvalAlg,
-        num_tested_player_profiles=numTestedPlayerProfilesInEst),
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup
+        player_model_bridge=player_bridge,
+        interactions_profile_template=int_prof_2d.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        num_tested_player_profiles=num_tested_profiles_in_est),
+    preferred_number_of_players_per_group=preferred_num_players_per_group
 )
-adaptationTabularCLink.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
-    configs_gen_alg=tabularCLinkconfigsAlg,
+adaptation_tab_clink.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=tab_clink_configs_alg,
     name="GIMME_CLink_Tabular"
 )
 
-prsConfigsAlg = PureRandomSearchConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate2D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
+prs_configs_alg = PureRandomSearchConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
     pers_est_alg=ExplorationPreferencesEstAlg(
-        player_model_bridge=playerBridge,
-        interactions_profile_template=intProfTemplate2D.generate_copy(),
-        quality_eval_alg=qualityEvalAlg,
-        num_tested_player_profiles=numTestedPlayerProfilesInEst),
-    number_of_config_choices=numberOfConfigChoices,
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
+        player_model_bridge=player_bridge,
+        interactions_profile_template=int_prof_2d.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        num_tested_player_profiles=num_tested_profiles_in_est),
+    number_of_config_choices=num_config_choices,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
     # jointPlayerConstraints="[15,1]",
     # separatedPlayerConstraints="[0,1]"
 )
-adaptationPRS.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
-    configs_gen_alg=prsConfigsAlg,
+adaptation_prs.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=prs_configs_alg,
     name="GIMME_PRS"
 )
 
-randomConfigsAlg = RandomConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate2D.generate_copy(),
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
+random_configs_alg = RandomConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
     # jointPlayerConstraints="[15,1]",
     # separatedPlayerConstraints="[0,1]"
 )
-adaptationRandom.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
-    configs_gen_alg=randomConfigsAlg,
+adaptation_random.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=random_configs_alg,
     name="Random"
 )
 
 # - - - - -
-intProfTemplate1D = InteractionsProfile({"dim_0": 0})
+int_prof_1d = InteractionsProfile({"dim_0": 0})
 evolutionaryConfigsAlg1D = EvolutionaryConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate1D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
-    initial_population_size=initialPopulationSize,
-    num_evolutions_per_iteration=numberOfEvolutionsPerIteration,
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_1d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    initial_population_size=initial_population_size,
+    num_evolutions_per_iteration=num_evolutions_per_iteration,
 
-    prob_cross=probOfCross,
-    prob_mut=probOfMutation,
+    prob_cross=prob_cross,
+    prob_mut=prob_mut,
 
-    prob_mut_config=probOfMutationConfig,
-    prob_mut_profiles=probOfMutationGIPs,
+    prob_mut_config=prob_mut_config,
+    prob_mut_profiles=prob_mut_profiles,
 
-    num_children_per_iteration=numChildrenPerIteration,
-    num_survivors=numSurvivors
+    num_children_per_iteration=num_children_per_iteration,
+    num_survivors=num_survivors
 )
-adaptationEvl1D.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
+adaptation_evl_1d.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
     configs_gen_alg=evolutionaryConfigsAlg1D,
     name="GIMME_GA1D"
 )
 
 # GIMME is the same as GIMME 2D
-intProfTemplate3D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0})
+int_prof_3d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0})
 evolutionaryConfigsAlg3D = EvolutionaryConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate3D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
-    initial_population_size=initialPopulationSize,
-    num_evolutions_per_iteration=numberOfEvolutionsPerIteration,
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_3d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    initial_population_size=initial_population_size,
+    num_evolutions_per_iteration=num_evolutions_per_iteration,
 
-    prob_cross=probOfCross,
-    prob_mut=probOfMutation,
+    prob_cross=prob_cross,
+    prob_mut=prob_mut,
 
-    prob_mut_config=probOfMutationConfig,
-    prob_mut_profiles=probOfMutationGIPs,
+    prob_mut_config=prob_mut_config,
+    prob_mut_profiles=prob_mut_profiles,
 
-    num_children_per_iteration=numChildrenPerIteration,
-    num_survivors=numSurvivors
+    num_children_per_iteration=num_children_per_iteration,
+    num_survivors=num_survivors
 )
-adaptationEvl3D.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
+adaptation_evl_3d.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
     configs_gen_alg=evolutionaryConfigsAlg3D,
     name="GIMME_GA3D"
 )
 
-intProfTemplate4D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0})
+int_prof_4d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0})
 evolutionaryConfigsAlg4D = EvolutionaryConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate4D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
-    initial_population_size=initialPopulationSize,
-    num_evolutions_per_iteration=numberOfEvolutionsPerIteration,
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_4d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    initial_population_size=initial_population_size,
+    num_evolutions_per_iteration=num_evolutions_per_iteration,
 
-    prob_cross=probOfCross,
-    prob_mut=probOfMutation,
+    prob_cross=prob_cross,
+    prob_mut=prob_mut,
 
-    prob_mut_config=probOfMutationConfig,
-    prob_mut_profiles=probOfMutationGIPs,
+    prob_mut_config=prob_mut_config,
+    prob_mut_profiles=prob_mut_profiles,
 
-    num_children_per_iteration=numChildrenPerIteration,
-    num_survivors=numSurvivors
+    num_children_per_iteration=num_children_per_iteration,
+    num_survivors=num_survivors
 )
-adaptationEvl4D.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
+adaptation_evl_4d.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
     configs_gen_alg=evolutionaryConfigsAlg4D,
     name="GIMME_GA4D"
 )
 
-intProfTemplate5D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0})
+int_prof_5d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0})
 evolutionaryConfigsAlg5D = EvolutionaryConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate5D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
-    initial_population_size=initialPopulationSize,
-    num_evolutions_per_iteration=numberOfEvolutionsPerIteration,
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_5d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    initial_population_size=initial_population_size,
+    num_evolutions_per_iteration=num_evolutions_per_iteration,
 
-    prob_cross=probOfCross,
-    prob_mut=probOfMutation,
+    prob_cross=prob_cross,
+    prob_mut=prob_mut,
 
-    prob_mut_config=probOfMutationConfig,
-    prob_mut_profiles=probOfMutationGIPs,
+    prob_mut_config=prob_mut_config,
+    prob_mut_profiles=prob_mut_profiles,
 
-    num_children_per_iteration=numChildrenPerIteration,
-    num_survivors=numSurvivors
+    num_children_per_iteration=num_children_per_iteration,
+    num_survivors=num_survivors
 )
-adaptationEvl5D.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
+adaptation_evl_5d.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
     configs_gen_alg=evolutionaryConfigsAlg5D,
     name="GIMME_GA5D"
 )
 
-intProfTemplate6D = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0, "dim_5": 0})
+int_prof_6d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0, "dim_5": 0})
 evolutionaryConfigsAlg6D = EvolutionaryConfigsGenAlg(
-    player_model_bridge=playerBridge,
-    interactions_profile_template=intProfTemplate6D.generate_copy(),
-    quality_eval_alg=qualityEvalAlg,
-    preferred_number_of_players_per_group=preferredNumberOfPlayersPerGroup,
-    initial_population_size=initialPopulationSize,
-    num_evolutions_per_iteration=numberOfEvolutionsPerIteration,
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_6d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    initial_population_size=initial_population_size,
+    num_evolutions_per_iteration=num_evolutions_per_iteration,
 
-    prob_cross=probOfCross,
-    prob_mut=probOfMutation,
+    prob_cross=prob_cross,
+    prob_mut=prob_mut,
 
-    prob_mut_config=probOfMutationConfig,
-    prob_mut_profiles=probOfMutationGIPs,
+    prob_mut_config=prob_mut_config,
+    prob_mut_profiles=prob_mut_profiles,
 
-    num_children_per_iteration=numChildrenPerIteration,
-    num_survivors=numSurvivors
+    num_children_per_iteration=num_children_per_iteration,
+    num_survivors=num_survivors
 )
-adaptationEvl6D.init(
-    player_model_bridge=playerBridge,
-    task_model_bridge=taskBridge,
+adaptation_evl_6d.init(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
     configs_gen_alg=evolutionaryConfigsAlg6D,
     name="GIMME_GA6D"
 )
@@ -388,188 +374,180 @@ adaptationEvl6D.init(
 
 # ----------------------- [Simulation Methods] --------------------------------
 
-def simulateReaction(playerBridge, currIteration, playerId):
-    currState = playerBridge.get_player_curr_state(playerId)
-    newState = calcReaction(
-        playerBridge=playerBridge,
-        state=currState,
-        playerId=playerId,
-        currIteration=currIteration)
+def simulate_reaction(player_bridge, player_id):
+    curr_state = player_bridge.get_player_curr_state(player_id)
+    new_state = calc_reaction(
+        player_bridge=player_bridge,
+        state=curr_state,
+        player_id=player_id)
 
-    increases = PlayerState(state_type=newState.stateType)
-    increases.profile = currState.profile
+    increases = PlayerState(state_type=new_state.state_type)
+    increases.profile = curr_state.profile
     increases.characteristics = PlayerCharacteristics(
-        ability=(newState.characteristics.ability - currState.characteristics.ability),
-        engagement=newState.characteristics.engagement)
-    playerBridge.set_and_save_player_state_to_data_frame(playerId, increases, newState)
+        ability=(new_state.characteristics.ability - curr_state.characteristics.ability),
+        engagement=new_state.characteristics.engagement)
+    player_bridge.set_and_save_player_state_to_data_frame(player_id, increases, new_state)
     return increases
 
 
-def calcReaction(playerBridge, state, playerId, currIteration):
-    preferences = playerBridge.get_player_real_preferences(playerId)
-    numDims = len(preferences.dimensions)
-    newState = PlayerState(
+def calc_reaction(player_bridge, state, player_id):
+    preferences = player_bridge.get_player_real_preferences(player_id)
+    num_dims = len(preferences.dimensions)
+    new_state = PlayerState(
         state_type=1,
         characteristics=PlayerCharacteristics(
             ability=state.characteristics.ability,
             engagement=state.characteristics.engagement
         ),
         profile=state.profile)
-    newState.characteristics.engagement = 1 - (
-                preferences.distance_between(state.profile) / math.sqrt(numDims))  #between 0 and 1
-    if newState.characteristics.engagement > 1:
+    new_state.characteristics.engagement = 1 - (
+            preferences.distance_between(state.profile) / math.sqrt(num_dims))  #between 0 and 1
+    if new_state.characteristics.engagement > 1:
         breakpoint()
-    abilityIncreaseSim = (newState.characteristics.engagement * playerBridge.getBaseLearningRate(playerId))
-    newState.characteristics.ability = newState.characteristics.ability + abilityIncreaseSim
-    return newState
+    ability_increase_sim = (new_state.characteristics.engagement * player_bridge.get_base_learning_rate(player_id))
+    new_state.characteristics.ability = new_state.characteristics.ability + ability_increase_sim
+    return new_state
 
 
-def executionPhase(numRuns, playerBridge, maxNumIterations, startingI, currRun, adaptation):
-    if (maxNumIterations <= 0):
+def execution_phase(num_runs, player_bridge, max_num_iterations, starting_i, curr_run, adaptation):
+    if max_num_iterations <= 0:
         return
 
-    numPlayersToTest = len(playerBridge.get_all_player_ids())
+    num_tested_players = len(player_bridge.get_all_player_ids())
 
-    i = startingI
-    while (i < maxNumIterations + startingI):
+    i = starting_i
+    while i < max_num_iterations + starting_i:
 
         if adaptation.name == "accurate":
             adaptation.configs_gen_alg.updateCurrIteration(i)
 
-        print("Process [" + simsID + "] performing step (" + str(i - startingI) + " of " + str(
-            maxNumIterations) + ") of run (" + str(currRun + 1) + " of " + str(numRuns) + ") of algorithm \"" + str(
+        print("Process [" + sims_id + "] performing step (" + str(i - starting_i) + " of " + str(
+            max_num_iterations) + ") of run (" + str(curr_run + 1) + " of " + str(num_runs) + ") of algorithm \"" + str(
             adaptation.name) + "\"...                                                             ", end="\r")
 
         start = time.time()
-        groups = adaptation.iterate()
+        adaptation.iterate()
         end = time.time()
         deltaTime = (end - start)
 
-        for x in range(numPlayersToTest):
-            increases = simulateReaction(playerBridge, i, x)
-            logManager.writeToLog("", "results",
-                                  {
-                                      "simsID": str(simsID),
+        for x in range(num_tested_players):
+            increases = simulate_reaction(player_bridge, x)
+            log_manager.writeToLog("", "results",
+                                   {
+                                      "simsID": str(sims_id),
                                       "algorithm": adaptation.name,
-                                      "run": str(currRun),
+                                      "run": str(curr_run),
                                       "iteration": str(i),
                                       "playerID": str(x),
                                       "abilityInc": str(increases.characteristics.ability),
                                       "engagementInc": str(increases.characteristics.engagement),
-                                      "profDiff": str(playerBridge.get_player_real_preferences(x).distance_between(
-                                          playerBridge.get_player_curr_profile(x))),
+                                      "profDiff": str(player_bridge.get_player_real_preferences(x).distance_between(
+                                          player_bridge.get_player_curr_profile(x))),
                                       "iterationElapsedTime": str(deltaTime)
                                   })
         i += 1
 
 
-def executeSimulations(numRuns, profileTemplate, maxNumTrainingIterations, firstTrainingI, numRealIterations,
-                       firstRealI, \
-                       playerBridge, taskBridge, adaptation, estimatorsAccuracy=None,
-                       considerExtremePreferencesValues=None):
-    estimatorsAccuracy = 0.1 if estimatorsAccuracy == None else estimatorsAccuracy
-    considerExtremePreferencesValues = False if considerExtremePreferencesValues == None else considerExtremePreferencesValues
+def execute_simulations(num_runs, prof_template, max_num_training_iterations, first_training_i, num_real_iterations,
+                        first_real_i,
+                        player_bridge, task_bridge, adaptation, estimators_accuracy=None,
+                        tests_extreme_values=None):
+    estimators_accuracy = 0.1 if estimators_accuracy is None else estimators_accuracy
+    tests_extreme_values = False if tests_extreme_values is None else tests_extreme_values
 
-    adaptationName = adaptation.name
+    # adaptationName = adaptation.name
+    num_int_dims = len(prof_template.dimensions.keys())
+    num_tested_players = len(player_bridge.get_all_player_ids())
 
-    numInteractionDimensions = len(profileTemplate.dimensions.keys())
-
-    numPlayersToTest = len(playerBridge.get_all_player_ids())
-
-    # re-init stuff
-    players = [0 for x in range(numPlayers)]
-    tasks = [0 for x in range(numTasks)]
+    # # re-init stuff
+    # players = [0 for x in range(num_players)]
+    # tasks = [0 for x in range(num_tasks)]
 
     # create players and tasks
-    for x in range(numPlayersToTest):
-        playerBridge.register_new_player(
+    for x in range(num_tested_players):
+        player_bridge.register_new_player(
             player_id=str(x),
             name="name",
-            curr_state=PlayerState(profile=profileTemplate.generate_copy().reset()),
+            curr_state=PlayerState(profile=prof_template.generate_copy().reset()),
             past_model_increases_data_frame=PlayerStatesDataFrame(
-                interactions_profile_template=profileTemplate.generate_copy().reset(),
+                interactions_profile_template=prof_template.generate_copy().reset(),
                 trim_alg=ProximitySortPlayerDataTrimAlg(
-                    max_num_model_elements=playerWindow,
+                    max_num_model_elements=player_window,
                     epsilon=0.005
                 )
             ),
             curr_model_increases=PlayerCharacteristics(),
-            preferences_est=profileTemplate.generate_copy().reset(),
-            real_preferences=profileTemplate.generate_copy().reset())
+            preferences_est=prof_template.generate_copy().reset(),
+            real_preferences=prof_template.generate_copy().reset())
 
-    for x in range(numTasks):
-        taskBridge.registerNewTask(
-            taskId=int(x),
+    for x in range(num_tasks):
+        task_bridge.register_new_task(
+            task_id=int(x),
             description="description",
-            minRequiredAbility=random.uniform(0, 1),
-            profile=profileTemplate.generate_copy(),
-            minDuration=datetime.timedelta(minutes=1),
-            difficultyWeight=0.5,
-            profileWeight=0.5)
+            min_required_ability=random.uniform(0, 1),
+            profile=prof_template.generate_copy(),
+            min_duration=datetime.timedelta(minutes=1),
+            difficulty_weight=0.5,
+            profile_weight=0.5)
 
-    for r in range(numRuns):
-        allRealPreferences = []
-        allQuestionnairePreferences = []
+    for r in range(num_runs):
+        all_real_prefs = []
+        all_questionnaire_prefs = []
 
-        EPdimensions = [{"dim_0": 0, "dim_1": 0}, {"dim_0": 1, "dim_1": 0}, {"dim_0": 0, "dim_1": 1},
-                        {"dim_0": 1, "dim_1": 1}, {"dim_0": 1, "dim_1": 1}]
+        ep_dims = [{"dim_0": 0, "dim_1": 0}, {"dim_0": 1, "dim_1": 0}, {"dim_0": 0, "dim_1": 1},
+                   {"dim_0": 1, "dim_1": 1}, {"dim_0": 1, "dim_1": 1}]
 
-        playersDimsStr = "players: [\n"
+        players_dims_str = "players: [\n"
 
-        for x in range(numPlayersToTest):
-            profile = profileTemplate.generate_copy().reset()
-            if (considerExtremePreferencesValues):
-                profile.dimensions = EPdimensions[x % len(EPdimensions)]
-                playersDimsStr += "{" + str(profile.dimensions) + "},\n"
+        for x in range(num_tested_players):
+            profile = prof_template.generate_copy().reset()
+            if tests_extreme_values:
+                profile.dimensions = ep_dims[x % len(ep_dims)]
+                players_dims_str += "{" + str(profile.dimensions) + "},\n"
             else:
-                for d in range(numInteractionDimensions):
+                for d in range(num_int_dims):
                     profile.dimensions["dim_" + str(d)] = random.uniform(0, 1)
 
-            allRealPreferences.append(profile)
-            # allRealPreferences[x].normalize()
+            all_real_prefs.append(profile)
 
-            profile = profileTemplate.generate_copy().reset()
-            currRealPreferences = allRealPreferences[x]
-            for d in range(numInteractionDimensions):
+            profile = prof_template.generate_copy().reset()
+            curr_real_preferences = all_real_prefs[x]
+            for d in range(num_int_dims):
                 profile.dimensions["dim_" + str(d)] = numpy.clip(
-                    random.gauss(currRealPreferences.dimensions["dim_" + str(d)], estimatorsAccuracy), 0, 1)
-            allQuestionnairePreferences.append(profile)
-            # allQuestionnairePreferences[x].normalize()
+                    random.gauss(curr_real_preferences.dimensions["dim_" + str(d)], estimators_accuracy), 0, 1)
+            all_questionnaire_prefs.append(profile)
 
             # init players including predicted preferences
-            playerBridge.reset_player(x)
+            player_bridge.reset_player(x)
 
-            playerBridge.set_player_preferences_est(x, profileTemplate.generate_copy().init())
-            # realPreferences = allRealPreferences[x]
-            # playerBridge.setPlayerRealPreferences(x, realPreferences)
+            player_bridge.set_player_preferences_est(x, prof_template.generate_copy().init())
 
-            questionnairePreferences = allQuestionnairePreferences[x]
-            playerBridge.set_player_real_preferences(x, questionnairePreferences)
-            playerBridge.setBaseLearningRate(x, 0.5)
+            questionnaire_prefs = all_questionnaire_prefs[x]
+            player_bridge.set_player_real_preferences(x, questionnaire_prefs)
+            player_bridge.set_base_learning_rate(x, 0.5)
 
-            playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
+            player_bridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
 
-        playersDimsStr += "],\n"
+        players_dims_str += "],\n"
+        # print(players_dims_str)
 
-        # print(playersDimsStr)
+        if max_num_training_iterations > 0:
+            adaptation.bootstrap(max_num_training_iterations)
 
-        if (maxNumTrainingIterations > 0):
-            adaptation.bootstrap(maxNumTrainingIterations)
+        # change for "real" preferences from which the predictions are meant to be based on...
+        for x in range(num_tested_players):
+            player_bridge.reset_state(x)
 
-        # change for "real" preferences from which the predictions supposidely are based on...
-        for x in range(numPlayersToTest):
-            playerBridge.reset_state(x)
+            real_pref = all_real_prefs[x]
+            player_bridge.set_player_real_preferences(x, real_pref)
+            player_bridge.set_base_learning_rate(x, random.gauss(0.5, 0.05))
 
-            realPreferences = allRealPreferences[x]
-            playerBridge.set_player_real_preferences(x, realPreferences)
-            playerBridge.setBaseLearningRate(x, random.gauss(0.5, 0.05))
-
-            playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(True)
+            player_bridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(True)
 
         if r > 0:
             adaptation.configs_gen_alg.reset()
 
-        executionPhase(numRuns, playerBridge, numRealIterations, firstRealI, r, adaptation)
+        execution_phase(num_runs, player_bridge, num_real_iterations, first_real_i, r, adaptation)
 
 
 # ----------------------- [Simulation] --------------------------------
@@ -585,7 +563,7 @@ if __name__ == '__main__':
     print("------------------------------------------")
     print("NOTE: This example tests several group organization algorithms types.")
     print("For more details, consult the source code.")
-    print("All results are saved to \'" + newpath + "\'.")
+    print("All results are saved to \'" + new_path + "\'.")
     print("------------------------------------------")
 
     # ----------------------- [Execute Algorithms] ----------------------------
@@ -595,25 +573,25 @@ if __name__ == '__main__':
     # exit()
 
     # Explore Base GIMME
-    adaptationPRS.name = "Random"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationRandom)
+    adaptation_prs.name = "Random"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_random)
 
-    adaptationPRS.name = "GIMME_PRS"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationPRS)
+    adaptation_prs.name = "GIMME_PRS"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_prs)
 
-    adaptationGA.name = "GIMME_GA"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationGA)
+    adaptation_evl.name = "GIMME_GA"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl)
 
-    adaptationODPIP.name = "GIMME_ODPIP"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationODPIP)
+    adaptation_odpip.name = "GIMME_ODPIP"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip)
 
-    adaptationTabularODPIP.name = "GIMME_ODPIP_Tabular"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationTabularODPIP)
+    adaptation_tab_odpip.name = "GIMME_ODPIP_Tabular"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_tab_odpip)
 
     # 	adaptationCLink.name = "GIMME_CLink"
     # 	executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
@@ -624,20 +602,20 @@ if __name__ == '__main__':
     # 		playerBridge, taskBridge, adaptationTabularCLink)
 
     # Explore GIMME-Bootstrap
-    adaptationODPIP.name = "GIMME_ODPIP_Bootstrap"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy=0.1)
+    adaptation_odpip.name = "GIMME_ODPIP_Bootstrap"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, estimators_accuracy=0.1)
 
-    adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_HighAcc"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy=0.05)
+    adaptation_odpip.name = "GIMME_ODPIP_Bootstrap_HighAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, estimators_accuracy=0.05)
 
-    adaptationODPIP.name = "GIMME_ODPIP_Bootstrap_LowAcc"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationODPIP, estimatorsAccuracy=0.2)
+    adaptation_odpip.name = "GIMME_ODPIP_Bootstrap_LowAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, estimators_accuracy=0.2)
 
     # adaptationCLink.name = "GIMME_CLink_Bootstrap"
     # executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
@@ -651,71 +629,71 @@ if __name__ == '__main__':
     # executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations, maxNumTrainingIterations,
     # 				playerBridge, taskBridge, adaptationCLink, estimatorsAccuracy = 0.2)
 
-    adaptationGA.name = "GIMME_GA_Bootstrap"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationGA, estimatorsAccuracy=0.1)
+    adaptation_evl.name = "GIMME_GA_Bootstrap"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl, estimators_accuracy=0.1)
 
-    adaptationGA.name = "GIMME_GA_Bootstrap_HighAcc"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationGA, estimatorsAccuracy=0.05)
+    adaptation_evl.name = "GIMME_GA_Bootstrap_HighAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl, estimators_accuracy=0.05)
 
-    adaptationGA.name = "GIMME_GA_Bootstrap_LowAcc"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationGA, estimatorsAccuracy=0.2)
+    adaptation_evl.name = "GIMME_GA_Bootstrap_LowAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl, estimators_accuracy=0.2)
 
-    adaptationPRS.name = "GIMME_PRS_Bootstrap"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy=0.1)
+    adaptation_prs.name = "GIMME_PRS_Bootstrap"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_prs, estimators_accuracy=0.1)
 
-    adaptationPRS.name = "GIMME_PRS_Bootstrap_HighAcc"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy=0.05)
+    adaptation_prs.name = "GIMME_PRS_Bootstrap_HighAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_prs, estimators_accuracy=0.05)
 
-    adaptationPRS.name = "GIMME_PRS_Bootstrap_LowAcc"
-    executeSimulations(numRuns, intProfTemplate2D, maxNumTrainingIterations, 0, numRealIterations,
-                       maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationPRS, estimatorsAccuracy=0.2)
+    adaptation_prs.name = "GIMME_PRS_Bootstrap_LowAcc"
+    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_prs, estimators_accuracy=0.2)
 
     # Explore GIP number of dimensions
-    executeSimulations(numRuns, intProfTemplate1D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationEvl1D)
+    execute_simulations(num_runs, int_prof_1d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl_1d)
 
-    executeSimulations(numRuns, intProfTemplate3D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationEvl3D)
+    execute_simulations(num_runs, int_prof_3d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl_3d)
 
-    executeSimulations(numRuns, intProfTemplate4D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationEvl4D)
+    execute_simulations(num_runs, int_prof_4d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl_4d)
 
-    executeSimulations(numRuns, intProfTemplate5D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationEvl5D)
+    execute_simulations(num_runs, int_prof_5d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl_5d)
 
-    executeSimulations(numRuns, intProfTemplate6D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationEvl6D)
+    execute_simulations(num_runs, int_prof_6d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl_6d)
 
     # Explore GIMME with extreme profiles
     # adaptationCLink.name = "GIMME_CLink_EP"
     # executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
     # 	playerBridge, taskBridge, adaptationCLink, considerExtremePreferencesValues = True)
 
-    adaptationODPIP.name = "GIMME_ODPIP_EP"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationODPIP, considerExtremePreferencesValues=True)
+    adaptation_odpip.name = "GIMME_ODPIP_EP"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip, tests_extreme_values=True)
 
-    adaptationTabularODPIP.name = "GIMME_Tabular_ODPIP_EP"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationTabularODPIP, considerExtremePreferencesValues=True)
+    adaptation_tab_odpip.name = "GIMME_Tabular_ODPIP_EP"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_tab_odpip, tests_extreme_values=True)
 
-    adaptationGA.name = "GIMME_GA_EP"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationGA, considerExtremePreferencesValues=True)
+    adaptation_evl.name = "GIMME_GA_EP"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl, tests_extreme_values=True)
 
-    adaptationPRS.name = "GIMME_PRS_EP"
-    executeSimulations(numRuns, intProfTemplate2D, 0, 0, numRealIterations, maxNumTrainingIterations,
-                       playerBridge, taskBridge, adaptationPRS, considerExtremePreferencesValues=True)
+    adaptation_prs.name = "GIMME_PRS_EP"
+    execute_simulations(num_runs, int_prof_2d, 0, 0, num_real_iterations, max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_prs, tests_extreme_values=True)
 
     print("Done!                        ")

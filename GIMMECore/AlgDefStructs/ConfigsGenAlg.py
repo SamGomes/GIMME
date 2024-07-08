@@ -489,7 +489,6 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
                  player_model_bridge,
                  interactions_profile_template,
                  quality_eval_alg,
-                 pers_est_alg,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None,
                  preferred_number_of_players_per_group=None,
@@ -520,7 +519,6 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
             separated_player_constraints=separated_player_constraints)
 
         self.quality_eval_alg = quality_eval_alg
-        self.pers_est_alg = pers_est_alg
 
         self.initial_population_size = 100 if initial_population_size is None else initial_population_size
 

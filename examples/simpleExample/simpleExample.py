@@ -69,7 +69,7 @@ for x in range(numPlayers):
 	# playerBridge.setPlayerRealPreferences(x, realPreferences)
 
 	playerBridge.set_player_real_preferences(x, profileTemplate.randomized())
-	playerBridge.setBaseLearningRate(x, 0.5)
+	playerBridge.set_base_learning_rate(x, 0.5)
 
 	playerBridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
 
@@ -122,7 +122,7 @@ def calcReaction(isBootstrap, playerBridge, state, playerId):
 	newState.characteristics.engagement = 1 - (preferences.distance_between(state.profile) / math.sqrt(numDims))  #between 0 and 1
 	if newState.characteristics.engagement>1:
 		breakpoint()
-	abilityIncreaseSim = (newState.characteristics.engagement*playerBridge.getBaseLearningRate(playerId))
+	abilityIncreaseSim = (newState.characteristics.engagement * playerBridge.get_base_learning_rate(playerId))
 	newState.characteristics.ability = newState.characteristics.ability + abilityIncreaseSim
 	return newState
 
