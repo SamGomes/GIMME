@@ -11,6 +11,9 @@ suppressMessages(library(dplyr))
 suppressMessages(library(envDocument))
 
 
+
+numTrainingIterations = 10
+
 options(warn=-1)
 
 
@@ -62,7 +65,7 @@ filenames <- list.files(scriptPath, pattern = ".csv", recursive = TRUE) #recursi
 filenames <- paste(scriptPath, filenames, sep="")
 
 resultsLog <- do.call(rbind, lapply(filenames, read.csv, header=TRUE, sep=","))
-resultsLog <- resultsLog[resultsLog$iteration > 19,]
+resultsLog <- resultsLog[resultsLog$iteration >= numTrainingIterations,]
 resultsLog <- resultsLog[complete.cases(resultsLog),]
 
 # print(sprintf("nRuns: %f", (nrow(unique(resultsLog[c("simsID", "run", "algorithm")])) / nrow(unique(resultsLog[c("algorithm")]))) ))

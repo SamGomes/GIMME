@@ -14,10 +14,10 @@ from LogManager import *
 num_runs = 5
 max_num_training_iterations = 10
 num_real_iterations = 10
-preferred_num_players_per_group = 3
+preferred_num_players_per_group = 4
 
 player_window = 10
-num_players = 15
+num_players = 16
 num_tasks = 1
 
 # ----------------------- [Init PRS] --------------------------------
