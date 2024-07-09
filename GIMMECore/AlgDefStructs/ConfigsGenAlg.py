@@ -1061,7 +1061,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
                          min_num_players_per_group,
                          max_num_players_per_group)
 
-        self.qualityEvalAlg = quality_eval_alg
+        self.quality_eval_alg = quality_eval_alg
         self.pers_est_alg = pers_est_alg
 
         self.coalitions_profiles = []

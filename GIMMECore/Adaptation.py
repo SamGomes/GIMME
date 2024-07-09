@@ -53,6 +53,8 @@ class Adaptation(object):
         adapted_avg_characteristics = adapted_config["avgCharacteristics"]
         adapted_config["tasks"] = []
 
+        # print(adapted_config)
+
         for group_index in range(len(adapted_groups)):
             curr_group = adapted_groups[group_index]
             group_profile = adapted_profiles[group_index]
@@ -126,18 +128,18 @@ class Adaptation(object):
         new_state.characteristics.ability = new_state.characteristics.ability + ability_increase_sim
         return new_state
 
-    def bootstrap(self, numBootstrapIterations):
-        if numBootstrapIterations <= 0:
+    def bootstrap(self, num_bootstrap_iterations):
+        if num_bootstrap_iterations <= 0:
             raise ValueError('Number of bootstrap iterations must be higher than 0 for this method to be called.')
 
-        numPlayers = len(self.player_model_bridge.get_all_player_ids())
+        num_players = len(self.player_model_bridge.get_all_player_ids())
         i = 0
-        while i < numBootstrapIterations:
+        while i < num_bootstrap_iterations:
             print("Performing step (" + str(i) + " of " + str(
-                numBootstrapIterations) + ") of the bootstrap phase of \"" + str(
+                num_bootstrap_iterations) + ") of the bootstrap phase of \"" + str(
                 self.name) + "\"...                                                             ", end="\r")
             self.iterate()
-            for x in range(numPlayers):
+            for x in range(num_players):
                 self.simulate_reaction(player_id=x)
             i += 1
 

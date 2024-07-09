@@ -47,7 +47,7 @@ class QualitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
         self.acc_state_residue = acc_state_residue
 
     def state_type_filter(self, element):
-        return element.stateType == 0
+        return element.state_type == 0
 
     def q_sort(self, elem):
         return elem.quality
@@ -61,7 +61,7 @@ class QualitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
             if modelInc.quality == -1:
                 modelInc.quality = self.calc_quality(modelInc)
                 if self.acc_state_residue:
-                    modelInc.quality += modelInc.stateType
+                    modelInc.quality += modelInc.state_type
 
         if len(past_model_incs) <= self.max_num_model_elements:
             return [past_model_incs, []]
@@ -98,7 +98,7 @@ class ProximitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
         for modelInc in past_model_incs:
             modelInc.quality = last_data_point.profile.sqr_distance_between(modelInc.profile)
             if self.acc_state_residue:
-                modelInc.quality += modelInc.stateType
+                modelInc.quality += modelInc.state_type
 
         # check if there is already a close point
         past_model_incs_sorted = sorted(past_model_incs, key=self.proximity_sort)
@@ -106,8 +106,8 @@ class ProximitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
         past_model_incs_sorted.remove(last_data_point)
         closest_point = past_model_incs_sorted[0]
 
-        if (self.acc_state_residue and closest_point.stateType == 0) or closest_point.quality > (
-                self.epsilon + closest_point.stateType):
+        if (self.acc_state_residue and closest_point.state_type == 0) or closest_point.quality > (
+                self.epsilon + closest_point.state_type):
             removed_i = past_model_incs.index(closest_point)
             past_model_incs.pop(removed_i)
         else:

@@ -265,7 +265,7 @@ adaptation_random.init(
 
 # - - - - -
 int_prof_1d = InteractionsProfile({"dim_0": 0})
-evolutionaryConfigsAlg1D = EvolutionaryConfigsGenAlg(
+evl_configs_alg_1d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_1d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
@@ -285,13 +285,13 @@ evolutionaryConfigsAlg1D = EvolutionaryConfigsGenAlg(
 adaptation_evl_1d.init(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
-    configs_gen_alg=evolutionaryConfigsAlg1D,
+    configs_gen_alg=evl_configs_alg_1d,
     name="GIMME_GA1D"
 )
 
 # GIMME is the same as GIMME 2D
 int_prof_3d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0})
-evolutionaryConfigsAlg3D = EvolutionaryConfigsGenAlg(
+evl_configs_alg_3d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_3d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
@@ -311,12 +311,12 @@ evolutionaryConfigsAlg3D = EvolutionaryConfigsGenAlg(
 adaptation_evl_3d.init(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
-    configs_gen_alg=evolutionaryConfigsAlg3D,
+    configs_gen_alg=evl_configs_alg_3d,
     name="GIMME_GA3D"
 )
 
 int_prof_4d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0})
-evolutionaryConfigsAlg4D = EvolutionaryConfigsGenAlg(
+evl_configs_alg_4d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_4d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
@@ -336,12 +336,12 @@ evolutionaryConfigsAlg4D = EvolutionaryConfigsGenAlg(
 adaptation_evl_4d.init(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
-    configs_gen_alg=evolutionaryConfigsAlg4D,
+    configs_gen_alg=evl_configs_alg_4d,
     name="GIMME_GA4D"
 )
 
 int_prof_5d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0})
-evolutionaryConfigsAlg5D = EvolutionaryConfigsGenAlg(
+evl_configs_alg_5d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_5d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
@@ -361,12 +361,12 @@ evolutionaryConfigsAlg5D = EvolutionaryConfigsGenAlg(
 adaptation_evl_5d.init(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
-    configs_gen_alg=evolutionaryConfigsAlg5D,
+    configs_gen_alg=evl_configs_alg_5d,
     name="GIMME_GA5D"
 )
 
 int_prof_6d = InteractionsProfile({"dim_0": 0, "dim_1": 0, "dim_2": 0, "dim_3": 0, "dim_4": 0, "dim_5": 0})
-evolutionaryConfigsAlg6D = EvolutionaryConfigsGenAlg(
+evl_configs_alg_6d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_6d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
@@ -386,7 +386,7 @@ evolutionaryConfigsAlg6D = EvolutionaryConfigsGenAlg(
 adaptation_evl_6d.init(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
-    configs_gen_alg=evolutionaryConfigsAlg6D,
+    configs_gen_alg=evl_configs_alg_6d,
     name="GIMME_GA6D"
 )
 
@@ -440,7 +440,7 @@ def execution_phase(num_runs, player_bridge, max_num_iterations, starting_i, cur
         if adaptation.name == "accurate":
             adaptation.configs_gen_alg.updateCurrIteration(i)
 
-        print("Process [" + sims_id + "] performing step (" + str(i - starting_i) + " of " + str(
+        print("Process [" + sims_id + "] performing step (" + str((i - starting_i) + 1) + " of " + str(
             max_num_iterations) + ") of run (" + str(curr_run + 1) + " of " + str(num_runs) + ") of algorithm \"" + str(
             adaptation.name) + "\"...                                                             ", end="\r")
 
@@ -617,15 +617,15 @@ if __name__ == '__main__':
                         max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_tab_odpip)
 
-    adaptation_clink.name = "GIMME_CLink"
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_clink)
-
-    adaptation_tab_clink.name = "GIMME_CLink_Tabular"
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_tab_clink)
+    # adaptation_clink.name = "GIMME_CLink"
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_clink)
+    #
+    # adaptation_tab_clink.name = "GIMME_CLink_Tabular"
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_tab_clink)
 
     # - - - - - - - - - - - - - - Explore GIMME-Bootstrap - - - - - - - - - - - - - -
     adaptation_odpip.name = "GIMME_ODPIP_Bootstrap"
@@ -643,20 +643,20 @@ if __name__ == '__main__':
                         max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
 
-    adaptation_clink.name = "GIMME_CLink_Bootstrap"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, est_error=0.1)
-
-    adaptation_clink.name = "GIMME_CLink_Bootstrap_HighAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, est_error=0.05)
-
-    adaptation_clink.name = "GIMME_CLink_Bootstrap_LowAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
+    # adaptation_clink.name = "GIMME_CLink_Bootstrap"
+    # execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_odpip, est_error=0.1)
+    #
+    # adaptation_clink.name = "GIMME_CLink_Bootstrap_HighAcc"
+    # execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_odpip, est_error=0.05)
+    #
+    # adaptation_clink.name = "GIMME_CLink_Bootstrap_LowAcc"
+    # execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
 
     adaptation_evl.name = "GIMME_GA_Bootstrap"
     execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
@@ -710,10 +710,10 @@ if __name__ == '__main__':
                         player_bridge, task_bridge, adaptation_evl_6d)
 
     # - - - - - - - - - - - - - - Explore GIMME with extreme profiles - - - - - - - - - - - - - -
-    adaptation_clink.name = "GIMME_CLink_EP"
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_clink, tests_extreme_values=True)
+    # adaptation_clink.name = "GIMME_CLink_EP"
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_clink, tests_extreme_values=True)
 
     adaptation_odpip.name = "GIMME_ODPIP_EP"
     execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
@@ -735,4 +735,4 @@ if __name__ == '__main__':
                         max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_prs, tests_extreme_values=True)
 
-    print("Done!                        ")
+    print("Done!                                                                                   ")
