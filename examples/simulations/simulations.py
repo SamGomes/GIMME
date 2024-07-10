@@ -1,3 +1,4 @@
+import random
 import sys
 import datetime
 
@@ -5,6 +6,7 @@ sys.path.insert(1, sys.path[0].rsplit('/', 2)[0])
 
 # hack for fetching the ModelMocks package on the previous directory
 from pathlib import Path
+
 sys.path.insert(1, str(Path(sys.path[0]).parent))
 
 from GIMMECore import *
@@ -14,11 +16,15 @@ from LogManager import *
 num_runs = 5
 max_num_training_iterations = 10
 num_real_iterations = 10
-preferred_num_players_per_group = 4
+preferred_num_players_per_group = 3
 
 player_window = 10
-num_players = 16
+num_players = 8
 num_tasks = 1
+
+# for testing iteration independence (num_players will act as an upper bound in this case)
+dynamic_player_reg = False
+init_num_players = num_players
 
 # ----------------------- [Init PRS] --------------------------------
 num_config_choices = 100
@@ -45,41 +51,39 @@ new_path = sys.path[0] + "/analyzer/results/"
 if not os.path.exists(new_path):
     os.makedirs(new_path)
 
-
 # ----------------------- [Init Model Bridges] --------------------------------
 print("Initializing model bridges...")
 
 player_bridge = CustomPlayerModelBridge()
 task_bridge = CustomTaskModelBridge()
 
-
-int_prof_init = InteractionsProfile({"dim_0": 0, "dim_1": 0})
-# create players and tasks
-for x in range(num_players):
-    player_bridge.register_new_player(
-        player_id=str(x),
-        name="name",
-        curr_state=PlayerState(profile=int_prof_init.generate_copy().reset()),
-        past_model_increases_data_frame=PlayerStatesDataFrame(
-            interactions_profile_template=int_prof_init.generate_copy().reset(),
-            trim_alg=ProximitySortPlayerDataTrimAlg(
-                max_num_model_elements=player_window,
-                epsilon=0.005
-            )
-        ),
-        curr_model_increases=PlayerCharacteristics(),
-        preferences_est=int_prof_init.generate_copy().reset(),
-        real_preferences=int_prof_init.generate_copy().reset())
-
-for x in range(num_tasks):
-    task_bridge.register_new_task(
-        task_id=int(x),
-        description="description",
-        min_required_ability=random.uniform(0, 1),
-        profile=int_prof_init.generate_copy(),
-        min_duration=datetime.timedelta(minutes=1),
-        difficulty_weight=0.5,
-        profile_weight=0.5)
+# int_prof_init = InteractionsProfile({"dim_0": 0, "dim_1": 0})
+# # create players and tasks
+# for x in range(num_players):
+#     player_bridge.register_new_player(
+#         player_id=str(x),
+#         name="name",
+#         curr_state=PlayerState(profile=int_prof_init.generate_copy().reset()),
+#         past_model_increases_data_frame=PlayerStatesDataFrame(
+#             interactions_profile_template=int_prof_init.generate_copy().reset(),
+#             trim_alg=ProximitySortPlayerDataTrimAlg(
+#                 max_num_model_elements=player_window,
+#                 epsilon=0.005
+#             )
+#         ),
+#         curr_model_increases=PlayerCharacteristics(),
+#         preferences_est=int_prof_init.generate_copy().reset(),
+#         real_preferences=int_prof_init.generate_copy().reset())
+# 
+# for x in range(num_tasks):
+#     task_bridge.register_new_task(
+#         task_id=int(x),
+#         description="description",
+#         min_required_ability=random.uniform(0, 1),
+#         profile=int_prof_init.generate_copy(),
+#         min_duration=datetime.timedelta(minutes=1),
+#         difficulty_weight=0.5,
+#         profile_weight=0.5)
 
 # ----------------------- [Init Adaptations] --------------------------------
 adaptation_prs = Adaptation()
@@ -112,7 +116,6 @@ all_questionnaire_preferences = []
 print("Initing .csv log manager...")
 # log_manager = CSVLogManager(new_path, sims_id)
 log_manager = SilentLogManager()
-
 
 # ----------------------- [Init Algorithms] --------------------------------
 print("Initing algorithms...")
@@ -428,11 +431,33 @@ def calc_reaction(player_bridge, state, player_id):
     return new_state
 
 
+def alter_reg_players():
+    player_bridge.clear_players()
+    global num_players
+    num_players = random.Random().randint(preferred_num_players_per_group, init_num_players)
+    print("number of players changed to: "+str(num_players))
+    prof_template = InteractionsProfile(dimensions={"dim_0": 0, "dim_1": 0})
+    # create players and tasks
+    for x in range(num_players):
+        player_bridge.register_new_player(
+            player_id=str(x),
+            name="name",
+            curr_state=PlayerState(profile=prof_template.generate_copy().reset()),
+            past_model_increases_data_frame=PlayerStatesDataFrame(
+                interactions_profile_template=prof_template.generate_copy().reset(),
+                trim_alg=ProximitySortPlayerDataTrimAlg(
+                    max_num_model_elements=player_window,
+                    epsilon=0.005
+                )
+            ),
+            preferences_est=prof_template.generate_copy().reset(),
+            real_preferences=prof_template.generate_copy().reset(),
+            base_learning_rate=0.5)
+
+
 def execution_phase(num_runs, player_bridge, max_num_iterations, starting_i, curr_run, adaptation):
     if max_num_iterations <= 0:
         return
-
-    num_tested_players = len(player_bridge.get_all_player_ids())
 
     i = starting_i
     while i < max_num_iterations + starting_i:
@@ -445,11 +470,15 @@ def execution_phase(num_runs, player_bridge, max_num_iterations, starting_i, cur
             adaptation.name) + "\"...                                                             ", end="\r")
 
         start = time.time()
+
+        if dynamic_player_reg:
+            alter_reg_players()
+
         adaptation.iterate()
         end = time.time()
-        deltaTime = (end - start)
+        delta_time = end - start
 
-        for x in range(num_tested_players):
+        for x in range(num_players):
             increases = simulate_reaction(player_bridge, x)
             log_manager.writeToLog("", "results",
                                    {
@@ -462,7 +491,7 @@ def execution_phase(num_runs, player_bridge, max_num_iterations, starting_i, cur
                                        "engagementInc": str(increases.characteristics.engagement),
                                        "profDiff": str(player_bridge.get_player_real_preferences(x).distance_between(
                                            player_bridge.get_player_curr_profile(x))),
-                                       "iterationElapsedTime": str(deltaTime)
+                                       "iterationElapsedTime": str(delta_time)
                                    })
         i += 1
 
@@ -474,16 +503,10 @@ def execute_simulations(num_runs, prof_template, max_num_training_iterations, nu
     est_error = 0.1 if est_error is None else est_error
     tests_extreme_values = False if tests_extreme_values is None else tests_extreme_values
 
-    # adaptationName = adaptation.name
     num_int_dims = len(prof_template.dimensions.keys())
-    num_tested_players = len(player_bridge.get_all_player_ids())
-
-    # # re-init stuff
-    # players = [0 for x in range(num_players)]
-    # tasks = [0 for x in range(num_tasks)]
 
     # create players and tasks
-    for x in range(num_tested_players):
+    for x in range(num_players):
         player_bridge.register_new_player(
             player_id=str(x),
             name="name",
@@ -495,9 +518,9 @@ def execute_simulations(num_runs, prof_template, max_num_training_iterations, nu
                     epsilon=0.005
                 )
             ),
-            curr_model_increases=PlayerCharacteristics(),
             preferences_est=prof_template.generate_copy().reset(),
-            real_preferences=prof_template.generate_copy().reset())
+            real_preferences=prof_template.generate_copy().reset(),
+            base_learning_rate=0.5)
 
     for x in range(num_tasks):
         task_bridge.register_new_task(
@@ -518,7 +541,7 @@ def execute_simulations(num_runs, prof_template, max_num_training_iterations, nu
 
         players_dims_str = "players: [\n"
 
-        for x in range(num_tested_players):
+        for x in range(num_players):
             profile = prof_template.generate_copy().reset()
             if tests_extreme_values:
                 profile.dimensions = ep_dims[x % len(ep_dims)]
@@ -554,7 +577,7 @@ def execute_simulations(num_runs, prof_template, max_num_training_iterations, nu
             adaptation.bootstrap(max_num_training_iterations)
 
         # change for "real" preferences from which the predictions are meant to be based on...
-        for x in range(num_tested_players):
+        for x in range(num_players):
             player_bridge.reset_state(x)
 
             real_pref = all_real_prefs[x]
@@ -588,15 +611,15 @@ if __name__ == '__main__':
     # ----------------------- [Execute Algorithms] ----------------------------
 
     # - - - - - - - - - - - - - - Explore Base GIMME - - - - - - - - - - - - - -
-    adaptation_prs.name = "Random"
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_random)
-
-    adaptation_prs.name = "GIMME_PRS"
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_prs)
+    # adaptation_prs.name = "Random"
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_random)
+    # 
+    # adaptation_prs.name = "GIMME_PRS"
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_prs)
 
     adaptation_evl.name = "GIMME_GA"
     execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,

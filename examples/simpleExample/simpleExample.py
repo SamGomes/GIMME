@@ -8,6 +8,7 @@ sys.path.insert(1, sys.path[0].rsplit('/', 2)[0])
 
 # hack for fetching the ModelMocks package on the previous directory
 from pathlib import Path
+
 sys.path.insert(1, str(Path(sys.path[0]).parent))
 
 from GIMMECore import *
@@ -36,8 +37,10 @@ prof_template = InteractionsProfile({"Focus": 0, "Challenge": 0})
 print("Setting up the players...")
 
 for x in range(num_players):
-    gridTrimAlg = QualitySortPlayerDataTrimAlg(max_num_model_elements=30,
-                                               quality_weights=PlayerCharacteristics(ability=0.5, engagement=0.5))
+    gridTrimAlg = QualitySortPlayerDataTrimAlg(
+        max_num_model_elements=30,
+        quality_weights=PlayerCharacteristics(ability=0.5, engagement=0.5))
+
     player_bridge.register_new_player(
         player_id=int(x),
         name="Player " + str(x + 1),
@@ -45,19 +48,9 @@ for x in range(num_players):
         past_model_increases_data_frame=PlayerStatesDataFrame(
             interactions_profile_template=prof_template.generate_copy().reset(),
             trim_alg=gridTrimAlg),
-        curr_model_increases=PlayerCharacteristics(),
-        preferences_est=prof_template.generate_copy().reset(),
-        real_preferences=prof_template.generate_copy().reset())
-    player_bridge.reset_state(x)
-    player_bridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(True)
-
-    # init players including predicted preferences
-    player_bridge.reset_player(x)
-
-    player_bridge.set_player_preferences_est(x, prof_template.generate_copy().init())
-    player_bridge.set_player_real_preferences(x, prof_template.randomized())
-    player_bridge.set_base_learning_rate(x, 0.5)
-
+        preferences_est=prof_template.generate_copy().init(),
+        real_preferences=prof_template.randomized(),
+        base_learning_rate=0.5)
     player_bridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
 
 print("Players created.")

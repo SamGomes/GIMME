@@ -45,7 +45,7 @@ class ConfigsGenAlg(ABC):
             self.min_num_players_per_group = min_num_players_per_group
         else:
             self.max_num_players_per_group = preferred_number_of_players_per_group
-            self.min_num_players_per_group = preferred_number_of_players_per_group
+            self.min_num_players_per_group = preferred_number_of_players_per_group - 1
 
         self.player_model_bridge = player_model_bridge
         self.task_model_bridge = task_model_bridge
@@ -421,7 +421,7 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
         best_avg_characteristics = []
 
         # estimate preferences
-        player_pref_estimates = self.persEstAlg.update_estimates()
+        self.persEstAlg.update_estimates()
 
         # generate several random groups, calculate their fitness and select the best one
         for i in range(self.numberOfConfigChoices):
@@ -441,8 +441,8 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
                 # generate profile as average of the preferences estimates
                 profile = self.interactions_profile_template.generate_copy().reset()
 
-                for currPlayer in group:
-                    preferences = player_pref_estimates[currPlayer]
+                for curr_player in group:
+                    preferences = self.player_model_bridge.get_player_preferences_est(curr_player)
                     for dim in profile.dimensions:
                         profile.dimensions[dim] += (preferences.dimensions[dim] / group_size)
 
@@ -588,7 +588,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 
         new_player_ids = self.player_model_bridge.get_all_player_ids()
         if len(self.player_ids) != len(new_player_ids):
-            self.player_ids = self.player_model_bridge.get_all_player_ids()
+            self.player_ids = new_player_ids
             self.min_num_groups = math.ceil(len(self.player_ids) / self.max_num_players_per_group)
             self.max_num_groups = math.floor(len(self.player_ids) / self.min_num_players_per_group)
 
@@ -598,10 +598,10 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
                                   self.toolbox.indices)
             self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
-        # if hasattr(self, "pop"):
-        #     del self.pop
-        # if hasattr(self, "hof"):
-        #     del self.hof
+        if hasattr(self, "pop"):
+            del self.pop
+        if hasattr(self, "hof"):
+            del self.hof
 
         self.pop = self.toolbox.population(n=self.initial_population_size)
         self.hof = tools.HallOfFame(1)
@@ -612,6 +612,13 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         return [groups, profs]
 
     def cx_gimme_order(self, ind1, ind2):
+
+        # print("-----")
+        # print("ind1:")
+        # print(ind1)
+        # print("ind2:")
+        # print(ind2)
+        # print("-----")
 
         # configs
         config1 = ind1[0]

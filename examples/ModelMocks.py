@@ -3,16 +3,22 @@ from GIMMECore import PlayerModelBridge
 
 
 class PlayerModelMock(object):
-    def __init__(self, id, name, curr_state, past_model_increases_data_frame, curr_model_increases, preferences_est,
-                 real_preferences):
+    def __init__(self,
+                 id,
+                 name,
+                 curr_state,
+                 past_model_increases_data_frame,
+                 preferences_est,
+                 real_preferences,
+                 base_learning_rate):
         self.curr_state = curr_state
         self.id = id
         self.name = name
         self.past_model_increases_data_frame = past_model_increases_data_frame
 
-        self.preferences_est = {}
-        self.real_preferences = {}
-        self.base_learning_rate = None
+        self.preferences_est = preferences_est
+        self.real_preferences = real_preferences
+        self.base_learning_rate = base_learning_rate
 
 
 class TaskModelMock(object):
@@ -26,55 +32,17 @@ class TaskModelMock(object):
         self.min_duration = min_duration
 
 
-class CustomTaskModelBridge(TaskModelBridge):
-    def __init__(self):
-        self.tasks = []
-
-    def register_new_task(self, task_id, description, min_required_ability, profile, min_duration, difficulty_weight,
-                          profile_weight):
-        new_task = TaskModelMock(task_id, description, min_required_ability, profile, min_duration,
-                                 difficulty_weight, profile_weight)
-        if int(task_id) < len(self.tasks):
-            self.tasks[task_id] = new_task
-        else:
-            self.tasks.append(new_task)
-
-    def get_all_task_ids(self):
-        return [str(task.id) for task in self.tasks]
-
-    def get_task_interactions_profile(self, task_id):
-        return self.tasks[int(task_id)].profile
-
-    def get_min_task_required_ability(self, task_id):
-        return self.tasks[int(task_id)].min_required_ability
-
-    def get_min_task_duration(self, task_id):
-        return self.tasks[int(task_id)].min_duration
-
-    def get_task_difficulty_weight(self, task_id):
-        return self.tasks[int(task_id)].difficulty_weight
-
-    def get_task_profile_weight(self, task_id):
-        return self.tasks[int(task_id)].profile_weight
-
-    def get_task_init_date(self, task_id):
-        return self.tasks[int(task_id)].initDate
-
-    def get_task_final_date(self, task_id):
-        return self.tasks[int(task_id)].finalDate
-
-    def get_task_diversity_weight(self, task_id):
-        return 0.5
-
-
 class CustomPlayerModelBridge(PlayerModelBridge):
     def __init__(self):
         self.players = []
 
-    def register_new_player(self, player_id, name, curr_state, past_model_increases_data_frame, curr_model_increases,
-                            preferences_est, real_preferences):
+    def clear_players(self):
+        self.players = []
+
+    def register_new_player(self, player_id, name, curr_state, past_model_increases_data_frame,
+                            preferences_est, real_preferences, base_learning_rate):
         new_player = PlayerModelMock(player_id, name, curr_state, past_model_increases_data_frame,
-                                     curr_model_increases, preferences_est, real_preferences)
+                                     preferences_est, real_preferences, base_learning_rate)
         if int(player_id) < len(self.players):
             self.players[int(player_id)] = new_player
         else:
@@ -84,8 +52,8 @@ class CustomPlayerModelBridge(PlayerModelBridge):
         self.players[int(player_id)].curr_state.reset()
         self.players[int(player_id)].past_model_increases_data_frame.reset()
 
-    def reset_state(self, playerId):
-        self.players[int(playerId)].curr_state.reset()
+    def reset_state(self, player_id):
+        self.players[int(player_id)].curr_state.reset()
 
     def set_and_save_player_state_to_data_frame(self, player_id, increases, new_state):
         self.players[int(player_id)].curr_state = new_state
@@ -141,3 +109,47 @@ class CustomPlayerModelBridge(PlayerModelBridge):
 
     def get_player_real_preferences(self, player_id):
         return self.players[int(player_id)].real_preferences
+
+
+class CustomTaskModelBridge(TaskModelBridge):
+    def __init__(self):
+        self.tasks = []
+
+    def clear_tasks(self):
+        self.tasks = []
+
+    def register_new_task(self, task_id, description, min_required_ability, profile, min_duration, difficulty_weight,
+                          profile_weight):
+        new_task = TaskModelMock(task_id, description, min_required_ability, profile, min_duration,
+                                 difficulty_weight, profile_weight)
+        if int(task_id) < len(self.tasks):
+            self.tasks[task_id] = new_task
+        else:
+            self.tasks.append(new_task)
+
+    def get_all_task_ids(self):
+        return [str(task.id) for task in self.tasks]
+
+    def get_task_interactions_profile(self, task_id):
+        return self.tasks[int(task_id)].profile
+
+    def get_min_task_required_ability(self, task_id):
+        return self.tasks[int(task_id)].min_required_ability
+
+    def get_min_task_duration(self, task_id):
+        return self.tasks[int(task_id)].min_duration
+
+    def get_task_difficulty_weight(self, task_id):
+        return self.tasks[int(task_id)].difficulty_weight
+
+    def get_task_profile_weight(self, task_id):
+        return self.tasks[int(task_id)].profile_weight
+
+    def get_task_init_date(self, task_id):
+        return self.tasks[int(task_id)].initDate
+
+    def get_task_final_date(self, task_id):
+        return self.tasks[int(task_id)].finalDate
+
+    def get_task_diversity_weight(self, task_id):
+        return 0.5
