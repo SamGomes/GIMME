@@ -16,10 +16,10 @@ from LogManager import *
 num_runs = 5
 max_num_training_iterations = 10
 num_real_iterations = 10
-preferred_num_players_per_group = 3
+preferred_num_players_per_group = 4
 
 player_window = 10
-num_players = 8
+num_players = 15
 num_tasks = 1
 
 # for testing iteration independence (num_players will act as an upper bound in this case)
@@ -87,18 +87,12 @@ task_bridge = CustomTaskModelBridge()
 
 # ----------------------- [Init Adaptations] --------------------------------
 adaptation_prs = Adaptation()
-list_adaptation_prs = []
 adaptation_evl_scx = Adaptation()
 adaptation_evl = Adaptation()
-list_adaptation_ga = []
 adaptation_odpip = Adaptation()
-list_adaptation_odpip = []
 adaptation_tab_odpip = Adaptation()
-list_adaptation_tabular_odpip = []
 adaptation_clink = Adaptation()
-list_adaptation_clink = []
 adaptation_tab_clink = Adaptation()
-list_adaptation_tabular_clink = []
 
 adaptation_evl_1d = Adaptation()
 adaptation_evl_3d = Adaptation()
@@ -107,15 +101,14 @@ adaptation_evl_5d = Adaptation()
 adaptation_evl_6d = Adaptation()
 
 adaptation_random = Adaptation()
-list_adaptation_random = []
 
 all_real_preferences = []
 all_questionnaire_preferences = []
 
 # ----------------------- [Init Log Manager] --------------------------------
 print("Initing .csv log manager...")
-# log_manager = CSVLogManager(new_path, sims_id)
-log_manager = SilentLogManager()
+log_manager = CSVLogManager(new_path, sims_id)
+# log_manager = SilentLogManager()
 
 # ----------------------- [Init Algorithms] --------------------------------
 print("Initing algorithms...")
@@ -128,6 +121,41 @@ tab_quality_eval_alg = SynergiesTabQualityEvalAlg(player_model_bridge=player_bri
 
 # - - - - - 
 int_prof_2d = InteractionsProfile({"dim_0": 0, "dim_1": 0})
+
+random_configs_alg = RandomConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    # jointPlayerConstraints="[15,1]",
+    # separatedPlayerConstraints="[0,1]"
+)
+adaptation_random = Adaptation(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=random_configs_alg,
+    name="Random"
+)
+
+prs_configs_alg = PureRandomSearchConfigsGenAlg(
+    player_model_bridge=player_bridge,
+    interactions_profile_template=int_prof_2d.generate_copy(),
+    quality_eval_alg=quality_eval_alg,
+    pers_est_alg=ExplorationPreferencesEstAlg(
+        player_model_bridge=player_bridge,
+        interactions_profile_template=int_prof_2d.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        num_tested_player_profiles=num_tested_profiles_in_est),
+    number_of_config_choices=num_config_choices,
+    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    # jointPlayerConstraints="[15,1]",
+    # separatedPlayerConstraints="[0,1]"
+)
+adaptation_prs = Adaptation(
+    player_model_bridge=player_bridge,
+    task_model_bridge=task_bridge,
+    configs_gen_alg=prs_configs_alg,
+    name="GIMME_PRS"
+)
 
 evl_configs_alg = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
@@ -150,7 +178,7 @@ evl_configs_alg = EvolutionaryConfigsGenAlg(
     # jointPlayerConstraints="[15,1];[3,4]",
     # separatedPlayerConstraints="[0,1]"
 )
-adaptation_evl.init(
+adaptation_evl = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=evl_configs_alg,
@@ -168,7 +196,7 @@ odpip_configs_alg = ODPIPConfigsGenAlg(
         num_tested_player_profiles=num_tested_profiles_in_est),
     preferred_number_of_players_per_group=preferred_num_players_per_group
 )
-adaptation_odpip.init(
+adaptation_odpip = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=odpip_configs_alg,
@@ -188,7 +216,7 @@ tab_odpip_configs_alg = ODPIPConfigsGenAlg(
     #jointPlayerConstraints="[15,1];[2,7];[3,4];[12,13];[14,15];[0,12];[9,15]",
     # separatedPlayerConstraints="[0,1]"
 )
-adaptation_tab_odpip.init(
+adaptation_tab_odpip = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=tab_odpip_configs_alg,
@@ -206,7 +234,7 @@ clink_configs_alg = CLinkConfigsGenAlg(
         num_tested_player_profiles=num_tested_profiles_in_est),
     preferred_number_of_players_per_group=preferred_num_players_per_group
 )
-adaptation_clink.init(
+adaptation_clink = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=clink_configs_alg,
@@ -224,46 +252,11 @@ tab_clink_configs_alg = CLinkConfigsGenAlg(
         num_tested_player_profiles=num_tested_profiles_in_est),
     preferred_number_of_players_per_group=preferred_num_players_per_group
 )
-adaptation_tab_clink.init(
+adaptation_tab_clink = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=tab_clink_configs_alg,
     name="GIMME_CLink_Tabular"
-)
-
-prs_configs_alg = PureRandomSearchConfigsGenAlg(
-    player_model_bridge=player_bridge,
-    interactions_profile_template=int_prof_2d.generate_copy(),
-    quality_eval_alg=quality_eval_alg,
-    pers_est_alg=ExplorationPreferencesEstAlg(
-        player_model_bridge=player_bridge,
-        interactions_profile_template=int_prof_2d.generate_copy(),
-        quality_eval_alg=quality_eval_alg,
-        num_tested_player_profiles=num_tested_profiles_in_est),
-    number_of_config_choices=num_config_choices,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
-    # jointPlayerConstraints="[15,1]",
-    # separatedPlayerConstraints="[0,1]"
-)
-adaptation_prs.init(
-    player_model_bridge=player_bridge,
-    task_model_bridge=task_bridge,
-    configs_gen_alg=prs_configs_alg,
-    name="GIMME_PRS"
-)
-
-random_configs_alg = RandomConfigsGenAlg(
-    player_model_bridge=player_bridge,
-    interactions_profile_template=int_prof_2d.generate_copy(),
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
-    # jointPlayerConstraints="[15,1]",
-    # separatedPlayerConstraints="[0,1]"
-)
-adaptation_random.init(
-    player_model_bridge=player_bridge,
-    task_model_bridge=task_bridge,
-    configs_gen_alg=random_configs_alg,
-    name="Random"
 )
 
 # - - - - -
@@ -285,7 +278,7 @@ evl_configs_alg_1d = EvolutionaryConfigsGenAlg(
     num_children_per_iteration=num_children_per_iteration,
     num_survivors=num_survivors
 )
-adaptation_evl_1d.init(
+adaptation_evl_1d = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=evl_configs_alg_1d,
@@ -311,7 +304,7 @@ evl_configs_alg_3d = EvolutionaryConfigsGenAlg(
     num_children_per_iteration=num_children_per_iteration,
     num_survivors=num_survivors
 )
-adaptation_evl_3d.init(
+adaptation_evl_3d = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=evl_configs_alg_3d,
@@ -336,7 +329,7 @@ evl_configs_alg_4d = EvolutionaryConfigsGenAlg(
     num_children_per_iteration=num_children_per_iteration,
     num_survivors=num_survivors
 )
-adaptation_evl_4d.init(
+adaptation_evl_4d = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=evl_configs_alg_4d,
@@ -361,7 +354,7 @@ evl_configs_alg_5d = EvolutionaryConfigsGenAlg(
     num_children_per_iteration=num_children_per_iteration,
     num_survivors=num_survivors
 )
-adaptation_evl_5d.init(
+adaptation_evl_5d = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=evl_configs_alg_5d,
@@ -386,7 +379,7 @@ evl_configs_alg_6d = EvolutionaryConfigsGenAlg(
     num_children_per_iteration=num_children_per_iteration,
     num_survivors=num_survivors
 )
-adaptation_evl_6d.init(
+adaptation_evl_6d = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=evl_configs_alg_6d,
@@ -435,7 +428,7 @@ def alter_reg_players():
     player_bridge.clear_players()
     global num_players
     num_players = random.Random().randint(preferred_num_players_per_group, init_num_players)
-    print("number of players changed to: "+str(num_players))
+    print("number of players changed to: " + str(num_players))
     prof_template = InteractionsProfile(dimensions={"dim_0": 0, "dim_1": 0})
     # create players and tasks
     for x in range(num_players):
@@ -611,15 +604,15 @@ if __name__ == '__main__':
     # ----------------------- [Execute Algorithms] ----------------------------
 
     # - - - - - - - - - - - - - - Explore Base GIMME - - - - - - - - - - - - - -
-    # adaptation_prs.name = "Random"
-    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-    #                     max_num_training_iterations,
-    #                     player_bridge, task_bridge, adaptation_random)
-    # 
-    # adaptation_prs.name = "GIMME_PRS"
-    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-    #                     max_num_training_iterations,
-    #                     player_bridge, task_bridge, adaptation_prs)
+    adaptation_prs.name = "Random"
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_random)
+
+    adaptation_prs.name = "GIMME_PRS"
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_prs)
 
     adaptation_evl.name = "GIMME_GA"
     execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
@@ -636,15 +629,15 @@ if __name__ == '__main__':
                         max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_tab_odpip)
 
-    adaptation_clink.name = "GIMME_CLink"
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_clink)
-
-    adaptation_tab_clink.name = "GIMME_CLink_Tabular"
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_tab_clink)
+    # adaptation_clink.name = "GIMME_CLink"
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_clink)
+    # 
+    # adaptation_tab_clink.name = "GIMME_CLink_Tabular"
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_tab_clink)
 
     # - - - - - - - - - - - - - - Explore GIMME-Bootstrap - - - - - - - - - - - - - -
     adaptation_odpip.name = "GIMME_ODPIP_Bootstrap"
@@ -662,20 +655,20 @@ if __name__ == '__main__':
                         max_num_training_iterations,
                         player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
 
-    adaptation_clink.name = "GIMME_CLink_Bootstrap"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, est_error=0.1)
-
-    adaptation_clink.name = "GIMME_CLink_Bootstrap_HighAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, est_error=0.05)
-
-    adaptation_clink.name = "GIMME_CLink_Bootstrap_LowAcc"
-    execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
+    # adaptation_clink.name = "GIMME_CLink_Bootstrap"
+    # execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_odpip, est_error=0.1)
+    # 
+    # adaptation_clink.name = "GIMME_CLink_Bootstrap_HighAcc"
+    # execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_odpip, est_error=0.05)
+    # 
+    # adaptation_clink.name = "GIMME_CLink_Bootstrap_LowAcc"
+    # execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_odpip, est_error=0.2)
 
     adaptation_evl.name = "GIMME_GA_Bootstrap"
     execute_simulations(num_runs, int_prof_2d, max_num_training_iterations, num_real_iterations,

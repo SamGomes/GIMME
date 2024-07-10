@@ -24,8 +24,6 @@ num_players = int(input("How many students would you like? "))
 preferred_num_group_players = int(input("How many students per group would you prefer? "))
 num_tasks = int(input("How many tasks would you like? "))
 
-adaptation_gimme = Adaptation()
-
 # ----------------------- [Init Model Bridges] --------------------------------
 print("Initializing model bridges...")
 
@@ -127,7 +125,7 @@ ODPIPConfigsGenAlg = ODPIPConfigsGenAlg(
         num_tested_player_profiles=numTestedPlayerProfilesInEst),
     preferred_number_of_players_per_group=preferred_num_group_players
 )
-adaptation_gimme.init(
+adaptation_gimme = Adaptation(
     player_model_bridge=player_bridge,
     task_model_bridge=task_bridge,
     configs_gen_alg=ODPIPConfigsGenAlg,

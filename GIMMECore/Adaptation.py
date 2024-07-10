@@ -9,39 +9,45 @@ from .ModelBridge.TaskModelBridge import TaskModelBridge
 
 class Adaptation(object):
 
-    def __init__(self):
-        self.initialized = False
-        self.player_ids = []
-        self.task_ids = []
-        self.name = "<adaptation with no name>"
+    # private members
+    player_model_bridge = None
 
-        self.configs_gen_alg = None
-        self.player_model_bridge = None
-        self.task_model_bridge = None
+    def __init__(self,
+                 player_model_bridge=None,
+                 task_model_bridge=None,
+                 name="<adaptation with no name>",
+                 configs_gen_alg=None):
 
-    def init(self,
-             player_model_bridge,
-             task_model_bridge,
-             name,
-             configs_gen_alg):
-
-        self.initialized = True
-        self.player_ids = []
-        self.task_ids = []
-        self.name = name
-
-        self.configs_gen_alg = configs_gen_alg
         self.player_model_bridge = player_model_bridge
         self.task_model_bridge = task_model_bridge
+        self.name = name
+        self.configs_gen_alg = configs_gen_alg
 
-        self.configs_gen_alg.init()
+        if self.player_model_bridge is None:
+            self.player_ids = []
+        else:
+            self.player_ids = self.player_model_bridge.get_all_player_ids()
+        if self.task_model_bridge is None:
+            self.task_ids = []
+        else:
+            self.task_ids = self.task_model_bridge.get_all_task_ids()
+        if self.configs_gen_alg is not None:
+            self.configs_gen_alg.init()
 
     def iterate(self):
-        if not self.initialized:
-            raise AssertionError('Adaptation not Initialized! Core not executed.')
+        missing_keys = []
+        attrs = self.__dict__
+        for key in attrs.keys():
+            if attrs[key] is None:
+                missing_keys.append(key)
+        if len(missing_keys) > 0:
+            raise AssertionError(
+                "Adaptation with name: '" + self.name + "' is not ready (missing the following parameters: "
+                + str(missing_keys) + "). Core not executed.")
 
         self.player_ids = self.player_model_bridge.get_all_player_ids()
         self.task_ids = self.task_model_bridge.get_all_task_ids()
+        self.configs_gen_alg.init()
 
         if len(self.player_ids) < self.configs_gen_alg.min_num_players_per_group:
             raise ValueError('Not enough players to form a group.')
