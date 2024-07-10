@@ -314,13 +314,13 @@ class ConfigsGenAlg(ABC):
 
     def update_metrics(self, groups):
         # kind of suboptimal, but guarantees encapsulation
-        if (self.config_size_freqs.get(len(groups))):
+        if self.config_size_freqs.get(len(groups)):
             self.config_size_freqs[len(groups)] += 1
         else:
             self.config_size_freqs[len(groups)] = 1
 
         for group in groups:
-            if (self.config_size_freqs.get(len(group))):
+            if self.config_size_freqs.get(len(group)):
                 self.config_size_freqs[len(group)] += 1
             else:
                 self.config_size_freqs[len(group)] = 1
@@ -537,28 +537,28 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         self.quality_eval_alg = KNNRegQualityEvalAlg(player_model_bridge=player_model_bridge, k=5) \
             if quality_eval_alg is None else quality_eval_alg
 
-        self.player_ids = self.player_model_bridge.get_all_player_ids()
-        self.min_num_groups = math.ceil(len(self.player_ids) / self.max_num_players_per_group)
-        self.max_num_groups = math.floor(len(self.player_ids) / self.min_num_players_per_group)
+        self.search_id = str(id(self))
 
-        self.searchID = str(id(self))
+        self.fitness_func_id = "fitness_func_" + self.search_id
+        self.individual_id = "individual_" + self.search_id
 
-        fitness_func_id = "FitnessMax" + self.searchID
-        individual_id = "Individual" + self.searchID
-
-        creator.create(fitness_func_id, base.Fitness, weights=(1.0,))
-        creator.create(individual_id, list, fitness=getattr(creator, fitness_func_id))
+        creator.create(self.fitness_func_id, base.Fitness, weights=(1.0,))
+        creator.create(self.individual_id, list, fitness=getattr(creator, self.fitness_func_id))
 
         # # conv test
         # creator.create(fitness_func_id, base.Fitness, weights=(-1.0,))
         # creator.create(individual_id, list, fitness=getattr(creator, fitness_func_id))
 
+        self.player_ids = self.player_model_bridge.get_all_player_ids()
+        self.min_num_groups = math.ceil(len(self.player_ids) / self.max_num_players_per_group)
+        self.max_num_groups = math.floor(len(self.player_ids) / self.min_num_players_per_group)
+
         self.toolbox = base.Toolbox()
 
+        # indices also left to reset because it has to be updated as needed
         self.toolbox.register("indices", self.random_individual_generator,
                               self.player_ids, self.min_num_groups, self.max_num_groups)
-
-        self.toolbox.register("individual", tools.initIterate, getattr(creator, individual_id),
+        self.toolbox.register("individual", tools.initIterate, getattr(creator, self.individual_id),
                               self.toolbox.indices)
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
@@ -568,7 +568,8 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         else:
             self.toolbox.register("mate", self.cx_gimme_simple)
 
-        self.toolbox.register("mutate", self.mut_gimme, p_profiles=self.prob_mut_profiles, p_configs=self.prob_mut_config)
+        self.toolbox.register("mutate", self.mut_gimme, p_profiles=self.prob_mut_profiles,
+                              p_configs=self.prob_mut_config)
 
         # self.toolbox.register("select", tools.selRoulette)
         # self.toolbox.register("select", tools.selBest, k=self.numFitSurvivors)
@@ -577,14 +578,30 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         # self.toolbox.register("evaluate", self.calcFitness_convergenceTest)
         self.toolbox.register("evaluate", self.calc_fitness)
 
-        self.reset_gen_alg()
+        self.pop = []
+        self.hof = []
 
-    def reset_gen_alg(self):
+    def reset(self):
+        super().reset()
+        # if isinstance(self.quality_eval_alg, TabQualityEvalAlg):
+        #     self.playerPrefEstimates = self.pers_est_alg.update_estimates()
 
-        if hasattr(self, "pop"):
-            del self.pop
-        if hasattr(self, "hof"):
-            del self.hof
+        new_player_ids = self.player_model_bridge.get_all_player_ids()
+        if len(self.player_ids) != len(new_player_ids):
+            self.player_ids = self.player_model_bridge.get_all_player_ids()
+            self.min_num_groups = math.ceil(len(self.player_ids) / self.max_num_players_per_group)
+            self.max_num_groups = math.floor(len(self.player_ids) / self.min_num_players_per_group)
+
+            self.toolbox.register("indices", self.random_individual_generator,
+                                  self.player_ids, self.min_num_groups, self.max_num_groups)
+            self.toolbox.register("individual", tools.initIterate, getattr(creator, self.individual_id),
+                                  self.toolbox.indices)
+            self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
+
+        # if hasattr(self, "pop"):
+        #     del self.pop
+        # if hasattr(self, "hof"):
+        #     del self.hof
 
         self.pop = self.toolbox.population(n=self.initial_population_size)
         self.hof = tools.HallOfFame(1)
@@ -782,10 +799,6 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         del individual.fitness.values
         return individual,
 
-    def reset(self):
-        super().reset()
-        self.reset_gen_alg()
-
     def calc_fitness_convergence_test(self, individual):
         config = individual[0]
         profiles = individual[1]
@@ -868,9 +881,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         return total_fitness,  # must return a tuple
 
     def organize(self):
-        self.reset_gen_alg()
-        # if isinstance(self.quality_eval_alg, TabQualityEvalAlg):
-        #     self.playerPrefEstimates = self.pers_est_alg.update_estimates()
+        self.reset()
 
         algorithms.eaMuCommaLambda(
             population=self.pop,
@@ -940,8 +951,6 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
         self.coalitions_avg_characteristics = []
         self.coalitions_values = []
 
-        self.player_pref_estimates = self.pers_est_alg.update_estimates()
-
     def compute_all_coalitions_values(self):
         num_of_agents = len(self.player_ids)
         num_of_coalitions = 1 << num_of_agents
@@ -966,11 +975,11 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
             group_size = len(group)
 
             # calculate the profile and characteristics only for groups in the range defined
-            if group_size >= adjusted_min_size and group_size <= adjusted_max_size:
+            if adjusted_min_size <= group_size <= adjusted_max_size:
                 # generate profile as average of the preferences estimates
                 profile = self.interactions_profile_template.generate_copy().reset()
-                for currPlayer in group_in_ids:
-                    preferences = self.player_pref_estimates[currPlayer]
+                for curr_player in group_in_ids:
+                    preferences = self.player_model_bridge.get_player_preferences_est(curr_player)
                     for dim in profile.dimensions:
                         profile.dimensions[dim] += (preferences.dimensions[dim] / group_size)
 
@@ -1027,7 +1036,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
         self.coalitions_values = numpy.empty(1 << num_players)
 
         # re-estimate preferences
-        self.player_pref_estimates = self.pers_est_alg.update_estimates()
+        self.pers_est_alg.update_estimates()
 
         # compute the value for every valid coalition before execution
         self.compute_all_coalitions_values()
@@ -1068,8 +1077,6 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
         self.coalitions_avg_characteristics = []
         self.coalitions_values = []
 
-        self.player_pref_estimates = self.pers_est_alg.update_estimates()
-
     def compute_all_coalitions_values(self):
         num_of_agents = len(self.player_ids)
         num_of_coalitions = 1 << num_of_agents
@@ -1094,11 +1101,11 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
             group_size = len(group)
 
             # calculate the profile and characteristics only for groups in the range defined
-            if group_size >= adjusted_min_size and group_size <= adjusted_max_size:
+            if adjusted_min_size <= group_size <= adjusted_max_size:
                 # generate profile as average of the preferences estimates
                 profile = self.interactions_profile_template.generate_copy().reset()
-                for currPlayer in group_in_ids:
-                    preferences = self.player_pref_estimates[currPlayer]
+                for curr_player in group_in_ids:
+                    preferences = self.player_model_bridge.get_player_preferences_est(curr_player)
                     for dim in profile.dimensions:
                         profile.dimensions[dim] += (preferences.dimensions[dim] / group_size)
 
@@ -1135,7 +1142,7 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
         self.coalitions_values = numpy.empty(1 << num_players)
 
         # re-estimate preferences
-        self.player_pref_estimates = self.pers_est_alg.update_estimates()
+        self.pers_est_alg.update_estimates()
 
         # compute the value for every valid coalition before execution
         self.compute_all_coalitions_values()

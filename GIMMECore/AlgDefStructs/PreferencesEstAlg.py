@@ -62,24 +62,20 @@ class ExplorationPreferencesEstAlg(PreferencesEstAlg):
 
     def update_estimates(self):
         player_ids = self.player_model_bridge.get_all_player_ids()
-        updated_estimates = {}
-        for playerId in player_ids:
+        for player_id in player_ids:
 
-            curr_preferences_est = self.player_model_bridge.get_player_preferences_est(playerId)
+            curr_preferences_est = self.player_model_bridge.get_player_preferences_est(player_id)
             new_preferences_est = curr_preferences_est
             if curr_preferences_est is not None:
-                best_quality = self.quality_eval_alg.evaluate(curr_preferences_est, [playerId])
+                best_quality = self.quality_eval_alg.evaluate(curr_preferences_est, [player_id])
             else:
                 best_quality = -1
 
             for i in range(self.numTestedPlayerProfiles):
                 profile = self.interactionsProfileTemplate.generate_copy().randomize()
-                curr_quality = self.quality_eval_alg.evaluate(profile, [playerId])
+                curr_quality = self.quality_eval_alg.evaluate(profile, [player_id])
                 if curr_quality >= best_quality:
                     best_quality = curr_quality
                     new_preferences_est = profile
 
-            self.player_model_bridge.set_player_preferences_est(playerId, new_preferences_est)
-            updated_estimates[str(playerId)] = new_preferences_est
-
-        return updated_estimates
+            self.player_model_bridge.set_player_preferences_est(player_id, new_preferences_est)

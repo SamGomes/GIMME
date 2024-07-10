@@ -13,7 +13,7 @@ with open('README.md', 'r') as file:
 
 setup(
     name="GIMMECore",
-    version="2.0.0 alpha",
+    version="2.0.0a0",
     license="CC BY 4.0",
     python_requires='>=3.7',
     author="Samuel Gomes",
