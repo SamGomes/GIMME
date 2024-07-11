@@ -572,30 +572,30 @@ if __name__ == '__main__':
     # ----------------------- [Execute Algorithms] ----------------------------
 
     # - - - - - - - - - - - - - - Explore Base GIMME - - - - - - - - - - - - - -
-    # adaptation_prs.set_name("Random")
-    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-    #                     max_num_training_iterations,
-    #                     player_bridge, task_bridge, adaptation_random)
-    # 
-    # adaptation_prs.set_name("GIMME_PRS")
-    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-    #                     max_num_training_iterations,
-    #                     player_bridge, task_bridge, adaptation_prs)
-    # 
-    # adaptation_evl.set_name("GIMME_GA")
-    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-    #                     max_num_training_iterations,
-    #                     player_bridge, task_bridge, adaptation_evl)
-    # 
-    # adaptation_odpip.set_name("GIMME_ODPIP")
-    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-    #                     max_num_training_iterations,
-    #                     player_bridge, task_bridge, adaptation_odpip)
-    # 
-    # adaptation_tab_odpip.set_name("GIMME_ODPIP_Tabular")
-    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-    #                     max_num_training_iterations,
-    #                     player_bridge, task_bridge, adaptation_tab_odpip)
+    adaptation_prs.set_name("Random")
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_random)
+
+    adaptation_prs.set_name("GIMME_PRS")
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_prs)
+
+    adaptation_evl.set_name("GIMME_GA")
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_evl)
+
+    adaptation_odpip.set_name("GIMME_ODPIP")
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_odpip)
+
+    adaptation_tab_odpip.set_name("GIMME_ODPIP_Tabular")
+    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+                        max_num_training_iterations,
+                        player_bridge, task_bridge, adaptation_tab_odpip)
 
     # adaptation_clink.set_name("GIMME_CLink")
     # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
