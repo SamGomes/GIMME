@@ -2,10 +2,17 @@ import copy
 import random
 import traceback
 
+
 class InteractionsProfile(object):
+    # public members
+    dimensions = None
+
+    # private members
+    __dimensionality = None
+
     def __init__(self, dimensions=None):
         self.dimensions = {} if dimensions is None else dimensions
-        self.dimensionality = len(self.dimensions)
+        self.__dimensionality = len(self.dimensions)
 
     def reset(self):
         for key in self.dimensions:
@@ -23,13 +30,13 @@ class InteractionsProfile(object):
         return newVar
 
     def normalize(self):
-        return self.normalization(self)
+        return self.__normalization(self)
 
     def normalized(self):
         clone = self.generate_copy()
-        return self.normalization(clone)
+        return self.__normalization(clone)
 
-    def normalization(self, profile):
+    def __normalization(self, profile):
         if len(profile.dimensions) > 1:
             total = 0
             for key in profile.dimensions:
@@ -43,13 +50,13 @@ class InteractionsProfile(object):
         return profile
 
     def randomize(self):
-        return self.randomization(self)
+        return self.__randomization(self)
 
     def randomized(self):
         clone = self.generate_copy()
-        return self.randomization(clone)
+        return self.__randomization(clone)
 
-    def randomization(self, profile):
+    def __randomization(self, profile):
         profile.reset()
         for key in profile.dimensions:
             profile.dimensions[key] = random.uniform(0.0, 1.0)
@@ -82,7 +89,7 @@ class InteractionsProfile(object):
     def flattened(self):
         return [dim for dim in self.dimensions.values()]
 
-    def unflatten_func(self, profile, array):
+    def __unflatten_func(self, profile, array):
         i = 0
         for key in profile.dimensions.keys():
             profile.dimensions[key] = array[i]
@@ -90,8 +97,8 @@ class InteractionsProfile(object):
         return profile
 
     def unflatten(self, array):
-        return self.unflatten_func(self, array)
+        return self.__unflatten_func(self, array)
 
     def unflattened(self, array):
         clone = self.generate_copy()
-        return self.unflatten_func(clone, array)
+        return self.__unflatten_func(clone, array)

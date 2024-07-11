@@ -5,6 +5,12 @@ from abc import ABC, abstractmethod
 
 
 class PlayerCharacteristics(object):
+    
+    # public members
+    ability = None
+    engagement = None
+    group_diversity = None
+
     def __init__(self, ability=None, engagement=None, group_diversity=None):
         self.ability = 0 if ability is None else ability
         self.engagement = 0 if engagement is None else engagement
@@ -17,6 +23,19 @@ class PlayerCharacteristics(object):
 
 
 class PlayerState(object):
+
+    # public members
+    creation_time = None
+
+    state_type = None
+    profile = None
+    characteristics = None
+    dist = None
+    quality = None
+
+    group = None
+    tasks = None
+    
     def __init__(self, state_type=None, profile=None, characteristics=None, dist=None, quality=None, group=None,
                  tasks=None):
         self.creation_time = time.time()
@@ -44,8 +63,12 @@ class PlayerState(object):
 
 
 class PlayerPersonality(ABC):
+
+    # protected members
+    _max_difference_value = None
+    
     def __init__(self):
-        self.maxDifferenceValue = 1
+        self._max_difference_value = 1
 
     @abstractmethod
     def get_personality_string(self):
@@ -61,25 +84,32 @@ class PlayerPersonality(ABC):
 
 
 class PersonalityMBTI(PlayerPersonality):
+
+    # provate members
+    __letter1 = None
+    __letter2 = None
+    __letter3 = None
+    __letter4 = None
+    
     def __init__(self):
         super()
-        self.letter1 = None
-        self.letter2 = None
-        self.letter3 = None
-        self.letter4 = None
+        self.__letter1 = None
+        self.__letter2 = None
+        self.__letter3 = None
+        self.__letter4 = None
 
     def __init__(self, letter1, letter2, letter3, letter4):
         super()
-        self.letter1 = letter1.upper()
-        self.letter2 = letter2.upper()
-        self.letter3 = letter3.upper()
-        self.letter4 = letter4.upper()
+        self.__letter1 = letter1.upper()
+        self.__letter2 = letter2.upper()
+        self.__letter3 = letter3.upper()
+        self.__letter4 = letter4.upper()
 
     def get_personality_string(self):
-        return self.letter1 + self.letter2 + self.letter3 + self.letter4
+        return self.__letter1 + self.__letter2 + self.__letter3 + self.__letter4
 
     def get_letters_list(self):
-        return [self.letter1, self.letter2, self.letter3, self.letter4]
+        return [self.__letter1, self.__letter2, self.__letter3, self.__letter4]
 
     # Determine the difference between 2 personalities. The value ranges from 0 (no difference) to 1 (max difference).
     def get_pair_personality_diversity(self, other):
@@ -91,7 +121,7 @@ class PersonalityMBTI(PlayerPersonality):
         self_letters = self.get_letters_list()
 
         for i in range(0, len(self_letters)):
-            difference += 0 if self_letters[i] == other_letters[i] else self.maxDifferenceValue / 4
+            difference += 0 if self_letters[i] == other_letters[i] else self._max_difference_value / 4
 
         return difference
 
@@ -136,6 +166,15 @@ class PersonalityMBTI(PlayerPersonality):
 
 
 class PlayerStatesDataFrame(object):
+
+    # public members
+    interactions_profile_template = None
+    trim_alg = None
+    states = None
+    flat_profiles = None
+    flat_abilities = None
+    flat_engagements = None
+    
     def __init__(self, interactions_profile_template, trim_alg, states=None):
         self.interactions_profile_template = interactions_profile_template
         self.trim_alg = trim_alg

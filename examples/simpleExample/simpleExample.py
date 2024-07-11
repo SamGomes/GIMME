@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(1, str(Path(sys.path[0]).parent))
 
-from GIMMECore import *
+from GIMME.GIMMECore import *
 from ModelMocks import *
 
 print("------------------------------------------")
@@ -125,12 +125,10 @@ ODPIPConfigsGenAlg = ODPIPConfigsGenAlg(
         num_tested_player_profiles=numTestedPlayerProfilesInEst),
     preferred_number_of_players_per_group=preferred_num_group_players
 )
-adaptation_gimme = Adaptation(
-    player_model_bridge=player_bridge,
-    task_model_bridge=task_bridge,
-    configs_gen_alg=ODPIPConfigsGenAlg,
-    name="Test Adaptation"
-)
+adaptation_gimme = Adaptation(name="Test Adaptation",
+                              player_model_bridge=player_bridge,
+                              task_model_bridge=task_bridge,
+                              configs_gen_alg=ODPIPConfigsGenAlg)
 print("Adaptation initialized and ready!")
 print("~~~~~~(Initialization Complete)~~~~~~\n\n\n")
 
