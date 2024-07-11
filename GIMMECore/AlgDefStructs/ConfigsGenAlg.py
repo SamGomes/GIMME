@@ -1,20 +1,15 @@
 import gc
 import random
-import math
 import copy
-from sys import breakpointhook
-import numpy
 import re
-from abc import ABC, abstractmethod
+# from abc import ABC, abstractmethod
 
 import GIMMESolver as gs
-from ctypes import *
 
 from deap import base, creator, tools, algorithms
-from collections import *
 
-from ..InteractionsProfile import InteractionsProfile
-from ..PlayerStructs import *
+# from ..InteractionsProfile import InteractionsProfile
+# from ..PlayerStructs import *
 from ..AlgDefStructs.QualityEvalAlg import *
 
 

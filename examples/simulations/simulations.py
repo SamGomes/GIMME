@@ -1,17 +1,14 @@
-import random
 import sys
 import datetime
 
-sys.path.insert(1, sys.path[0].rsplit('/', 2)[0])
-
-# hack for fetching the ModelMocks package on the previous directory
-from pathlib import Path
-
-sys.path.insert(1, str(Path(sys.path[0]).parent))
-
 from GIMMECore import *
-from ModelMocks import *
 from LogManager import *
+
+# hack for fetching the ModelMocks package on the previous directory 
+from pathlib import Path
+sys.path.insert(1, str(Path(sys.path[0]).parent))
+from ModelMocks import *
+
 
 num_runs = 5
 max_num_training_iterations = 10

@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 
 
 class PlayerCharacteristics(object):
-    
     # public members
     ability = None
     engagement = None
@@ -23,7 +22,6 @@ class PlayerCharacteristics(object):
 
 
 class PlayerState(object):
-
     # public members
     creation_time = None
 
@@ -35,7 +33,7 @@ class PlayerState(object):
 
     group = None
     tasks = None
-    
+
     def __init__(self, state_type=None, profile=None, characteristics=None, dist=None, quality=None, group=None,
                  tasks=None):
         self.creation_time = time.time()
@@ -63,10 +61,9 @@ class PlayerState(object):
 
 
 class PlayerPersonality(ABC):
-
     # protected members
     _max_difference_value = None
-    
+
     def __init__(self):
         self._max_difference_value = 1
 
@@ -84,13 +81,12 @@ class PlayerPersonality(ABC):
 
 
 class PersonalityMBTI(PlayerPersonality):
-
     # provate members
     __letter1 = None
     __letter2 = None
     __letter3 = None
     __letter4 = None
-    
+
     def __init__(self):
         super()
         self.__letter1 = None
@@ -166,7 +162,6 @@ class PersonalityMBTI(PlayerPersonality):
 
 
 class PlayerStatesDataFrame(object):
-
     # public members
     interactions_profile_template = None
     trim_alg = None
@@ -174,7 +169,7 @@ class PlayerStatesDataFrame(object):
     flat_profiles = None
     flat_abilities = None
     flat_engagements = None
-    
+
     def __init__(self, interactions_profile_template, trim_alg, states=None):
         self.interactions_profile_template = interactions_profile_template
         self.trim_alg = trim_alg

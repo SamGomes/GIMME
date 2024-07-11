@@ -1,17 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import itertools
 import threading
 import sys
 
-sys.path.insert(1, sys.path[0].rsplit('/', 2)[0])
-
-# hack for fetching the ModelMocks package on the previous directory
-from pathlib import Path
-
-sys.path.insert(1, str(Path(sys.path[0]).parent))
-
 from GIMMECore import *
+
+# hack for fetching the ModelMocks package on the previous directory 
+from pathlib import Path
+sys.path.insert(1, str(Path(sys.path[0]).parent))
 from ModelMocks import *
 
 print("------------------------------------------")

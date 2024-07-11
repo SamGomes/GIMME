@@ -1,10 +1,8 @@
-import math
-from .AlgDefStructs.QualityEvalAlg import *
 from .AlgDefStructs.ConfigsGenAlg import *
 from .AlgDefStructs.PreferencesEstAlg import *
 
-from .ModelBridge.PlayerModelBridge import PlayerModelBridge
-from .ModelBridge.TaskModelBridge import TaskModelBridge
+# from .ModelBridge.PlayerModelBridge import PlayerModelBridge
+# from .ModelBridge.TaskModelBridge import TaskModelBridge
 
 
 class Adaptation(object):
