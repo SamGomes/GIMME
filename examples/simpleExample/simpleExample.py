@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(1, str(Path(sys.path[0]).parent))
 
-from GIMME.GIMMECore import *
+from GIMMECore import *
 from ModelMocks import *
 
 print("------------------------------------------")
@@ -114,21 +114,51 @@ numberOfConfigChoices = 100
 numTestedPlayerProfilesInEst = 500
 quality_eval_alg = KNNRegQualityEvalAlg(player_bridge, 5)
 
-ODPIPConfigsGenAlg = ODPIPConfigsGenAlg(
-    player_model_bridge=player_bridge,
-    interactions_profile_template=prof_template.generate_copy(),
-    quality_eval_alg=quality_eval_alg,
-    pers_est_alg=ExplorationPreferencesEstAlg(
+selected_alg = int(input("Please select a grouping algorithm (1: Random, 2: PRS, 3: GA, 4: ODPIP):"))
+
+configs_gen_alg = None
+if selected_alg == 1:
+    configs_gen_alg = RandomConfigsGenAlg(
+        player_model_bridge=player_bridge,
+        interactions_profile_template=prof_template.generate_copy(),
+        preferred_number_of_players_per_group=preferred_num_group_players
+    )
+elif selected_alg == 2:
+    configs_gen_alg = PureRandomSearchConfigsGenAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=prof_template.generate_copy(),
         quality_eval_alg=quality_eval_alg,
-        num_tested_player_profiles=numTestedPlayerProfilesInEst),
-    preferred_number_of_players_per_group=preferred_num_group_players
-)
+        pers_est_alg=ExplorationPreferencesEstAlg(
+            player_model_bridge=player_bridge,
+            interactions_profile_template=prof_template.generate_copy(),
+            quality_eval_alg=quality_eval_alg,
+            num_tested_player_profiles=numTestedPlayerProfilesInEst),
+        preferred_number_of_players_per_group=preferred_num_group_players
+    )
+elif selected_alg == 3:
+    configs_gen_alg = EvolutionaryConfigsGenAlg(
+        player_model_bridge=player_bridge,
+        interactions_profile_template=prof_template.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        preferred_number_of_players_per_group=preferred_num_group_players
+    )
+elif selected_alg == 4:
+    configs_gen_alg = ODPIPConfigsGenAlg(
+        player_model_bridge=player_bridge,
+        interactions_profile_template=prof_template.generate_copy(),
+        quality_eval_alg=quality_eval_alg,
+        pers_est_alg=ExplorationPreferencesEstAlg(
+            player_model_bridge=player_bridge,
+            interactions_profile_template=prof_template.generate_copy(),
+            quality_eval_alg=quality_eval_alg,
+            num_tested_player_profiles=numTestedPlayerProfilesInEst),
+        preferred_number_of_players_per_group=preferred_num_group_players
+    )
 adaptation_gimme = Adaptation(name="Test Adaptation",
                               player_model_bridge=player_bridge,
                               task_model_bridge=task_bridge,
-                              configs_gen_alg=ODPIPConfigsGenAlg)
+                              configs_gen_alg=configs_gen_alg)
+
 print("Adaptation initialized and ready!")
 print("~~~~~~(Initialization Complete)~~~~~~\n\n\n")
 
