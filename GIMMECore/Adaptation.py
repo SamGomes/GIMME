@@ -1,158 +1,160 @@
-import math
-from .AlgDefStructs.RegressionAlg import *
 from .AlgDefStructs.ConfigsGenAlg import *
 from .AlgDefStructs.PreferencesEstAlg import *
 
-from .ModelBridge.PlayerModelBridge import PlayerModelBridge 
-from .ModelBridge.TaskModelBridge import TaskModelBridge 
+# from .ModelBridge.PlayerModelBridge import PlayerModelBridge
+# from .ModelBridge.TaskModelBridge import TaskModelBridge
 
 
 class Adaptation(object):
+    # private members
+    __player_model_bridge = None
+    __task_model_bridge = None
+    __name = None
+    __configs_gen_alg = None
 
-	def init(self, \
-		playerModelBridge, \
-		taskModelBridge, \
-		name, \
-		configsGenAlg):
+    __player_ids = None
+    __task_ids = None
 
-		self.initialized = True
-		self.playerIds = []
-		self.taskIds = []
-		self.name = name
+    def __init__(self, name="<adaptation with no name>",
+                 player_model_bridge=None,
+                 task_model_bridge=None,
+                 configs_gen_alg=None):
 
-		# self.numTasksPerGroup = numTasksPerGroup;
-		self.configsGenAlg = configsGenAlg
-		self.playerModelBridge = playerModelBridge
-		self.taskModelBridge = taskModelBridge
+        self.__player_model_bridge = player_model_bridge
+        self.__task_model_bridge = task_model_bridge
+        self.__name = name
+        self.__configs_gen_alg = configs_gen_alg
 
-		self.configsGenAlg.init()	
+        if self.__player_model_bridge is None:
+            self.__player_ids = []
+        else:
+            self.__player_ids = self.__player_model_bridge.get_all_player_ids()
+        if self.__task_model_bridge is None:
+            self.__task_ids = []
+        else:
+            self.__task_ids = self.__task_model_bridge.get_all_task_ids()
 
+    def iterate(self):
+        missing_keys = []
+        attrs = self.__dict__
+        for key in attrs.keys():
+            if attrs[key] is None:
+                missing_keys.append(key)
+        if len(missing_keys) > 0:
+            raise AssertionError(
+                "Adaptation with name: '" + self.__name + "' is not ready (missing the following parameters: "
+                + str(missing_keys) + "). Core not executed.")
 
-	# instrumentation
-	def getConfigsGenAlgCompPerc(self):
-		return self.configsGenAlg.getCompPercentage()
+        self.__player_ids = self.__player_model_bridge.get_all_player_ids()
+        self.__task_ids = self.__task_model_bridge.get_all_task_ids()
 
-	def iterate(self):
-		if not self.initialized:
-			raise AssertionError('Adaptation not Initialized! Core not executed.') 
-			return
-		
-		self.playerIds = self.playerModelBridge.getAllPlayerIds()
-		self.taskIds = self.taskModelBridge.getAllTaskIds()
+        if len(self.__player_ids) < self.__configs_gen_alg._min_num_players_per_group:
+            raise ValueError('Not enough players to form a group.')
 
-		if len(self.playerIds) < self.configsGenAlg.minNumberOfPlayersPerGroup:
-			raise ValueError('Not enough players to form a group.') 
-			return
-		
+        adapted_config = self.__configs_gen_alg.organize()
 
-		# print(json.dumps(self.playerModelBridge.getPlayerStatesDataFrame(0).states, default=lambda o: [o.__dict__["quality"],o.__dict__["stateType"],o.__dict__["creationTime"]], sort_keys=True))
-		# print("\n\n")
-		adaptedConfig = self.configsGenAlg.organize()
+        adapted_groups = adapted_config["groups"]
+        adapted_profiles = adapted_config["profiles"]
+        adapted_avg_characteristics = adapted_config["avgCharacteristics"]
+        adapted_config["tasks"] = []
 
-		adaptedGroups = adaptedConfig["groups"]
-		adaptedProfiles = adaptedConfig["profiles"]
-		adaptedAvgCharacteristics = adaptedConfig["avgCharacteristics"]
-		adaptedConfig["tasks"] = []
+        # print(adapted_config)
 
-		for groupIndex in range(len(adaptedGroups)):
-			currGroup = adaptedGroups[groupIndex]
-			groupProfile = adaptedProfiles[groupIndex]
-			avgState = adaptedAvgCharacteristics[groupIndex]
+        for group_index in range(len(adapted_groups)):
+            curr_group = adapted_groups[group_index]
+            group_profile = adapted_profiles[group_index]
+            avg_state = adapted_avg_characteristics[group_index]
 
-			adaptedTaskId = self.selectTask(self.taskIds, groupProfile, avgState)
-			for playerId in currGroup:
+            adapted_task_id = self.__select_task(self.__task_ids, group_profile, avg_state)
+            for player_id in curr_group:
+                curr_state = self.__player_model_bridge.get_player_curr_state(player_id)
+                curr_state.profile = group_profile
+                self.__player_model_bridge.set_player_tasks(player_id, [adapted_task_id])
+                self.__player_model_bridge.set_player_characteristics(player_id, curr_state.characteristics)
+                self.__player_model_bridge.set_player_profile(player_id, curr_state.profile)
+                self.__player_model_bridge.set_player_group(player_id, curr_group)
 
-				currState = self.playerModelBridge.getPlayerCurrState(playerId)
-				currState.profile = groupProfile	
-				self.playerModelBridge.setPlayerTasks(playerId, [adaptedTaskId])
-				self.playerModelBridge.setPlayerCharacteristics(playerId, currState.characteristics)
-				self.playerModelBridge.setPlayerProfile(playerId, currState.profile)
-				self.playerModelBridge.setPlayerGroup(playerId, currGroup)
-				
-			adaptedConfig["tasks"].append(adaptedTaskId)
+            adapted_config["tasks"].append(adapted_task_id)
 
-			
-		# totalFitness = 0.0
-		# for groupI in range(len(adaptedGroups)):
-		# 	group = adaptedGroups[groupI]
-		# 	profile = adaptedProfiles[groupI]
-		# 	for playerId in group:
-		# 		predictedIncreases = self.configsGenAlg.regAlg.predict(profile, playerId)
-		# 		totalFitness += (0.5* predictedIncreases.characteristics.ability + \
-		# 						0.5* predictedIncreases.characteristics.engagement)
-		
-		# totalFitness = totalFitness + 1.0 #helps selection (otherwise Pchoice would always be 0)
-		# print(totalFitness, end="\n")
+        return adapted_config
 
+    # def reset_configs_gen_alg(self):
+    #     self.__configs_gen_alg.reset()
 
+    def set_name(self, name):
+        self.__name = name
 
+    def get_name(self):
+        return self.__name
 
-		return adaptedConfig
+    def __select_task(self,
+                      possible_task_ids,
+                      best_config_profile,
+                      avg_characteristics):
+        lowest_cost = math.inf
 
-	def selectTask(self,
-		possibleTaskIds,
-		bestConfigProfile,
-		avgState):
-		lowestCost = math.inf
-		bestTaskId = -1 #if no tasks are available 
+        # if no tasks are available
+        best_task_id = -1
 
-		for i in range(len(possibleTaskIds)):
-			currTaskId = possibleTaskIds[i]
+        for i in range(len(possible_task_ids)):
+            curr_task_id = possible_task_ids[i]
 
-			cost = abs(bestConfigProfile.sqrDistanceBetween(self.taskModelBridge.getTaskInteractionsProfile(currTaskId)) * self.taskModelBridge.getTaskProfileWeight(currTaskId))
-			cost += abs(avgState.ability - self.taskModelBridge.getMinTaskRequiredAbility(currTaskId) * self.taskModelBridge.getTaskDifficultyWeight(currTaskId))
+            cost = abs(best_config_profile.sqr_distance_between(self.__task_model_bridge.get_task_interactions_profile(
+                curr_task_id)) * self.__task_model_bridge.get_task_profile_weight(curr_task_id))
+            cost += abs(avg_characteristics.ability - self.__task_model_bridge.get_min_task_required_ability(
+                curr_task_id) * self.__task_model_bridge.get_task_difficulty_weight(curr_task_id))
 
-			if cost < lowestCost:
-				lowestCost = cost
-				bestTaskId = currTaskId
-				
-		return bestTaskId
+            if cost < lowest_cost:
+                lowest_cost = cost
+                best_task_id = curr_task_id
 
+        return best_task_id
 
+    # Bootstrap
+    def __simulate_reaction(self, player_id):
+        curr_state = self.__player_model_bridge.get_player_curr_state(player_id)
+        new_state = self.__calc_reaction(state=curr_state, player_id=player_id)
 
+        increases = PlayerState(type=new_state.type)
+        increases.profile = curr_state.profile
+        increases.characteristics = PlayerCharacteristics(
+            ability=(new_state.characteristics.ability - curr_state.characteristics.ability),
+            engagement=new_state.characteristics.engagement)
+        self.__player_model_bridge.set_and_save_player_state_to_data_frame(player_id, increases, new_state)
+        return increases
 
+    def __calc_reaction(self, state, player_id):
+        preferences = self.__player_model_bridge.get_player_real_preferences(player_id)
+        num_dims = len(preferences.dimensions)
+        new_state = PlayerState(
+            type=0,
+            characteristics=PlayerCharacteristics(
+                ability=state.characteristics.ability,
+                engagement=state.characteristics.engagement
+            ),
+            profile=state.profile)
+        new_state.characteristics.engagement = 1 - (
+                preferences.distance_between(state.profile) / math.sqrt(num_dims))  #between 0 and 1
+        if new_state.characteristics.engagement > 1:
+            raise ValueError('Something went wrong. Engagement is > 1.')
+        ability_increase_sim = (
+                new_state.characteristics.engagement * self.__player_model_bridge.get_base_learning_rate(player_id))
+        new_state.characteristics.ability = new_state.characteristics.ability + ability_increase_sim
+        return new_state
 
-	# Bootstrap
-	def simulateReaction(self, playerId):
-		currState = self.playerModelBridge.getPlayerCurrState(playerId)
-		newState = self.calcReaction(state = currState, playerId = playerId)
+    def bootstrap(self, num_bootstrap_iterations):
+        if num_bootstrap_iterations <= 0:
+            raise ValueError('Number of bootstrap iterations must be higher than 0 for this method to be called.')
 
-		increases = PlayerState(stateType = newState.stateType)
-		increases.profile = currState.profile
-		increases.characteristics = PlayerCharacteristics(ability=(newState.characteristics.ability - currState.characteristics.ability), engagement=newState.characteristics.engagement)
-		self.playerModelBridge.setAndSavePlayerStateToDataFrame(playerId, increases, newState)	
-		return increases
+        num_players = len(self.__player_model_bridge.get_all_player_ids())
+        i = 0
+        while i < num_bootstrap_iterations:
+            print("Performing step (" + str(i) + " of " + str(
+                num_bootstrap_iterations) + ") of the bootstrap phase of \"" + str(
+                self.__name) + "\"...                                                             ", end="\r")
+            self.iterate()
+            for x in range(num_players):
+                self.__simulate_reaction(player_id=x)
+            i += 1
 
-	def calcReaction(self, state, playerId):
-		preferences = self.playerModelBridge.getPlayerRealPreferences(playerId)
-		numDims = len(preferences.dimensions)
-		newState = PlayerState(
-			stateType = 0, 
-			characteristics = PlayerCharacteristics(
-				ability=state.characteristics.ability, 
-				engagement=state.characteristics.engagement
-				), 
-			profile=state.profile)
-		newState.characteristics.engagement = 1 - (preferences.distanceBetween(state.profile) / math.sqrt(numDims))  #between 0 and 1
-		if newState.characteristics.engagement>1:
-			raise ValueError('Something went wrong. Engagement is > 1.') 
-		abilityIncreaseSim = (newState.characteristics.engagement*self.playerModelBridge.getBaseLearningRate(playerId))
-		newState.characteristics.ability = newState.characteristics.ability + abilityIncreaseSim
-		return newState
-
-	def bootstrap(self, numBootstrapIterations):
-		if(numBootstrapIterations <= 0):
-			raise ValueError('Number of bootstrap iterations must be higher than 0 for this method to be called.') 
-			return
-
-		numPlayers = len(self.playerModelBridge.getAllPlayerIds())
-		i = 0
-		while(i < numBootstrapIterations):
-			print("Performming step ("+str(i)+" of "+str(numBootstrapIterations)+") of the bootstrap phase of \""+str(self.name)+"\"...                                                             ", end="\r")
-			self.iterate()
-			for x in range(numPlayers):
-				increases = self.simulateReaction(playerId=x)	
-			i+=1
-
-
-		self.configsGenAlg.reset()
+        # self.__configs_gen_alg.reset()
