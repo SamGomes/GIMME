@@ -2,26 +2,25 @@
 
 <img src="ReadmeImages/logo.png" width="300" alt="">
 
-![version](https://img.shields.io/badge/version-2.0.0-blue)
-![version](https://img.shields.io/badge/python-v3.11-blue)
+![version](https://img.shields.io/badge/version-2.0.0-red)
+![version](https://img.shields.io/badge/python-v3.12-blue)
 
-GIMME (Group Interactions Management for Multiplayer sErious games) is a research framework that focuses on the formation of work groups so that collective ability improves. 
-What distinguishes this approach is that the interaction preferences of learners are explicitly considered when forming group configurations (also commonly named coalition structures).
-This repository contains the core of the application (written in Python) as well as some examples. 
-Over time, we aim to improve the core functionalities as well as provide more examples for the ```GIMMECore``` API.
+This repository contains the code for the ```GIMMECore``` Python package that is part of the GIMME (Group Interactions Management for Multiplayer sErious games) research project. 
+GIMME focuses on the formation of work groups so that collective ability improves. What distinguishes this approach is that the interaction preferences of learners are explicitly considered when forming group configurations (also commonly named coalition structures).
+The core of the application is included, along with some examples. 
+Over time, we aim to improve the core functionalities as well as provide more examples for ```GIMMECore```.
 
 
-Information about the API internals and examples can be observed in our [wiki](https://github.com/SamGomes/GIMME/wiki).
+Information about the API internals and examples can be consulted in our [wiki](https://github.com/SamGomes/GIMME/wiki).
 
 ## Requirements
 
-GIMME requires Python 3 in order to be executed (tested in Python 3.11.6). 
-GIMME was tested on Windows and Linux. 
+```GIMMECore``` requires Python 3 in order to be executed (tested in Python 3.12.4). The package was tested on Windows and Linux. 
 
 
 ## Setup
 
-The setup is straightforward. You just have to install the Python package via the repository:
+The Python package is installed as usual:
 
 ```python 
 pip install GIMMECore
@@ -29,34 +28,33 @@ pip install GIMMECore
 
 *Note #1: The installed version may not correspond to the latest version, and so some aspects of the API may differ (especially relevant since the revision for version 2.0.0). It is advised to check our wiki in case of any naming doubt.*
 
-*Note #2: If some errors about libraries are prompted (for ex., numpy or matplotlib package not found), please install those packages as well. We are currently reimplementing some code parts, and so we do not guarantee that the requirements are updated to the last code version...*
+*Note #2: If some errors about libraries are prompted (e.g., numpy or matplotlib package not found), please install those packages as well. We are currently reimplementing some code parts, and so we do not guarantee that the requirements are updated to the last code version.*
 
-Then you can start to write programs with our library.
-When importing the package, it is recommended to use the following command:
+Once installed, programs can import the package with the following command:
 
 ```python 
 from GIMMECore import *
 ```
-This will automatically import all of the associated GIMME classes.
-Besides importing the core, the user has to also implement the functionalities to store data used by the algorithm. This is done by extending two abstract data bridges: the [PlayerModelBridge](https://github.com/SamGomes/GIMME/wiki/PlayerModelBridge) and [TaskModelBridge](https://github.com/SamGomes/GIMME/wiki/TaskModelBridge). 
+This will automatically import all the associated classes.
+Besides importing the core, the user has to implement functionalities to store and fetch data used by the library. This is done by extending two abstract data bridges: the [PlayerModelBridge](https://github.com/SamGomes/GIMME/wiki/PlayerModelBridge) and [TaskModelBridge](https://github.com/SamGomes/GIMME/wiki/TaskModelBridge). Consult our [wiki](https://github.com/SamGomes/GIMME/wiki) for more detail.
 
 ## Execute an example
 
-Some examples are provided as use cases for our package. To execute the provided examples, you just have to call Python as usual, for instance:
+Some examples are provided as use cases for our package. To execute the provided examples, you have to call Python as usual, for instance:
 
 ```python 
 python examples/simpleExample/simpleExample.py
 python examples/simulations/simulations.py
 ```
 
-*Note: For just testing the code, it is advised to change the numRuns variable in simulations.py to a low value, such as 10. For tendencies to be clearly observed when executing them, it is adviseable to set numRuns to 200.*
+*Note: For just testing the code, it is advised to change the num_runs variable in simulations.py to a low value, such as 10. For tendencies to be clearly observed when executing them, it is advised to set num_runs to 200.*
 
-The ```simulations.py``` example will output the data to a csv file ```examples/simulationResults/latestResults/GIMMESims/results.csv```, summarizing the results of applying our simulations. Several plots of the results can be built using the r code provided in ```examples/simulationResults/latestResults/plotGenerator.r```.
+The ```simulations.py``` example will output a result csv file ```/examples/simulations/analyzer/results/resultsXXXX.csv``` where XXXX symbolizes the id of the process that invoked the example. Several plots of the results can be built using the r code provided in ```/examples/simulations/analyzer/plotGenerator.r```.
 
 
 ## Future Improvements
 As of the current version, there are still some on-going exploration pathways. They include:
-- The integration of more refined coalition structure generators (ConfigGenAlg);
+- The addition and refinement of coalition structure generators (ConfigGenAlg);
 - The improvement of task selection.
 
 *Any help to improve this idea is welcome.*
