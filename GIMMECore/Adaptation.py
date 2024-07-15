@@ -90,7 +90,7 @@ class Adaptation(object):
     def __select_task(self,
                       possible_task_ids,
                       best_config_profile,
-                      avg_state):
+                      avg_characteristics):
         lowest_cost = math.inf
 
         # if no tasks are available
@@ -101,7 +101,7 @@ class Adaptation(object):
 
             cost = abs(best_config_profile.sqr_distance_between(self.__task_model_bridge.get_task_interactions_profile(
                 curr_task_id)) * self.__task_model_bridge.get_task_profile_weight(curr_task_id))
-            cost += abs(avg_state.ability - self.__task_model_bridge.get_min_task_required_ability(
+            cost += abs(avg_characteristics.ability - self.__task_model_bridge.get_min_task_required_ability(
                 curr_task_id) * self.__task_model_bridge.get_task_difficulty_weight(curr_task_id))
 
             if cost < lowest_cost:
@@ -115,7 +115,7 @@ class Adaptation(object):
         curr_state = self.__player_model_bridge.get_player_curr_state(player_id)
         new_state = self.__calc_reaction(state=curr_state, player_id=player_id)
 
-        increases = PlayerState(state_type=new_state.state_type)
+        increases = PlayerState(type=new_state.type)
         increases.profile = curr_state.profile
         increases.characteristics = PlayerCharacteristics(
             ability=(new_state.characteristics.ability - curr_state.characteristics.ability),
@@ -127,7 +127,7 @@ class Adaptation(object):
         preferences = self.__player_model_bridge.get_player_real_preferences(player_id)
         num_dims = len(preferences.dimensions)
         new_state = PlayerState(
-            state_type=0,
+            type=0,
             characteristics=PlayerCharacteristics(
                 ability=state.characteristics.ability,
                 engagement=state.characteristics.engagement

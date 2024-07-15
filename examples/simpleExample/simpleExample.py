@@ -1,9 +1,9 @@
-from datetime import timedelta
-
+import json
 import itertools
 import threading
 import sys
 
+from datetime import timedelta
 from GIMMECore import *
 
 # hack for fetching the ModelMocks package on the previous directory 
@@ -32,7 +32,7 @@ prof_template = InteractionsProfile({"Focus": 0, "Challenge": 0})
 print("Setting up the players...")
 
 for x in range(num_players):
-    gridTrimAlg = QualitySortPlayerDataTrimAlg(
+    grid_trim_alg = QualitySortPlayerDataTrimAlg(
         max_num_model_elements=30,
         quality_weights=PlayerCharacteristics(ability=0.5, engagement=0.5))
 
@@ -42,8 +42,8 @@ for x in range(num_players):
         curr_state=PlayerState(profile=prof_template.generate_copy().reset()),
         past_model_increases_data_frame=PlayerStatesDataFrame(
             interactions_profile_template=prof_template.generate_copy().reset(),
-            trim_alg=gridTrimAlg),
-        preferences_est=prof_template.generate_copy().init(),
+            trim_alg=grid_trim_alg),
+        preferences_est=prof_template.generate_copy().reset(),
         real_preferences=prof_template.randomized(),
         base_learning_rate=0.5)
     player_bridge.get_player_states_data_frame(x).trim_alg.consider_state_residue(False)
@@ -78,7 +78,7 @@ def simulate_reaction(is_bootstrap, player_id):
         state=curr_state,
         player_id=player_id)
 
-    increases = PlayerState(state_type=new_state.state_type)
+    increases = PlayerState(type=new_state.type)
     increases.profile = curr_state.profile
     increases.characteristics = PlayerCharacteristics(
         ability=(new_state.characteristics.ability - curr_state.characteristics.ability),
@@ -92,7 +92,7 @@ def calc_reaction(is_bootstrap, state, player_id):
     num_dims = len(preferences.dimensions)
     new_state_type = 0 if is_bootstrap else 1
     new_state = PlayerState(
-        state_type=new_state_type,
+        type=new_state_type,
         characteristics=PlayerCharacteristics(
             ability=state.characteristics.ability,
             engagement=state.characteristics.engagement
@@ -107,8 +107,8 @@ def calc_reaction(is_bootstrap, state, player_id):
     return new_state
 
 
-numberOfConfigChoices = 100
-numTestedPlayerProfilesInEst = 500
+num_config_choices = 100
+num_tested_profs_in_est = 500
 quality_eval_alg = KNNRegQualityEvalAlg(player_bridge, 5)
 
 selected_alg = int(input("Please select a grouping algorithm (1: Random, 2: PRS, 3: GA, 4: ODPIP):"))
@@ -118,38 +118,38 @@ if selected_alg == 1:
     configs_gen_alg = RandomConfigsGenAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=prof_template.generate_copy(),
-        preferred_number_of_players_per_group=preferred_num_group_players
+        preferred_num_players_per_group=preferred_num_group_players
     )
 elif selected_alg == 2:
     configs_gen_alg = PureRandomSearchConfigsGenAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=prof_template.generate_copy(),
         quality_eval_alg=quality_eval_alg,
-        pers_est_alg=ExplorationPreferencesEstAlg(
+        pref_est_alg=ExplorationPreferencesEstAlg(
             player_model_bridge=player_bridge,
             interactions_profile_template=prof_template.generate_copy(),
             quality_eval_alg=quality_eval_alg,
-            num_tested_player_profiles=numTestedPlayerProfilesInEst),
-        preferred_number_of_players_per_group=preferred_num_group_players
+            num_tested_player_profiles=num_tested_profs_in_est),
+        preferred_num_players_per_group=preferred_num_group_players
     )
 elif selected_alg == 3:
     configs_gen_alg = EvolutionaryConfigsGenAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=prof_template.generate_copy(),
         quality_eval_alg=quality_eval_alg,
-        preferred_number_of_players_per_group=preferred_num_group_players
+        preferred_num_players_per_group=preferred_num_group_players
     )
 elif selected_alg == 4:
     configs_gen_alg = ODPIPConfigsGenAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=prof_template.generate_copy(),
         quality_eval_alg=quality_eval_alg,
-        pers_est_alg=ExplorationPreferencesEstAlg(
+        pref_est_alg=ExplorationPreferencesEstAlg(
             player_model_bridge=player_bridge,
             interactions_profile_template=prof_template.generate_copy(),
             quality_eval_alg=quality_eval_alg,
-            num_tested_player_profiles=numTestedPlayerProfilesInEst),
-        preferred_number_of_players_per_group=preferred_num_group_players
+            num_tested_player_profiles=num_tested_profs_in_est),
+        preferred_num_players_per_group=preferred_num_group_players
     )
 adaptation_gimme = Adaptation(name="Test Adaptation",
                               player_model_bridge=player_bridge,

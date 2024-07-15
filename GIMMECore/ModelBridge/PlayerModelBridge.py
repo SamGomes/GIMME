@@ -12,19 +12,7 @@ class PlayerModelBridge(ABC):
         pass
 
     @abstractmethod
-    def get_player_name(self, player_id):
-        pass
-
-    @abstractmethod
-    def get_player_curr_state(self, player_id):
-        pass
-
-    @abstractmethod
     def get_player_personality(self, player_id):
-        pass
-
-    @abstractmethod
-    def get_player_curr_characteristics(self, player_id):
         pass
 
     @abstractmethod

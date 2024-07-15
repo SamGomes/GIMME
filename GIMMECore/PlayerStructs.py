@@ -25,7 +25,7 @@ class PlayerState(object):
     # public members
     creation_time = None
 
-    state_type = None
+    type = None
     profile = None
     characteristics = None
     dist = None
@@ -34,11 +34,11 @@ class PlayerState(object):
     group = None
     tasks = None
 
-    def __init__(self, state_type=None, profile=None, characteristics=None, dist=None, quality=None, group=None,
+    def __init__(self, type=None, profile=None, characteristics=None, dist=None, quality=None, group=None,
                  tasks=None):
         self.creation_time = time.time()
 
-        self.state_type = 1 if state_type is None else state_type
+        self.type = 1 if type is None else type
         self.profile = InteractionsProfile() if profile is None else profile
         self.characteristics = PlayerCharacteristics() if characteristics is None else characteristics
         self.dist = -1 if dist is None else dist
@@ -51,7 +51,7 @@ class PlayerState(object):
         self.characteristics.reset()
         self.profile.reset()
         self.creation_time = time.time()
-        self.state_type = 1
+        self.type = 1
         self.quality = -1
         self.dist = -1
 
@@ -81,7 +81,7 @@ class PlayerPersonality(ABC):
 
 
 class PersonalityMBTI(PlayerPersonality):
-    # provate members
+    # private members
     __letter1 = None
     __letter2 = None
     __letter3 = None
@@ -193,8 +193,6 @@ class PlayerStatesDataFrame(object):
         self.flat_profiles = []
         self.flat_abilities = []
         self.flat_engagements = []
-
-        return self
 
     def push_to_data_frame(self, player_state):
         self.states.append(player_state)

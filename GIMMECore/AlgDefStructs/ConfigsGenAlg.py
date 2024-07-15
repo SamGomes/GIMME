@@ -29,7 +29,7 @@ class ConfigsGenAlg(ABC):
                  player_model_bridge,
                  interactions_profile_template,
                  task_model_bridge=None,
-                 preferred_number_of_players_per_group=None,
+                 preferred_num_players_per_group=None,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None,
                  joint_player_constraints="",
@@ -45,12 +45,12 @@ class ConfigsGenAlg(ABC):
         if min_num_players_per_group > max_num_players_per_group:
             raise ValueError('The min number of players per group cannot be higher than the max!')
 
-        if preferred_number_of_players_per_group is None:
+        if preferred_num_players_per_group is None:
             self._max_num_players_per_group = max_num_players_per_group
             self._min_num_players_per_group = min_num_players_per_group
         else:
-            self._max_num_players_per_group = preferred_number_of_players_per_group
-            self._min_num_players_per_group = preferred_number_of_players_per_group - 1
+            self._max_num_players_per_group = preferred_num_players_per_group
+            self._min_num_players_per_group = preferred_num_players_per_group - 1
 
         self._player_model_bridge = player_model_bridge
         self._task_model_bridge = task_model_bridge
@@ -319,7 +319,7 @@ class RandomConfigsGenAlg(ConfigsGenAlg):
     def __init__(self,
                  player_model_bridge,
                  interactions_profile_template,
-                 preferred_number_of_players_per_group=None,
+                 preferred_num_players_per_group=None,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None,
                  joint_player_constraints="",
@@ -327,7 +327,7 @@ class RandomConfigsGenAlg(ConfigsGenAlg):
         super().__init__(
             player_model_bridge=player_model_bridge,
             interactions_profile_template=interactions_profile_template,
-            preferred_number_of_players_per_group=preferred_number_of_players_per_group,
+            preferred_num_players_per_group=preferred_num_players_per_group,
             min_num_players_per_group=min_num_players_per_group,
             max_num_players_per_group=max_num_players_per_group,
             joint_player_constraints=joint_player_constraints,
@@ -371,16 +371,16 @@ class RandomConfigsGenAlg(ConfigsGenAlg):
 class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
     # private members
     __quality_eval_alg = None
-    __pers_est_alg = None
-    __number_of_config_choices = None
+    __pref_est_alg = None
+    __num_config_choices = None
 
     def __init__(self,
                  player_model_bridge,
                  interactions_profile_template,
                  quality_eval_alg,
-                 pers_est_alg,
-                 number_of_config_choices=None,
-                 preferred_number_of_players_per_group=None,
+                 pref_est_alg,
+                 num_config_choices=None,
+                 preferred_num_players_per_group=None,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None,
                  joint_player_constraints="",
@@ -389,15 +389,15 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
         super().__init__(
             player_model_bridge=player_model_bridge,
             interactions_profile_template=interactions_profile_template,
-            preferred_number_of_players_per_group=preferred_number_of_players_per_group,
+            preferred_num_players_per_group=preferred_num_players_per_group,
             min_num_players_per_group=min_num_players_per_group,
             max_num_players_per_group=max_num_players_per_group,
             joint_player_constraints=joint_player_constraints,
             separated_player_constraints=separated_player_constraints)
 
         self.__quality_eval_alg = quality_eval_alg
-        self.__pers_est_alg = pers_est_alg
-        self.__number_of_config_choices = 100 if number_of_config_choices is None else number_of_config_choices
+        self.__pref_est_alg = pref_est_alg
+        self.__num_config_choices = 100 if num_config_choices is None else num_config_choices
 
     def organize(self):
         player_ids = self._player_model_bridge.get_all_player_ids()
@@ -410,10 +410,10 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
         best_avg_characteristics = []
 
         # estimate preferences
-        self.__pers_est_alg.update_estimates()
+        self.__pref_est_alg.update_estimates()
 
         # generate several random groups, calculate their fitness and select the best one
-        for i in range(self.__number_of_config_choices):
+        for i in range(self.__num_config_choices):
 
             # generate several random groups
             new_groups = self._random_config_generator(player_ids, min_num_groups, max_num_groups)
@@ -462,7 +462,7 @@ class PureRandomSearchConfigsGenAlg(ConfigsGenAlg):
                 best_avg_characteristics = new_avg_characteristics
                 curr_max_quality = curr_quality
 
-            self.completion_percentage = i / self.__number_of_config_choices
+            self.completion_percentage = i / self.__num_config_choices
 
         return {"groups": best_groups, "profiles": best_config_profiles, "avgCharacteristics": best_avg_characteristics}
 
@@ -493,8 +493,6 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
     __hof = None
 
     __player_ids = None
-    __min_num_groups = None
-    __max_num_groups = None
 
     def __init__(self,
                  player_model_bridge,
@@ -502,7 +500,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
                  quality_eval_alg,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None,
-                 preferred_number_of_players_per_group=None,
+                 preferred_num_players_per_group=None,
 
                  initial_population_size=None,
                  num_evolutions_per_iteration=None,
@@ -523,7 +521,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         super().__init__(
             player_model_bridge=player_model_bridge,
             interactions_profile_template=interactions_profile_template,
-            preferred_number_of_players_per_group=preferred_number_of_players_per_group,
+            preferred_num_players_per_group=preferred_num_players_per_group,
             min_num_players_per_group=min_num_players_per_group,
             max_num_players_per_group=max_num_players_per_group,
             joint_player_constraints=joint_player_constraints,
@@ -561,14 +559,14 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         # creator.create(individual_id, list, fitness=getattr(creator, fitness_func_id))
 
         self.__player_ids = self._player_model_bridge.get_all_player_ids()
-        self.__min_num_groups = math.ceil(len(self.__player_ids) / self._max_num_players_per_group)
-        self.__max_num_groups = math.floor(len(self.__player_ids) / self._min_num_players_per_group)
+        min_num_groups = math.ceil(len(self.__player_ids) / self._max_num_players_per_group)
+        max_num_groups = math.floor(len(self.__player_ids) / self._min_num_players_per_group)
 
         self.__toolbox = base.Toolbox()
 
         # indices also left to reset because it has to be updated as needed
         self.__toolbox.register("indices", self.__random_individual_generator,
-                                self.__player_ids, self.__min_num_groups, self.__max_num_groups)
+                                self.__player_ids, min_num_groups, max_num_groups)
         self.__toolbox.register("individual", tools.initIterate, getattr(creator, self.__individual_id),
                                 self.__toolbox.indices)
         self.__toolbox.register("population", tools.initRepeat, list, self.__toolbox.individual)
@@ -597,13 +595,13 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         #     self.playerPrefEstimates = self.pers_est_alg.update_estimates()
 
         new_player_ids = self._player_model_bridge.get_all_player_ids()
-        if len(self.__player_ids) != len(new_player_ids):
+        if self.__player_ids != new_player_ids:
             self.__player_ids = new_player_ids
-            self.__min_num_groups = math.ceil(len(self.__player_ids) / self._max_num_players_per_group)
-            self.__max_num_groups = math.floor(len(self.__player_ids) / self._min_num_players_per_group)
+            min_num_groups = math.ceil(len(self.__player_ids) / self._max_num_players_per_group)
+            max_num_groups = math.floor(len(self.__player_ids) / self._min_num_players_per_group)
 
             self.__toolbox.register("indices", self.__random_individual_generator,
-                                    self.__player_ids, self.__min_num_groups, self.__max_num_groups)
+                                    self.__player_ids, min_num_groups, max_num_groups)
             self.__toolbox.register("individual", tools.initIterate, getattr(creator, self.__individual_id),
                                     self.__toolbox.indices)
             self.__toolbox.register("population", tools.initRepeat, list, self.__toolbox.individual)
@@ -842,9 +840,6 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         individual.fitness.values = total_fitness,
         return total_fitness,  # must return a tuple
 
-    def __sel_gimme(self, individuals, k, fit_attr="fitness"):
-        return tools.selBest(individuals, k, fit_attr)
-
     def __calc_fitness(self, individual):
         config = individual[0]
         profiles = individual[1]
@@ -897,6 +892,9 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 
         return total_fitness,  # must return a tuple
 
+    def __sel_gimme(self, individuals, k, fit_attr="fitness"):
+        return tools.selBest(individuals, k, fit_attr)
+
     def organize(self):
         self.__reset()
 
@@ -917,6 +915,9 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
         )
 
         self._completion_percentage = len(tools.Logbook()) / self.__num_evolutions_per_iteration
+
+        # print(self.__pop)
+        # print(self.__hof)
 
         best_groups = self.__hof[0][0]
         best_profiles = self.__hof[0][1]
@@ -944,7 +945,7 @@ class EvolutionaryConfigsGenAlg(ConfigsGenAlg):
 class ODPIPConfigsGenAlg(ConfigsGenAlg):
     # private members
     __quality_eval_alg = None
-    __pers_est_alg = None
+    __pref_est_alg = None
 
     __coalitions_profiles = None
     __coalitions_avg_characteristics = None
@@ -954,9 +955,9 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
                  player_model_bridge,
                  interactions_profile_template,
                  quality_eval_alg,
-                 pers_est_alg,
+                 pref_est_alg,
                  task_model_bridge=None,
-                 preferred_number_of_players_per_group=None,
+                 preferred_num_players_per_group=None,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None,
                  joint_player_constraints="",
@@ -964,14 +965,14 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
         super().__init__(player_model_bridge,
                          interactions_profile_template,
                          task_model_bridge,
-                         preferred_number_of_players_per_group,
+                         preferred_num_players_per_group,
                          min_num_players_per_group,
                          max_num_players_per_group,
                          joint_player_constraints=joint_player_constraints,
                          separated_player_constraints=separated_player_constraints)
 
         self.__quality_eval_alg = quality_eval_alg
-        self.__pers_est_alg = pers_est_alg
+        self.__pref_est_alg = pref_est_alg
 
         self.__coalitions_profiles = []
         self.__coalitions_avg_characteristics = []
@@ -1062,7 +1063,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
         self.__coalitions_values = numpy.empty(1 << num_players)
 
         # re-estimate preferences
-        self.__pers_est_alg.update_estimates()
+        self.__pref_est_alg.update_estimates()
 
         # compute the value for every valid coalition before execution
         self.__compute_all_coalitions_values()
@@ -1083,7 +1084,7 @@ class ODPIPConfigsGenAlg(ConfigsGenAlg):
 class CLinkConfigsGenAlg(ConfigsGenAlg):
     # private members
     __quality_eval_alg = None
-    __pers_est_alg = None
+    __pref_est_alg = None
 
     __coalitions_profiles = None
     __coalitions_avg_characteristics = None
@@ -1093,20 +1094,20 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
                  player_model_bridge,
                  interactions_profile_template,
                  quality_eval_alg,
-                 pers_est_alg,
+                 pref_est_alg,
                  task_model_bridge=None,
-                 preferred_number_of_players_per_group=None,
+                 preferred_num_players_per_group=None,
                  min_num_players_per_group=None,
                  max_num_players_per_group=None):
         super().__init__(player_model_bridge,
                          interactions_profile_template,
                          task_model_bridge,
-                         preferred_number_of_players_per_group,
+                         preferred_num_players_per_group,
                          min_num_players_per_group,
                          max_num_players_per_group)
 
         self.quality_eval_alg = quality_eval_alg
-        self.pers_est_alg = pers_est_alg
+        self.pers_est_alg = pref_est_alg
 
         self.coalitions_profiles = []
         self.coalitions_avg_characteristics = []
@@ -1191,4 +1192,3 @@ class CLinkConfigsGenAlg(ConfigsGenAlg):
         gc.collect()
         return self._convert_cs_bytes_to_dict(best_cs_in_bytes, self.__coalitions_profiles,
                                               self.__coalitions_avg_characteristics)
-

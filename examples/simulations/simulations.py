@@ -6,9 +6,9 @@ from LogManager import *
 
 # hack for fetching the ModelMocks package on the previous directory 
 from pathlib import Path
+
 sys.path.insert(1, str(Path(sys.path[0]).parent))
 from ModelMocks import *
-
 
 num_runs = 5
 max_num_training_iterations = 10
@@ -83,21 +83,21 @@ task_bridge = CustomTaskModelBridge()
 #         profile_weight=0.5)
 
 # ----------------------- [Init Adaptations] --------------------------------
-adaptation_prs = Adaptation()
-adaptation_evl_scx = Adaptation()
-adaptation_evl = Adaptation()
-adaptation_odpip = Adaptation()
-adaptation_tab_odpip = Adaptation()
-adaptation_clink = Adaptation()
-adaptation_tab_clink = Adaptation()
-
-adaptation_evl_1d = Adaptation()
-adaptation_evl_3d = Adaptation()
-adaptation_evl_4d = Adaptation()
-adaptation_evl_5d = Adaptation()
-adaptation_evl_6d = Adaptation()
-
-adaptation_random = Adaptation()
+# adaptation_prs = Adaptation()
+# adaptation_evl_scx = Adaptation()
+# adaptation_evl = Adaptation()
+# adaptation_odpip = Adaptation()
+# adaptation_tab_odpip = Adaptation()
+# adaptation_clink = Adaptation()
+# adaptation_tab_clink = Adaptation()
+# 
+# adaptation_evl_1d = Adaptation()
+# adaptation_evl_3d = Adaptation()
+# adaptation_evl_4d = Adaptation()
+# adaptation_evl_5d = Adaptation()
+# adaptation_evl_6d = Adaptation()
+# 
+# adaptation_random = Adaptation()
 
 all_real_preferences = []
 all_questionnaire_preferences = []
@@ -122,7 +122,7 @@ int_prof_2d = InteractionsProfile({"dim_0": 0, "dim_1": 0})
 random_configs_alg = RandomConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_2d.generate_copy(),
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     # jointPlayerConstraints="[15,1]",
     # separatedPlayerConstraints="[0,1]"
 )
@@ -133,13 +133,13 @@ prs_configs_alg = PureRandomSearchConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_2d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    pers_est_alg=ExplorationPreferencesEstAlg(
+    pref_est_alg=ExplorationPreferencesEstAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=int_prof_2d.generate_copy(),
         quality_eval_alg=quality_eval_alg,
         num_tested_player_profiles=num_tested_profiles_in_est),
-    number_of_config_choices=num_config_choices,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    num_config_choices=num_config_choices,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     # jointPlayerConstraints="[15,1]",
     # separatedPlayerConstraints="[0,1]"
 )
@@ -150,7 +150,7 @@ evl_configs_alg = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_2d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     initial_population_size=initial_population_size,
     num_evolutions_per_iteration=num_evolutions_per_iteration,
 
@@ -176,12 +176,12 @@ odpip_configs_alg = ODPIPConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_2d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    pers_est_alg=ExplorationPreferencesEstAlg(
+    pref_est_alg=ExplorationPreferencesEstAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=int_prof_2d.generate_copy(),
         quality_eval_alg=quality_eval_alg,
         num_tested_player_profiles=num_tested_profiles_in_est),
-    preferred_number_of_players_per_group=preferred_num_players_per_group
+    preferred_num_players_per_group=preferred_num_players_per_group
 )
 adaptation_odpip = Adaptation(name="GIMME_ODPIP",
                               player_model_bridge=player_bridge,
@@ -192,12 +192,12 @@ tab_odpip_configs_alg = ODPIPConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_2d.generate_copy(),
     quality_eval_alg=tab_quality_eval_alg,
-    pers_est_alg=ExplorationPreferencesEstAlg(
+    pref_est_alg=ExplorationPreferencesEstAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=int_prof_2d.generate_copy(),
         quality_eval_alg=quality_eval_alg,
         num_tested_player_profiles=num_tested_profiles_in_est),
-    preferred_number_of_players_per_group=preferred_num_players_per_group
+    preferred_num_players_per_group=preferred_num_players_per_group
     #jointPlayerConstraints="[15,1];[2,7];[3,4];[12,13];[14,15];[0,12];[9,15]",
     # separatedPlayerConstraints="[0,1]"
 )
@@ -210,12 +210,12 @@ clink_configs_alg = CLinkConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_2d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    pers_est_alg=ExplorationPreferencesEstAlg(
+    pref_est_alg=ExplorationPreferencesEstAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=int_prof_2d.generate_copy(),
         quality_eval_alg=quality_eval_alg,
         num_tested_player_profiles=num_tested_profiles_in_est),
-    preferred_number_of_players_per_group=preferred_num_players_per_group
+    preferred_num_players_per_group=preferred_num_players_per_group
 )
 adaptation_clink = Adaptation(name="GIMME_CLink",
                               player_model_bridge=player_bridge,
@@ -226,12 +226,12 @@ tab_clink_configs_alg = CLinkConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_2d.generate_copy(),
     quality_eval_alg=tab_quality_eval_alg,
-    pers_est_alg=ExplorationPreferencesEstAlg(
+    pref_est_alg=ExplorationPreferencesEstAlg(
         player_model_bridge=player_bridge,
         interactions_profile_template=int_prof_2d.generate_copy(),
         quality_eval_alg=quality_eval_alg,
         num_tested_player_profiles=num_tested_profiles_in_est),
-    preferred_number_of_players_per_group=preferred_num_players_per_group
+    preferred_num_players_per_group=preferred_num_players_per_group
 )
 adaptation_tab_clink = Adaptation(name="GIMME_CLink_Tabular",
                                   player_model_bridge=player_bridge,
@@ -244,7 +244,7 @@ evl_configs_alg_1d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_1d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     initial_population_size=initial_population_size,
     num_evolutions_per_iteration=num_evolutions_per_iteration,
 
@@ -268,7 +268,7 @@ evl_configs_alg_3d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_3d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     initial_population_size=initial_population_size,
     num_evolutions_per_iteration=num_evolutions_per_iteration,
 
@@ -291,7 +291,7 @@ evl_configs_alg_4d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_4d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     initial_population_size=initial_population_size,
     num_evolutions_per_iteration=num_evolutions_per_iteration,
 
@@ -314,7 +314,7 @@ evl_configs_alg_5d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_5d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     initial_population_size=initial_population_size,
     num_evolutions_per_iteration=num_evolutions_per_iteration,
 
@@ -337,7 +337,7 @@ evl_configs_alg_6d = EvolutionaryConfigsGenAlg(
     player_model_bridge=player_bridge,
     interactions_profile_template=int_prof_6d.generate_copy(),
     quality_eval_alg=quality_eval_alg,
-    preferred_number_of_players_per_group=preferred_num_players_per_group,
+    preferred_num_players_per_group=preferred_num_players_per_group,
     initial_population_size=initial_population_size,
     num_evolutions_per_iteration=num_evolutions_per_iteration,
 
@@ -365,7 +365,7 @@ def simulate_reaction(player_bridge, player_id):
         state=curr_state,
         player_id=player_id)
 
-    increases = PlayerState(state_type=new_state.state_type)
+    increases = PlayerState(type=new_state.type)
     increases.profile = curr_state.profile
     increases.characteristics = PlayerCharacteristics(
         ability=(new_state.characteristics.ability - curr_state.characteristics.ability),
@@ -378,7 +378,7 @@ def calc_reaction(player_bridge, state, player_id):
     preferences = player_bridge.get_player_real_preferences(player_id)
     num_dims = len(preferences.dimensions)
     new_state = PlayerState(
-        state_type=1,
+        type=1,
         characteristics=PlayerCharacteristics(
             ability=state.characteristics.ability,
             engagement=state.characteristics.engagement
@@ -520,7 +520,7 @@ def execute_simulations(num_runs, prof_template, max_num_training_iterations, nu
             # init players including predicted preferences
             player_bridge.reset_player(x)
 
-            player_bridge.set_player_preferences_est(x, prof_template.generate_copy().init())
+            player_bridge.set_player_preferences_est(x, prof_template.generate_copy().reset())
 
             questionnaire_prefs = all_questionnaire_prefs[x]
             player_bridge.set_player_real_preferences(x, questionnaire_prefs)
@@ -687,10 +687,10 @@ if __name__ == '__main__':
                         player_bridge, task_bridge, adaptation_evl_6d)
 
     # - - - - - - - - - - - - - - Explore GIMME with extreme profiles - - - - - - - - - - - - - -
-    adaptation_clink.set_name("GIMME_CLink_EP")
-    execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
-                        max_num_training_iterations,
-                        player_bridge, task_bridge, adaptation_clink, tests_extreme_values=True)
+    # adaptation_clink.set_name("GIMME_CLink_EP")
+    # execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,
+    #                     max_num_training_iterations,
+    #                     player_bridge, task_bridge, adaptation_clink, tests_extreme_values=True)
 
     adaptation_odpip.set_name("GIMME_ODPIP_EP")
     execute_simulations(num_runs, int_prof_2d, 0, num_real_iterations,

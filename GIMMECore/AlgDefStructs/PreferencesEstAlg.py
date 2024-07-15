@@ -3,7 +3,6 @@ from ..PlayerStructs import *
 
 
 class PreferencesEstAlg(ABC):
-    
     # protected members
     _player_model_bridge = None
 
@@ -16,11 +15,10 @@ class PreferencesEstAlg(ABC):
 
 
 class ExploitationPreferencesEstAlg(PreferencesEstAlg):
-
     # private members
     __quality_weights = None
     __best_qualities = None
-    
+
     def __init__(self,
                  player_model_bridge,
                  quality_weights=None):
@@ -31,7 +29,7 @@ class ExploitationPreferencesEstAlg(PreferencesEstAlg):
                                                        engagement=0.5) if quality_weights is None else quality_weights
         self.__best_qualities = {}
 
-    def calc_quality(self, state):
+    def __calc_quality(self, state):
         return (self.__quality_weights.ability * state.characteristics.ability +
                 self.__quality_weights.engagement * state.characteristics.engagement)
 
@@ -40,19 +38,18 @@ class ExploitationPreferencesEstAlg(PreferencesEstAlg):
         for playerId in player_ids:
             curr_preferences_quality = self.__best_qualities.get(playerId, 0.0)
             last_data_point = self._player_model_bridge.get_player_curr_state(playerId)
-            quality = self.calc_quality(last_data_point)
+            quality = self.__calc_quality(last_data_point)
             if quality > curr_preferences_quality:
                 self.__best_qualities[playerId] = curr_preferences_quality
                 self._player_model_bridge.set_player_preferences_est(playerId, last_data_point.profile)
 
 
 class ExplorationPreferencesEstAlg(PreferencesEstAlg):
-
     # private members
     __interactions_profile_template = None
     __quality_eval_alg = None
     __num_tested_player_profiles = None
-    
+
     def __init__(self,
                  player_model_bridge,
                  interactions_profile_template,

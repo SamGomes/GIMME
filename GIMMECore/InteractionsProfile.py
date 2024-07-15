@@ -19,9 +19,6 @@ class InteractionsProfile(object):
             self.dimensions[key] = 0
         return self
 
-    def init(self):
-        return self.reset()
-
     def generate_copy(self):
         keys = list(self.dimensions.keys())
         newVar = type(self)(copy.copy(self.dimensions))
@@ -62,18 +59,18 @@ class InteractionsProfile(object):
             profile.dimensions[key] = random.uniform(0.0, 1.0)
         return profile
 
-    def sqr_distance_between(self, profileToTest):
+    def sqr_distance_between(self, profile_to_test):
         cost = self.generate_copy()
         cost.reset()
-        if len(cost.dimensions) != len(profileToTest.dimensions):
+        if len(cost.dimensions) != len(profile_to_test.dimensions):
             traceback.print_stack()
             print(cost.dimensions)
-            print(profileToTest.dimensions)
+            print(profile_to_test.dimensions)
             raise Exception(
                 "[ERROR] Could not compute distance between profiles in different sized spaces. Execution aborted.")
 
         for key in cost.dimensions:
-            cost.dimensions[key] = abs(self.dimensions[key] - profileToTest.dimensions[key])
+            cost.dimensions[key] = abs(self.dimensions[key] - profile_to_test.dimensions[key])
 
         total = 0
         for key in cost.dimensions:
@@ -82,9 +79,9 @@ class InteractionsProfile(object):
 
         return total
 
-    def distance_between(self, profileToTest):
-        numDims = len(profileToTest.dimensions)
-        return self.sqr_distance_between(profileToTest) ** (1 / float(numDims))
+    def distance_between(self, profile_to_test):
+        num_dims = len(profile_to_test.dimensions)
+        return self.sqr_distance_between(profile_to_test) ** (1 / float(num_dims))
 
     def flattened(self):
         return [dim for dim in self.dimensions.values()]

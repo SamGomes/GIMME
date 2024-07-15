@@ -45,8 +45,8 @@ class QualitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
                                                        engagement=0.5) if quality_weights is None else quality_weights
         self.__acc_state_residue = False if acc_state_residue is None else acc_state_residue
 
-    def __state_type_filter(self, element):
-        return element.state_type == 0
+    def __state_type_filter(self, elem):
+        return elem.type == 0
 
     def __q_sort(self, elem):
         return elem.quality
@@ -64,7 +64,7 @@ class QualitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
             if modelInc.quality == -1:
                 modelInc.quality = self.__calc_quality(modelInc)
                 if self.__acc_state_residue:
-                    modelInc.quality += modelInc.state_type
+                    modelInc.quality += modelInc.type
 
         if len(past_model_incs) <= self._max_num_model_elements:
             return [past_model_incs, []]
@@ -103,7 +103,7 @@ class ProximitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
         for modelInc in past_model_incs:
             modelInc.quality = last_data_point.profile.sqr_distance_between(modelInc.profile)
             if self.__acc_state_residue:
-                modelInc.quality += modelInc.state_type
+                modelInc.quality += modelInc.type
 
         # check if there is already a close point
         past_model_incs_sorted = sorted(past_model_incs, key=self.__proximity_sort)
@@ -111,8 +111,8 @@ class ProximitySortPlayerDataTrimAlg(PlayerDataTrimAlg):
         past_model_incs_sorted.remove(last_data_point)
         closest_point = past_model_incs_sorted[0]
 
-        if (self.__acc_state_residue and closest_point.state_type == 0) or closest_point.quality > (
-                self.__epsilon + closest_point.state_type):
+        if (self.__acc_state_residue and closest_point.type == 0) or closest_point.quality > (
+                self.__epsilon + closest_point.type):
             removed_i = past_model_incs.index(closest_point)
             past_model_incs.pop(removed_i)
         else:

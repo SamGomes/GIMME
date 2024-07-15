@@ -20,7 +20,7 @@ class QualityEvalAlg(ABC):
     def evaluate(self, profile, group_player_ids):
         pass
 
-    def get_completion_percentage(self, profile, group_player_ids):
+    def get_completion_percentage(self):
         return self._completion_percentage
 
 
@@ -146,10 +146,9 @@ class TabQualityEvalAlg(QualityEvalAlg):
 
 
 class SynergiesTabQualityEvalAlg(TabQualityEvalAlg):
-    
     # private members
     __synergy_matrix = None
-    
+
     def __init__(self, player_model_bridge, synergy_table_path):
         super().__init__(player_model_bridge)
 
@@ -158,9 +157,9 @@ class SynergiesTabQualityEvalAlg(TabQualityEvalAlg):
 
         self.__synergy_matrix = synergy_table.to_numpy()
         self.__synergy_matrix[numpy.isnan(self.__synergy_matrix)] = 0
-        self.__synergy_matrix = self.symmetrize(self.__synergy_matrix)
+        self.__synergy_matrix = self.__symmetrize(self.__synergy_matrix)
 
-    def symmetrize(self, table):
+    def __symmetrize(self, table):
         return table + table.T - numpy.diag(table.diagonal())
 
     def evaluate(self, _, group_player_ids):
