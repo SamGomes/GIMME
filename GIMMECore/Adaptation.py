@@ -45,10 +45,13 @@ class Adaptation(object):
 			return
 		
 
-		# print(json.dumps(self.playerModelBridge.getPlayerStatesDataFrame(0).states, default=lambda o: [o.__dict__["quality"],o.__dict__["stateType"],o.__dict__["creationTime"]], sort_keys=True))
-		# print("\n\n")
 		adaptedConfig = self.configsGenAlg.organize()
 
+		# print(json.dumps(adaptedConfig, default=lambda o: o.__dict__, indent=2))
+		# print("\n\n")
+		# input("")
+		# quit()
+		
 		adaptedGroups = adaptedConfig["groups"]
 		adaptedProfiles = adaptedConfig["profiles"]
 		adaptedAvgCharacteristics = adaptedConfig["avgCharacteristics"]
@@ -72,6 +75,7 @@ class Adaptation(object):
 			adaptedConfig["tasks"].append(adaptedTaskId)
 
 			
+
 		# totalFitness = 0.0
 		# for groupI in range(len(adaptedGroups)):
 		# 	group = adaptedGroups[groupI]
@@ -134,7 +138,7 @@ class Adaptation(object):
 				), 
 			profile=state.profile)
 		newState.characteristics.engagement = 1 - (preferences.distanceBetween(state.profile) / math.sqrt(numDims))  #between 0 and 1
-		if newState.characteristics.engagement>1:
+		if newState.characteristics.engagement > 1:
 			raise ValueError('Something went wrong. Engagement is > 1.') 
 		abilityIncreaseSim = (newState.characteristics.engagement*self.playerModelBridge.getBaseLearningRate(playerId))
 		newState.characteristics.ability = newState.characteristics.ability + abilityIncreaseSim
@@ -148,10 +152,10 @@ class Adaptation(object):
 		numPlayers = len(self.playerModelBridge.getAllPlayerIds())
 		i = 0
 		while(i < numBootstrapIterations):
-			print("Performming step ("+str(i)+" of "+str(numBootstrapIterations)+") of the bootstrap phase of \""+str(self.name)+"\"...                                                             ", end="\r")
+			print("Performing step ("+str(i)+" of "+str(numBootstrapIterations)+") of the bootstrap phase of \""+str(self.name)+"\"...                                                             ", end="\r")
 			self.iterate()
 			for x in range(numPlayers):
-				increases = self.simulateReaction(playerId=x)	
+				self.simulateReaction(playerId=x)	
 			i+=1
 
 

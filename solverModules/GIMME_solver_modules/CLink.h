@@ -2,6 +2,7 @@
 #include <limits>
 #include <math.h>
 #include <vector>
+#include <stdio.h>
 #include "General.h"
 
 class CLink

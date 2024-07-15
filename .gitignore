@@ -14,3 +14,5 @@ _pycache__/
 *.csv
 
 examples/simulationResults/latestResults/currResults.zip
+
+venv/
